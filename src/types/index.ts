@@ -1,17 +1,17 @@
 export interface DamageZone {
   id: string;
-  name: string; // internal zone name key
+  name: string;
   displayName: string;
   icon: string;
   color: string;
-  isDefault: boolean; // whether it's a built-in zone
+  isDefault: boolean;
 }
 
 export interface Buff {
   id: string;
-  name: string; // display name for this buff
-  zoneId: string; // which zone this buff belongs to
-  value: number; // percentage value (e.g. 50 means 50%)
+  name: string;
+  zoneId: string;
+  value: number;
   icon: string;
   color: string;
 }
@@ -19,32 +19,38 @@ export interface Buff {
 export interface Character {
   id: string;
   name: string;
-  baseAttack: number; // character base attack
-  weaponAttack: number; // weapon attack
-  attackPercentBonus: number; // percentage bonus (e.g. 50 means 50%)
+  baseAttack: number;
+  weaponAttack: number;
+  attackPercentBonus: number;
 }
 
 export interface Skill {
   id: string;
   name: string;
-  characterId: string; // which character uses this skill
-  skillMultiplier: number; // skill multiplier percentage
-  enabledBuffIds: string[]; // which buffs are active for this skill
-  order: number; // for sorting
+  characterId: string;
+  skillMultiplier: number;
+  enabledBuffIds: string[];
+  order: number;
 }
 
-export interface SkillRotation {
+export interface RotationEntry {
   id: string;
   skillId: string;
-  count: number; // how many times to cast
+  count: number;
 }
 
-export interface AppState {
+export interface RotationGroup {
+  id: string;
+  name: string;
+  entries: RotationEntry[];
+}
+
+export interface AppData {
   zones: DamageZone[];
   buffs: Buff[];
   characters: Character[];
   skills: Skill[];
-  rotation: SkillRotation[];
+  rotationGroups: RotationGroup[];
 }
 
 export const DEFAULT_ZONES: DamageZone[] = [
