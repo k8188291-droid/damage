@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
-  type DragEndEvent, type DragStartEvent, DragOverlay,
+  type DragEndEvent
 } from '@dnd-kit/core';
 import {
   arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
@@ -103,7 +103,6 @@ function SortableEntry({ entry, skills, onUpdate, onRemove }: {
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: entry.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
-  const skill = skills.find(s => s.id === entry.skillId);
 
   return (
     <div ref={setNodeRef} style={style}
