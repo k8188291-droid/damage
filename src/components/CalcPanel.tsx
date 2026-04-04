@@ -11,17 +11,16 @@ interface Props {
 function safeEval(formula: string): number {
   const cleaned = formula.trim();
   if (!cleaned) throw new Error('');
-  // Block dangerous characters
-  if (/[;=`\\{}[\]]/.test(cleaned)) throw new Error('不允許的操作');
+  // Block dangerous characters/patterns
+  if (/[=`\\{}[\]]/.test(cleaned)) throw new Error('不允許的操作');
   // Replace allowed Math.xxx with placeholder, then check no identifiers remain
   const stripped = cleaned.replace(
     /\bMath\.(abs|ceil|floor|round|sqrt|pow|min|max|log|log2|log10|sin|cos|tan|PI|E)\b/g, '0'
   );
   if (/[a-zA-Z_$]/.test(stripped)) throw new Error('不允許的操作');
+  // Single-string body: new Function('body') — all args before last are param names
   const result = new Function(
-    '"use strict";',
-    'const {abs,ceil,floor,round,sqrt,pow,min,max,log,log2,log10,sin,cos,tan,PI,E}=Math;',
-    `return (${cleaned});`
+    '"use strict"; const {abs,ceil,floor,round,sqrt,pow,min,max,log,log2,log10,sin,cos,tan,PI,E}=Math; return (' + cleaned + ');'
   )();
   if (typeof result !== 'number' || !isFinite(result)) throw new Error('結果無效');
   return result;
