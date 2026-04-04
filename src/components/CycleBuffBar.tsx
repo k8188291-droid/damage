@@ -1,15 +1,13 @@
-import type { Buff, BuffGroup, DamageZone } from '../types';
+import type { Buff, BuffGroup } from '../types';
 
 interface Props {
   buffs: Buff[];
   buffGroups: BuffGroup[];
-  zones: DamageZone[];
   cycleDisabledBuffIds: string[];
   onToggleBuff: (buffId: string) => void;
-  onAddBuff?: () => void;
 }
 
-export default function CycleBuffBar({ buffs, buffGroups, zones, cycleDisabledBuffIds, onToggleBuff }: Props) {
+export default function CycleBuffBar({ buffs, buffGroups, cycleDisabledBuffIds, onToggleBuff }: Props) {
   // Only show globally enabled buffs
   const enabledBuffs = buffs.filter(b => b.enabled);
   const disabledSet = new Set(cycleDisabledBuffIds);
@@ -23,7 +21,6 @@ export default function CycleBuffBar({ buffs, buffGroups, zones, cycleDisabledBu
       <div className="flex flex-wrap gap-2">
         {enabledBuffs.map(b => {
           const group = buffGroups.find(g => g.id === b.groupId);
-          const zone = zones.find(z => z.id === b.zoneId);
           const isDisabled = disabledSet.has(b.id);
           const color = group?.color || '#64748b';
 
@@ -31,9 +28,10 @@ export default function CycleBuffBar({ buffs, buffGroups, zones, cycleDisabledBu
             <button
               key={b.id}
               onClick={() => onToggleBuff(b.id)}
+              title={isDisabled ? '已停用，點擊啟用' : '已啟用，點擊停用'}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer border transition-all ${
                 isDisabled
-                  ? 'border-gray-700 text-gray-500 opacity-50'
+                  ? 'border-gray-700 text-gray-500 opacity-40 line-through'
                   : 'text-white'
               }`}
               style={
@@ -42,12 +40,7 @@ export default function CycleBuffBar({ buffs, buffGroups, zones, cycleDisabledBu
                   : { backgroundColor: color + '25', borderColor: color + '80', color }
               }
             >
-              {!isDisabled && <span className="text-[10px]">◆</span>}
               {b.icon} {b.name} {b.value}%
-              {zone && <span className="opacity-60">· {zone.displayName}</span>}
-              {!isDisabled && (
-                <span className="ml-0.5 text-[10px] opacity-60 hover:opacity-100">✕</span>
-              )}
             </button>
           );
         })}

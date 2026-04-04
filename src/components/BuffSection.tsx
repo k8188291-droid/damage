@@ -123,8 +123,8 @@ function BuffModal({ buff, zones, buffGroups, onSave, onClose, onAddZone }: {
 }
 
 /* ── Sortable Buff Chip (compact single-column) ── */
-function SortableBuffChip({ buff, zone, groupColor, onClick, onToggle, onCopy, onRemove }: {
-  buff: Buff; zone: DamageZone | undefined; groupColor: string | undefined;
+function SortableBuffChip({ buff, zone, onClick, onToggle, onCopy, onRemove }: {
+  buff: Buff; zone: DamageZone | undefined;
   onClick: () => void; onToggle: () => void; onCopy: () => void; onRemove: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: buff.id });
@@ -149,7 +149,6 @@ function SortableBuffChip({ buff, zone, groupColor, onClick, onToggle, onCopy, o
           <span className="text-gray-400 font-mono">{buff.value}%</span>
         </div>
       </div>
-      {groupColor && <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: groupColor }} />}
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
         <button onClick={e => { e.stopPropagation(); onCopy(); }} className="text-gray-600 hover:text-indigo-400 cursor-pointer text-xs" title="複製">⧉</button>
         <button onClick={e => { e.stopPropagation(); onRemove(); }} className="text-gray-600 hover:text-red-400 cursor-pointer text-xs" title="刪除">✕</button>
@@ -159,7 +158,7 @@ function SortableBuffChip({ buff, zone, groupColor, onClick, onToggle, onCopy, o
 }
 
 /* ── Overlay chip for dragging ── */
-function BuffChipOverlay({ buff, zone, groupColor }: { buff: Buff; zone: DamageZone | undefined; groupColor: string | undefined }) {
+function BuffChipOverlay({ buff, zone }: { buff: Buff; zone: DamageZone | undefined }) {
   return (
     <div className="bg-gray-800 border border-indigo-500 rounded-xl px-3 py-2 flex items-center gap-2 shadow-xl shadow-indigo-500/20 cursor-grabbing">
       <span className="text-base">{buff.icon}</span>
@@ -170,7 +169,6 @@ function BuffChipOverlay({ buff, zone, groupColor }: { buff: Buff; zone: DamageZ
           <span className="text-gray-400 font-mono">{buff.value}%</span>
         </div>
       </div>
-      {groupColor && <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: groupColor }} />}
     </div>
   );
 }
@@ -322,23 +320,35 @@ export default function BuffSection({ buffs, zones, buffGroups, onBuffsChange, o
 
   return (
     <section>
-      {/* Action buttons */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex gap-1.5 flex-wrap">
+      {/* Zone pills (req 2: show name) */}
+      {zones.filter(z => z.id !== 'zone-skill').length > 0 && (
+        <div className="flex gap-1.5 flex-wrap mb-2">
           {zones.filter(z => z.id !== 'zone-skill').map(z => (
-            <span key={z.id} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] border border-gray-700 group" style={{ borderColor: z.color + '40' }}>
-              <span style={{ color: z.color }}>{z.icon}</span>
+            <span key={z.id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border group" style={{ borderColor: z.color + '40', color: z.color }}>
+              <span>{z.icon}</span>
+              <span>{z.displayName}</span>
               {!z.isDefault && (
-                <button onClick={() => removeZone(z.id)} className="text-gray-600 hover:text-red-400 cursor-pointer opacity-0 group-hover:opacity-100 ml-0.5 text-[10px]">✕</button>
+                <button onClick={() => removeZone(z.id)} className="text-gray-600 hover:text-red-400 cursor-pointer opacity-0 group-hover:opacity-100 ml-0.5">✕</button>
               )}
             </span>
           ))}
         </div>
-        <div className="flex gap-1 shrink-0">
-          <button onClick={newZone} className="px-1.5 py-0.5 text-[10px] text-gray-500 hover:text-gray-300 cursor-pointer" title="新增分區">⊕</button>
-          <button onClick={addGroup} className="px-1.5 py-0.5 text-[10px] text-gray-500 hover:text-gray-300 cursor-pointer" title="新增群組">⊞</button>
-          <button onClick={newBuff} className="px-1.5 py-0.5 text-[10px] text-indigo-400 hover:text-indigo-300 cursor-pointer">+ Buff</button>
-        </div>
+      )}
+
+      {/* Action buttons (req 1: pill button style) */}
+      <div className="flex gap-2 mb-3 flex-wrap">
+        <button onClick={newZone}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 cursor-pointer transition-colors">
+          + 分區
+        </button>
+        <button onClick={addGroup}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 cursor-pointer transition-colors">
+          + 群組
+        </button>
+        <button onClick={newBuff}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer transition-colors">
+          + Buff
+        </button>
       </div>
 
       {buffs.length === 0 && buffGroups.length === 0 ? (
@@ -356,7 +366,6 @@ export default function BuffSection({ buffs, zones, buffGroups, onBuffsChange, o
                   {ungroupedBuffs.map(b => (
                     <SortableBuffChip key={b.id} buff={b}
                       zone={zones.find(z => z.id === b.zoneId)}
-                      groupColor={undefined}
                       onClick={() => setEditingBuff({ ...b })}
                       onToggle={() => toggleBuff(b.id)}
                       onCopy={() => copyBuff(b)}
@@ -390,7 +399,6 @@ export default function BuffSection({ buffs, zones, buffGroups, onBuffsChange, o
                     {groupBuffs.map(b => (
                       <SortableBuffChip key={b.id} buff={b}
                         zone={zones.find(z => z.id === b.zoneId)}
-                        groupColor={g.color}
                         onClick={() => setEditingBuff({ ...b })}
                         onToggle={() => toggleBuff(b.id)}
                         onCopy={() => copyBuff(b)}
@@ -405,8 +413,7 @@ export default function BuffSection({ buffs, zones, buffGroups, onBuffsChange, o
           <DragOverlay>
             {activeBuff ? (
               <BuffChipOverlay buff={activeBuff}
-                zone={zones.find(z => z.id === activeBuff.zoneId)}
-                groupColor={buffGroups.find(g => g.id === activeBuff.groupId)?.color} />
+                zone={zones.find(z => z.id === activeBuff.zoneId)} />
             ) : null}
           </DragOverlay>
         </DndContext>

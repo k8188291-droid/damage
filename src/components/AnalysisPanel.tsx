@@ -13,12 +13,12 @@ interface Props {
 
 function fmt(n: number) { return Math.round(n).toLocaleString(); }
 
-// Assign stable colors to skills
 const SKILL_COLORS = ['#3b82f6', '#f59e0b', '#ef4444', '#22c55e', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#14b8a6', '#a855f7'];
 
 export default function AnalysisPanel({ rotationGroups, groupResults, activeRotationId, onSelectRotation, onAddRotation, onRemoveRotation, onCopyRotation }: Props) {
   const activeIdx = rotationGroups.findIndex(g => g.id === activeRotationId);
   const activeResult = activeIdx >= 0 ? groupResults[activeIdx] : null;
+  const maxDamage = Math.max(...groupResults.map(r => r.totalDamage), 1);
 
   return (
     <aside className="w-[280px] bg-gray-900/40 border-l border-gray-800 flex flex-col overflow-y-auto shrink-0">
@@ -41,6 +41,7 @@ export default function AnalysisPanel({ rotationGroups, groupResults, activeRota
           {rotationGroups.map((g, i) => {
             const isActive = g.id === activeRotationId;
             const result = groupResults[i];
+            const pct = (result.totalDamage / maxDamage) * 100;
             const diff = activeResult && activeResult.totalDamage > 0 && !isActive
               ? ((result.totalDamage / activeResult.totalDamage - 1) * 100).toFixed(1)
               : null;
@@ -55,12 +56,10 @@ export default function AnalysisPanel({ rotationGroups, groupResults, activeRota
                     : 'bg-gray-800/60 border border-gray-700 hover:border-gray-600'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-sm text-gray-200 truncate">{g.name}</span>
-                    {isActive && <span className="text-[9px] text-indigo-400 font-bold">(Active)</span>}
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                {/* Name + damage */}
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-sm text-gray-200 truncate min-w-0">{g.name}</span>
+                  <div className="flex items-center gap-2 shrink-0 ml-2">
                     <span className="text-sm font-bold text-gray-100">{fmt(result.totalDamage)}</span>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button onClick={e => { e.stopPropagation(); onCopyRotation(g); }}
@@ -70,8 +69,18 @@ export default function AnalysisPanel({ rotationGroups, groupResults, activeRota
                     </div>
                   </div>
                 </div>
+
+                {/* Progress bar vs max damage (req 8) */}
+                <div className="h-1.5 bg-gray-900 rounded-full overflow-hidden mb-1">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${isActive ? 'bg-indigo-500' : 'bg-gray-500'}`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+
+                {/* Diff vs active */}
                 {diff && (
-                  <div className={`text-[10px] font-mono mt-0.5 ${Number(diff) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  <div className={`text-[10px] font-mono ${Number(diff) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {Number(diff) >= 0 ? '+' : ''}{diff}%
                   </div>
                 )}

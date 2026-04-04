@@ -274,12 +274,15 @@ export default function SkillSection({ skills, buffs, buffGroups, characters, zo
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-gray-500 font-medium">技能設定</span>
-        <div className="flex gap-1">
-          <button onClick={addSkillGroup} className="px-1.5 py-0.5 text-[10px] text-gray-500 hover:text-gray-300 cursor-pointer" title="新增群組">⊞</button>
-          <button onClick={startNew} className="px-1.5 py-0.5 text-[10px] text-indigo-400 hover:text-indigo-300 cursor-pointer">+ 技能</button>
-        </div>
+      <div className="flex gap-2 mb-3 flex-wrap">
+        <button onClick={addSkillGroup}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 cursor-pointer transition-colors">
+          + 群組
+        </button>
+        <button onClick={startNew}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer transition-colors">
+          + 技能
+        </button>
       </div>
 
       {skills.length === 0 && skillGroups.length === 0 ? (

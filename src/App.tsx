@@ -303,7 +303,6 @@ function App() {
           <CycleBuffBar
             buffs={buffs}
             buffGroups={buffGroups}
-            zones={zones}
             cycleDisabledBuffIds={activeRotation.disabledBuffIds || []}
             onToggleBuff={toggleCycleBuff}
           />

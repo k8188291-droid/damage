@@ -65,9 +65,11 @@ export default function CharacterSection({ characters, onChange }: Props) {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-gray-500 font-medium">角色設定</span>
-        <button onClick={startNew} className="px-2 py-0.5 text-[10px] text-indigo-400 hover:text-indigo-300 cursor-pointer">+ 新增</button>
+      <div className="flex gap-2 mb-3">
+        <button onClick={startNew}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer transition-colors">
+          + 角色
+        </button>
       </div>
       {characters.length === 0 ? (
         <p className="text-gray-600 text-xs text-center py-3">尚未新增角色</p>
