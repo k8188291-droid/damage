@@ -10,6 +10,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import type { Skill, SkillGroup, Buff, BuffGroup, Character, DamageZone } from '../types';
 import Modal from './Modal';
+import { ColorDotPicker, COLORS } from './ui';
 
 interface Props {
   skills: Skill[];
@@ -22,8 +23,6 @@ interface Props {
   onSkillGroupsChange: (groups: SkillGroup[]) => void;
   pushUndo: (label: string, restore: () => void) => void;
 }
-
-const COLORS = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#f43f5e','#14b8a6','#a855f7','#64748b'];
 
 /* ── Skill Modal ── */
 function SkillModal({ skill, buffs, buffGroups, characters, zones, onSave, onClose }: {
@@ -336,11 +335,10 @@ export default function SkillSection({ skills, buffs, buffGroups, characters, zo
               <div key={g.id} className="mb-3 border border-gray-700/50 rounded-xl overflow-hidden">
                 {/* Inline editable group header */}
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800/40" style={{ borderLeft: `3px solid ${g.color}` }}>
-                  <button
-                    onClick={() => cycleSkillGroupColor(g)}
-                    className="w-3 h-3 rounded-full shrink-0 cursor-pointer hover:scale-110 transition-transform"
-                    style={{ backgroundColor: g.color }}
-                    title="點擊切換顏色"
+                  <ColorDotPicker
+                    color={g.color}
+                    onCycle={() => cycleSkillGroupColor(g)}
+                    onChange={c => updateSkillGroup({ ...g, color: c })}
                   />
                   <input
                     value={g.name}
