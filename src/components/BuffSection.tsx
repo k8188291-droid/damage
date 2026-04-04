@@ -10,6 +10,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import type { Buff, BuffGroup, DamageZone } from '../types';
 import Modal from './Modal';
+import { Tooltip, ColorDotPicker, COLORS } from './ui';
 
 interface Props {
   buffs: Buff[];
@@ -22,7 +23,6 @@ interface Props {
 }
 
 const ICONS = ['🗡️','🔥','💀','💥','🌀','🛡️','🔮','⚡','🎯','💎','🌟','💫','🔰','⭐','❄️','🌊','💨','🍃'];
-const COLORS = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#f43f5e','#14b8a6','#a855f7','#64748b'];
 
 /* ── Zone Modal ── */
 function ZoneModal({ zone, onSave, onClose }: { zone: DamageZone; onSave: (z: DamageZone) => void; onClose: () => void }) {
@@ -135,11 +135,12 @@ function SortableBuffChip({ buff, zone, groupColor, onClick, onToggle, onCopy, o
       className={`bg-gray-800/60 border rounded-xl px-3 py-2 flex items-center gap-2 cursor-pointer hover:border-indigo-500/50 transition-colors group ${buff.enabled ? 'border-gray-700' : 'border-gray-800 opacity-50'}`}
       onClick={onClick}>
       <span {...attributes} {...listeners} className="text-gray-600 cursor-grab active:cursor-grabbing text-xs" onClick={e => e.stopPropagation()}>⠿</span>
-      <button
-        onClick={e => { e.stopPropagation(); onToggle(); }}
-        className={`w-4 h-4 rounded-full border-2 cursor-pointer shrink-0 transition-colors ${buff.enabled ? 'border-green-500 bg-green-500/30' : 'border-gray-600 bg-transparent'}`}
-        title={buff.enabled ? '已啟用 (點擊停用)' : '已停用 (點擊啟用)'}
-      />
+      <Tooltip label={buff.enabled ? '已啟用，點擊停用' : '已停用，點擊啟用'}>
+        <button
+          onClick={e => { e.stopPropagation(); onToggle(); }}
+          className={`w-4 h-4 rounded-full border-2 cursor-pointer shrink-0 transition-colors ${buff.enabled ? 'border-green-500 bg-green-500/30' : 'border-gray-600 bg-transparent'}`}
+        />
+      </Tooltip>
       <span className="text-base">{buff.icon}</span>
       <div className="min-w-0 flex-1">
         <div className={`text-sm font-medium truncate ${buff.enabled ? 'text-gray-200' : 'text-gray-500 line-through'}`}>{buff.name}</div>
@@ -380,11 +381,10 @@ export default function BuffSection({ buffs, zones, buffGroups, onBuffsChange, o
               <div key={g.id} className="mb-3 border border-gray-700/50 rounded-xl overflow-hidden">
                 {/* Inline editable group header */}
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800/40" style={{ borderLeft: `3px solid ${g.color}` }}>
-                  <button
-                    onClick={() => cycleGroupColor(g)}
-                    className="w-3 h-3 rounded-full shrink-0 cursor-pointer hover:scale-110 transition-transform"
-                    style={{ backgroundColor: g.color }}
-                    title="點擊切換顏色"
+                  <ColorDotPicker
+                    color={g.color}
+                    onCycle={() => cycleGroupColor(g)}
+                    onChange={c => updateGroup({ ...g, color: c })}
                   />
                   <input
                     value={g.name}
