@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react';
 import type { AppData } from '../types';
+import { CURRENT_VERSION } from '../types';
+import { migrateToLatest } from '../migrations';
 import Modal from './Modal';
 
 interface Props {
@@ -14,7 +16,7 @@ export default function ImportExport({ getData, onImport }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
-    const data = getData();
+    const data = { ...getData(), version: CURRENT_VERSION };
     const json = JSON.stringify(data, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -26,18 +28,23 @@ export default function ImportExport({ getData, onImport }: Props) {
   };
 
   const handleCopyToClipboard = () => {
-    const data = getData();
+    const data = { ...getData(), version: CURRENT_VERSION };
     navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+  };
+
+  const processImport = (raw: string) => {
+    const parsed = JSON.parse(raw);
+    const migrated = migrateToLatest(parsed);
+    validate(migrated);
+    onImport(migrated);
+    setShowModal(false);
+    setImportText('');
+    setError('');
   };
 
   const handleImportFromText = () => {
     try {
-      const data = JSON.parse(importText);
-      validate(data);
-      onImport(data);
-      setShowModal(false);
-      setImportText('');
-      setError('');
+      processImport(importText);
     } catch (e) {
       setError(e instanceof Error ? e.message : '格式錯誤');
     }
@@ -49,17 +56,12 @@ export default function ImportExport({ getData, onImport }: Props) {
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        const data = JSON.parse(reader.result as string);
-        validate(data);
-        onImport(data);
-        setShowModal(false);
-        setError('');
+        processImport(reader.result as string);
       } catch (err) {
         setError(err instanceof Error ? err.message : '格式錯誤');
       }
     };
     reader.readAsText(file);
-    // Reset so same file can be re-imported
     e.target.value = '';
   };
 

@@ -1,18 +1,33 @@
 import { useState } from 'react';
 import { v4 as uuid } from 'uuid';
-import type { Skill, Buff, Character, DamageZone } from '../types';
+import {
+  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+  type DragEndEvent, type DragStartEvent, DragOverlay, useDroppable,
+} from '@dnd-kit/core';
+import {
+  arrayMove, SortableContext, useSortable, rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import type { Skill, SkillGroup, Buff, BuffGroup, Character, DamageZone } from '../types';
 import Modal from './Modal';
 
 interface Props {
   skills: Skill[];
   buffs: Buff[];
+  buffGroups: BuffGroup[];
   characters: Character[];
   zones: DamageZone[];
+  skillGroups: SkillGroup[];
   onChange: (skills: Skill[]) => void;
+  onSkillGroupsChange: (groups: SkillGroup[]) => void;
+  pushUndo: (label: string, restore: () => void) => void;
 }
 
-function SkillModal({ skill, buffs, characters, zones, onSave, onClose }: {
-  skill: Skill; buffs: Buff[]; characters: Character[]; zones: DamageZone[];
+const COLORS = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#f43f5e','#14b8a6','#a855f7','#64748b'];
+
+/* ── Skill Modal ── */
+function SkillModal({ skill, buffs, buffGroups, characters, zones, onSave, onClose }: {
+  skill: Skill; buffs: Buff[]; buffGroups: BuffGroup[]; characters: Character[]; zones: DamageZone[];
   onSave: (s: Skill) => void; onClose: () => void;
 }) {
   const [d, setD] = useState({ ...skill });
@@ -22,7 +37,7 @@ function SkillModal({ skill, buffs, characters, zones, onSave, onClose }: {
     p({ enabledBuffIds: d.enabledBuffIds.includes(id) ? d.enabledBuffIds.filter(x => x !== id) : [...d.enabledBuffIds, id] });
   };
 
-  // Group buffs by zone
+  // Group buffs by zone for display
   const buffsByZone = new Map<string, Buff[]>();
   for (const b of buffs) {
     const key = b.zoneId;
@@ -74,10 +89,12 @@ function SkillModal({ skill, buffs, characters, zones, onSave, onClose }: {
                     <div className="flex flex-wrap gap-1.5">
                       {zoneBuffs.map(b => {
                         const on = d.enabledBuffIds.includes(b.id);
+                        const group = buffGroups.find(g => g.id === b.groupId);
+                        const chipColor = group?.color || '#64748b';
                         return (
                           <button key={b.id} onClick={() => toggleBuff(b.id)}
                             className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all ${on ? 'text-white border-opacity-60' : 'border-gray-700 text-gray-500 opacity-40 hover:opacity-70'}`}
-                            style={on ? { backgroundColor: b.color + '30', borderColor: b.color } : undefined}>
+                            style={on ? { backgroundColor: chipColor + '30', borderColor: chipColor } : undefined}>
                             {b.icon} {b.name} ({b.value}%)
                           </button>
                         );
@@ -96,8 +113,90 @@ function SkillModal({ skill, buffs, characters, zones, onSave, onClose }: {
   );
 }
 
-export default function SkillSection({ skills, buffs, characters, zones, onChange }: Props) {
+/* ── Sortable Skill Card ── */
+function SortableSkillCard({ skill, char, buffs, buffGroups, onClick, onCopy, onRemove }: {
+  skill: Skill; char: Character | undefined; buffs: Buff[]; buffGroups: BuffGroup[];
+  onClick: () => void; onCopy: () => void; onRemove: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: skill.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
+
+  const enabledBuffs = buffs.filter(b => skill.enabledBuffIds.includes(b.id));
+  const maxShow = 6;
+  const shown = enabledBuffs.slice(0, maxShow);
+  const remaining = enabledBuffs.length - maxShow;
+
+  return (
+    <div ref={setNodeRef} style={style}
+      className="bg-gray-800/60 border border-gray-700 rounded-xl px-4 py-2.5 cursor-pointer hover:border-indigo-500/50 transition-colors group"
+      onClick={onClick}>
+      <div className="flex items-center gap-3">
+        <span {...attributes} {...listeners} className="text-gray-600 cursor-grab active:cursor-grabbing text-xs" onClick={e => e.stopPropagation()}>⠿</span>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-medium text-gray-200">{skill.name}</div>
+          <div className="text-xs text-gray-500">
+            {char ? char.name : '未指定'} · {skill.skillMultiplier}% · {enabledBuffs.length} buff
+          </div>
+        </div>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <button onClick={e => { e.stopPropagation(); onCopy(); }} className="text-gray-600 hover:text-indigo-400 text-xs cursor-pointer" title="複製">⧉</button>
+          <button onClick={e => { e.stopPropagation(); onRemove(); }} className="text-gray-600 hover:text-red-400 text-xs cursor-pointer" title="刪除">✕</button>
+        </div>
+      </div>
+      {/* Inline buff chips */}
+      {shown.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-1.5">
+          {shown.map(b => {
+            const group = buffGroups.find(g => g.id === b.groupId);
+            const color = group?.color || '#64748b';
+            return (
+              <span key={b.id} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] border"
+                style={{ backgroundColor: color + '20', borderColor: color + '40', color: color }}>
+                {b.icon} {b.name}
+              </span>
+            );
+          })}
+          {remaining > 0 && <span className="text-[10px] text-gray-500 px-1 py-0.5">+{remaining}</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Overlay for dragging ── */
+function SkillCardOverlay({ skill, char }: { skill: Skill; char: Character | undefined }) {
+  return (
+    <div className="bg-gray-800 border border-indigo-500 rounded-xl px-4 py-2.5 shadow-xl shadow-indigo-500/20 cursor-grabbing">
+      <div className="text-sm font-medium text-gray-200">{skill.name}</div>
+      <div className="text-xs text-gray-500">{char ? char.name : '未指定'} · {skill.skillMultiplier}%</div>
+    </div>
+  );
+}
+
+/* ── Droppable skill group container ── */
+function DroppableSkillArea({ groupId, children, isEmpty }: {
+  groupId: string; children: React.ReactNode; isEmpty: boolean;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: `skill-group-drop:${groupId}` });
+  return (
+    <div ref={setNodeRef}
+      className={`flex gap-2 flex-wrap p-2 min-h-[56px] rounded-lg transition-colors ${isOver ? 'bg-indigo-500/10 ring-1 ring-inset ring-indigo-500/30' : ''}`}>
+      {children}
+      {isEmpty && (
+        <div className="w-full text-xs text-gray-600 text-center py-2">
+          {isOver ? '放開以移入此群組' : '拖曳技能到此群組'}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Main Section ── */
+export default function SkillSection({ skills, buffs, buffGroups, characters, zones, skillGroups, onChange, onSkillGroupsChange, pushUndo }: Props) {
   const [editing, setEditing] = useState<Skill | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const save = (s: Skill) => {
     const exists = skills.find(x => x.id === s.id);
@@ -105,43 +204,179 @@ export default function SkillSection({ skills, buffs, characters, zones, onChang
     setEditing(null);
   };
 
-  const remove = (id: string) => onChange(skills.filter(s => s.id !== id));
+  const remove = (id: string) => {
+    const skill = skills.find(s => s.id === id);
+    if (!skill) return;
+    const prev = [...skills];
+    onChange(skills.filter(s => s.id !== id));
+    pushUndo(`已刪除技能: ${skill.name}`, () => onChange(prev));
+  };
+
+  const copy = (s: Skill) => {
+    const c = { ...s, id: uuid(), name: `${s.name} (複製)`, enabledBuffIds: [...s.enabledBuffIds], order: skills.length };
+    const idx = skills.findIndex(x => x.id === s.id);
+    const next = [...skills];
+    next.splice(idx + 1, 0, c);
+    onChange(next);
+  };
 
   const startNew = () => setEditing({
     id: uuid(), name: `技能 ${skills.length + 1}`, characterId: characters[0]?.id || '',
-    skillMultiplier: 100, enabledBuffIds: [], order: skills.length,
+    skillMultiplier: 100, enabledBuffIds: [], order: skills.length, groupId: '',
   });
+
+  /* Skill group operations — inline editing, no modal */
+  const updateSkillGroup = (g: SkillGroup) => {
+    onSkillGroupsChange(skillGroups.map(x => x.id === g.id ? g : x));
+  };
+
+  const cycleSkillGroupColor = (g: SkillGroup) => {
+    const idx = COLORS.indexOf(g.color);
+    updateSkillGroup({ ...g, color: COLORS[(idx + 1) % COLORS.length] });
+  };
+
+  const addSkillGroup = () => {
+    onSkillGroupsChange([...skillGroups, { id: uuid(), name: `群組 ${skillGroups.length + 1}`, color: COLORS[skillGroups.length % COLORS.length] }]);
+  };
+
+  const removeSkillGroup = (id: string) => {
+    const grp = skillGroups.find(g => g.id === id);
+    if (!grp) return;
+    const prevGroups = [...skillGroups];
+    const prevSkills = [...skills];
+    onSkillGroupsChange(skillGroups.filter(g => g.id !== id));
+    onChange(skills.map(s => s.groupId === id ? { ...s, groupId: '' } : s));
+    pushUndo(`已刪除技能群組: ${grp.name}`, () => { onSkillGroupsChange(prevGroups); onChange(prevSkills); });
+  };
+
+  /* DnD — group change + reorder all in onDragEnd, no onDragOver */
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveId(null);
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeSkillId = active.id as string;
+    const overId = over.id as string;
+
+    // Determine target group
+    let targetGroupId: string;
+    if (overId.startsWith('skill-group-drop:')) {
+      targetGroupId = overId.replace('skill-group-drop:', '');
+    } else {
+      targetGroupId = skills.find(s => s.id === overId)?.groupId ?? '';
+    }
+
+    const sourceGroupId = skills.find(s => s.id === activeSkillId)?.groupId ?? '';
+    const groupChanged = sourceGroupId !== targetGroupId;
+
+    if (groupChanged) {
+      onChange(skills.map(s => s.id === activeSkillId ? { ...s, groupId: targetGroupId } : s));
+    } else if (!overId.startsWith('skill-group-drop:') && active.id !== over.id) {
+      const oldIdx = skills.findIndex(s => s.id === activeSkillId);
+      const newIdx = skills.findIndex(s => s.id === overId);
+      if (oldIdx !== -1 && newIdx !== -1) {
+        onChange(arrayMove(skills, oldIdx, newIdx));
+      }
+    }
+  };
+
+  // Group skills
+  const ungroupedSkills = skills.filter(s => !s.groupId);
+  const groupedMap = new Map<string, Skill[]>();
+  for (const g of skillGroups) groupedMap.set(g.id, []);
+  for (const s of skills) {
+    if (s.groupId && groupedMap.has(s.groupId)) {
+      groupedMap.get(s.groupId)!.push(s);
+    }
+  }
+
+  const activeSkill = activeId ? skills.find(s => s.id === activeId) : null;
 
   return (
     <section>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-base font-semibold text-gray-100">⚔️ 技能</h2>
-        <button onClick={startNew} className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-medium transition-colors cursor-pointer">+ 新增</button>
+        <div className="flex gap-2">
+          <button onClick={addSkillGroup} className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs font-medium transition-colors cursor-pointer">+ 群組</button>
+          <button onClick={startNew} className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-medium transition-colors cursor-pointer">+ 新增</button>
+        </div>
       </div>
-      {skills.length === 0 ? (
+
+      {skills.length === 0 && skillGroups.length === 0 ? (
         <p className="text-gray-600 text-sm text-center py-4">尚未新增技能</p>
       ) : (
-        <div className="flex gap-2 flex-wrap">
-          {skills.map(s => {
-            const char = characters.find(c => c.id === s.characterId);
-            const activeBuffCount = s.enabledBuffIds.filter(id => buffs.some(b => b.id === id)).length;
+        <DndContext sensors={sensors} collisionDetection={closestCenter}
+          onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+
+          {/* Ungrouped */}
+          <div className="mb-3">
+            {skillGroups.length > 0 && <div className="text-xs text-gray-500 mb-1.5">未分組</div>}
+            <SortableContext items={ungroupedSkills.map(s => s.id)} strategy={rectSortingStrategy}>
+              <DroppableSkillArea groupId="" isEmpty={ungroupedSkills.length === 0}>
+                {ungroupedSkills.map(s => (
+                  <SortableSkillCard key={s.id} skill={s}
+                    char={characters.find(c => c.id === s.characterId)}
+                    buffs={buffs} buffGroups={buffGroups}
+                    onClick={() => setEditing({ ...s })}
+                    onCopy={() => copy(s)}
+                    onRemove={() => remove(s.id)} />
+                ))}
+              </DroppableSkillArea>
+            </SortableContext>
+          </div>
+
+          {/* Skill groups */}
+          {skillGroups.map(g => {
+            const groupSkills = groupedMap.get(g.id) || [];
             return (
-              <div key={s.id} onClick={() => setEditing({ ...s })}
-                className="bg-gray-800/60 border border-gray-700 rounded-xl px-4 py-2.5 cursor-pointer hover:border-indigo-500/50 transition-colors group flex items-center gap-3">
-                <div>
-                  <div className="text-sm font-medium text-gray-200">{s.name}</div>
-                  <div className="text-xs text-gray-500">
-                    {char ? char.name : '未指定'} · {s.skillMultiplier}% · {activeBuffCount} buff
-                  </div>
+              <div key={g.id} className="mb-3 border border-gray-700/50 rounded-xl overflow-hidden">
+                {/* Inline editable group header */}
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800/40" style={{ borderLeft: `3px solid ${g.color}` }}>
+                  <button
+                    onClick={() => cycleSkillGroupColor(g)}
+                    className="w-3 h-3 rounded-full shrink-0 cursor-pointer hover:scale-110 transition-transform"
+                    style={{ backgroundColor: g.color }}
+                    title="點擊切換顏色"
+                  />
+                  <input
+                    value={g.name}
+                    onChange={e => updateSkillGroup({ ...g, name: e.target.value })}
+                    className="bg-transparent text-sm font-medium text-gray-200 flex-1 focus:outline-none focus:border-b focus:border-indigo-500 min-w-0"
+                  />
+                  <button onClick={() => removeSkillGroup(g.id)} className="text-gray-500 hover:text-red-400 text-xs cursor-pointer shrink-0">✕</button>
                 </div>
-                <button onClick={e => { e.stopPropagation(); remove(s.id); }}
-                  className="text-gray-600 hover:text-red-400 text-xs cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                <SortableContext items={groupSkills.map(s => s.id)} strategy={rectSortingStrategy}>
+                  <DroppableSkillArea groupId={g.id} isEmpty={groupSkills.length === 0}>
+                    {groupSkills.map(s => (
+                      <SortableSkillCard key={s.id} skill={s}
+                        char={characters.find(c => c.id === s.characterId)}
+                        buffs={buffs} buffGroups={buffGroups}
+                        onClick={() => setEditing({ ...s })}
+                        onCopy={() => copy(s)}
+                        onRemove={() => remove(s.id)} />
+                    ))}
+                  </DroppableSkillArea>
+                </SortableContext>
               </div>
             );
           })}
-        </div>
+
+          <DragOverlay>
+            {activeSkill ? (
+              <SkillCardOverlay skill={activeSkill} char={characters.find(c => c.id === activeSkill.characterId)} />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       )}
-      {editing && <SkillModal skill={editing} buffs={buffs} characters={characters} zones={zones} onSave={save} onClose={() => setEditing(null)} />}
+
+      {editing && (
+        <SkillModal skill={editing} buffs={buffs} buffGroups={buffGroups} characters={characters} zones={zones}
+          onSave={save} onClose={() => setEditing(null)} />
+      )}
     </section>
   );
 }
