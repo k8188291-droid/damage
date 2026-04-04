@@ -65,21 +65,24 @@ export default function CharacterSection({ characters, onChange }: Props) {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-semibold text-gray-100">👤 角色</h2>
-        <button onClick={startNew} className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-medium transition-colors cursor-pointer">+ 新增</button>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-gray-500 font-medium">角色設定</span>
+        <button onClick={startNew} className="px-2 py-0.5 text-[10px] text-indigo-400 hover:text-indigo-300 cursor-pointer">+ 新增</button>
       </div>
       {characters.length === 0 ? (
-        <p className="text-gray-600 text-sm text-center py-4">尚未新增角色</p>
+        <p className="text-gray-600 text-xs text-center py-3">尚未新增角色</p>
       ) : (
-        <div className="flex gap-2 flex-wrap">
+        <div className="space-y-1.5">
           {characters.map(c => {
             const atk = Math.round((c.baseAttack + c.weaponAttack) * (1 + c.attackPercentBonus / 100));
             return (
               <div key={c.id} onClick={() => setEditing({ ...c })}
-                className="bg-gray-800/60 border border-gray-700 rounded-xl px-4 py-2.5 cursor-pointer hover:border-indigo-500/50 transition-colors group flex items-center gap-3">
-                <div>
-                  <div className="text-sm font-medium text-gray-200">{c.name}</div>
+                className="bg-gray-800/60 border border-gray-700 rounded-xl px-3 py-2 cursor-pointer hover:border-indigo-500/50 transition-colors group flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gray-700/50 flex items-center justify-center text-sm shrink-0">
+                  {c.name.charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-200 truncate">{c.name}</div>
                   <div className="text-xs text-gray-500">ATK <span className="text-indigo-400">{atk.toLocaleString()}</span></div>
                 </div>
                 <button onClick={e => { e.stopPropagation(); remove(c.id); }}

@@ -58,6 +58,7 @@ export interface RotationGroup {
   id: string;
   name: string;
   entries: RotationEntry[];
+  disabledBuffIds: string[];
 }
 
 export interface CalcRow {

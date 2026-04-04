@@ -253,7 +253,7 @@ export default function RotationSection({ rotationGroups, skills, buffs, buffGro
   const [detailResult, setDetailResult] = useState<RotationGroupResult | null>(null);
 
   const addGroup = () => {
-    onChange([...rotationGroups, { id: uuid(), name: `循環 ${rotationGroups.length + 1}`, entries: [] }]);
+    onChange([...rotationGroups, { id: uuid(), name: `循環 ${rotationGroups.length + 1}`, entries: [], disabledBuffIds: [] }]);
   };
 
   const updateGroup = (g: RotationGroup) => {

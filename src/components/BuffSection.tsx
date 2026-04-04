@@ -5,7 +5,7 @@ import {
   type DragEndEvent, type DragStartEvent, DragOverlay, useDroppable,
 } from '@dnd-kit/core';
 import {
-  arrayMove, SortableContext, useSortable, rectSortingStrategy,
+  arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Buff, BuffGroup, DamageZone } from '../types';
@@ -122,7 +122,7 @@ function BuffModal({ buff, zones, buffGroups, onSave, onClose, onAddZone }: {
   );
 }
 
-/* ── Sortable Buff Chip ── */
+/* ── Sortable Buff Chip (compact single-column) ── */
 function SortableBuffChip({ buff, zone, groupColor, onClick, onToggle, onCopy, onRemove }: {
   buff: Buff; zone: DamageZone | undefined; groupColor: string | undefined;
   onClick: () => void; onToggle: () => void; onCopy: () => void; onRemove: () => void;
@@ -141,11 +141,11 @@ function SortableBuffChip({ buff, zone, groupColor, onClick, onToggle, onCopy, o
           className={`w-4 h-4 rounded-full border-2 cursor-pointer shrink-0 transition-colors ${buff.enabled ? 'border-green-500 bg-green-500/30' : 'border-gray-600 bg-transparent'}`}
         />
       </Tooltip>
-      <span className="text-base">{buff.icon}</span>
+      <span className="text-base shrink-0">{buff.icon}</span>
       <div className="min-w-0 flex-1">
         <div className={`text-sm font-medium truncate ${buff.enabled ? 'text-gray-200' : 'text-gray-500 line-through'}`}>{buff.name}</div>
         <div className="text-xs text-gray-500 flex items-center gap-1.5">
-          {zone && <span style={{ color: zone.color }}>{zone.icon}{zone.displayName}</span>}
+          {zone && <span style={{ color: zone.color }}>★ {zone.displayName}</span>}
           <span className="text-gray-400 font-mono">{buff.value}%</span>
         </div>
       </div>
@@ -166,7 +166,7 @@ function BuffChipOverlay({ buff, zone, groupColor }: { buff: Buff; zone: DamageZ
       <div className="min-w-0">
         <div className="text-sm font-medium text-gray-200 truncate">{buff.name}</div>
         <div className="text-xs text-gray-500 flex items-center gap-1.5">
-          {zone && <span style={{ color: zone.color }}>{zone.icon}{zone.displayName}</span>}
+          {zone && <span style={{ color: zone.color }}>★ {zone.displayName}</span>}
           <span className="text-gray-400 font-mono">{buff.value}%</span>
         </div>
       </div>
@@ -175,17 +175,17 @@ function BuffChipOverlay({ buff, zone, groupColor }: { buff: Buff; zone: DamageZ
   );
 }
 
-/* ── Droppable group container (entire area is a drop target) ── */
+/* ── Droppable group container (single column) ── */
 function DroppableGroupArea({ groupId, children, isEmpty }: {
   groupId: string; children: React.ReactNode; isEmpty: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `group-drop:${groupId}` });
   return (
     <div ref={setNodeRef}
-      className={`grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 p-2 min-h-[56px] rounded-lg transition-colors ${isOver ? 'bg-indigo-500/10 ring-1 ring-inset ring-indigo-500/30' : ''}`}>
+      className={`space-y-1.5 p-1.5 min-h-[40px] rounded-lg transition-colors ${isOver ? 'bg-indigo-500/10 ring-1 ring-inset ring-indigo-500/30' : ''}`}>
       {children}
       {isEmpty && (
-        <div className="col-span-full text-xs text-gray-600 text-center py-2">
+        <div className="text-xs text-gray-600 text-center py-2">
           {isOver ? '放開以移入此群組' : '拖曳 Buff 到此群組'}
         </div>
       )}
@@ -243,7 +243,6 @@ export default function BuffSection({ buffs, zones, buffGroups, onBuffsChange, o
     pushUndo(`已刪除分區: ${zone.displayName}`, () => { onZonesChange(prevZones); onBuffsChange(prevBuffs); });
   };
 
-  /* Group operations — no modal, inline editing */
   const updateGroup = (g: BuffGroup) => {
     onBuffGroupsChange(buffGroups.map(x => x.id === g.id ? g : x));
   };
@@ -277,7 +276,6 @@ export default function BuffSection({ buffs, zones, buffGroups, onBuffsChange, o
     setEditingZone({ id: uuid(), name: '', displayName: '', icon: '⭐', color: COLORS[zones.length % COLORS.length], isDefault: false });
   };
 
-  /* DnD handlers — group change + reorder all in onDragEnd, no onDragOver */
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
   };
@@ -290,7 +288,6 @@ export default function BuffSection({ buffs, zones, buffGroups, onBuffsChange, o
     const activeBuffId = active.id as string;
     const overId = over.id as string;
 
-    // Determine target group
     let targetGroupId: string;
     if (overId.startsWith('group-drop:')) {
       targetGroupId = overId.replace('group-drop:', '');
@@ -302,10 +299,8 @@ export default function BuffSection({ buffs, zones, buffGroups, onBuffsChange, o
     const groupChanged = sourceGroupId !== targetGroupId;
 
     if (groupChanged) {
-      // Move to target group, append at end
       onBuffsChange(buffs.map(b => b.id === activeBuffId ? { ...b, groupId: targetGroupId } : b));
     } else if (!overId.startsWith('group-drop:') && active.id !== over.id) {
-      // Reorder within same group
       const oldIdx = buffs.findIndex(b => b.id === activeBuffId);
       const newIdx = buffs.findIndex(b => b.id === overId);
       if (oldIdx !== -1 && newIdx !== -1) {
@@ -314,7 +309,6 @@ export default function BuffSection({ buffs, zones, buffGroups, onBuffsChange, o
     }
   };
 
-  // Group buffs
   const ungroupedBuffs = buffs.filter(b => !b.groupId);
   const groupedMap = new Map<string, Buff[]>();
   for (const g of buffGroups) groupedMap.set(g.id, []);
@@ -328,58 +322,56 @@ export default function BuffSection({ buffs, zones, buffGroups, onBuffsChange, o
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-semibold text-gray-100">✨ Buff / 分區</h2>
-        <div className="flex gap-2">
-          <button onClick={newZone} className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs font-medium transition-colors cursor-pointer">+ 分區</button>
-          <button onClick={addGroup} className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs font-medium transition-colors cursor-pointer">+ 群組</button>
-          <button onClick={newBuff} className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-medium transition-colors cursor-pointer">+ Buff</button>
+      {/* Action buttons */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex gap-1.5 flex-wrap">
+          {zones.filter(z => z.id !== 'zone-skill').map(z => (
+            <span key={z.id} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] border border-gray-700 group" style={{ borderColor: z.color + '40' }}>
+              <span style={{ color: z.color }}>{z.icon}</span>
+              {!z.isDefault && (
+                <button onClick={() => removeZone(z.id)} className="text-gray-600 hover:text-red-400 cursor-pointer opacity-0 group-hover:opacity-100 ml-0.5 text-[10px]">✕</button>
+              )}
+            </span>
+          ))}
+        </div>
+        <div className="flex gap-1 shrink-0">
+          <button onClick={newZone} className="px-1.5 py-0.5 text-[10px] text-gray-500 hover:text-gray-300 cursor-pointer" title="新增分區">⊕</button>
+          <button onClick={addGroup} className="px-1.5 py-0.5 text-[10px] text-gray-500 hover:text-gray-300 cursor-pointer" title="新增群組">⊞</button>
+          <button onClick={newBuff} className="px-1.5 py-0.5 text-[10px] text-indigo-400 hover:text-indigo-300 cursor-pointer">+ Buff</button>
         </div>
       </div>
 
-      {/* Zone chips */}
-      <div className="flex gap-1.5 flex-wrap mb-3">
-        {zones.filter(z => z.id !== 'zone-skill').map(z => (
-          <span key={z.id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border border-gray-700 group" style={{ borderColor: z.color + '60' }}>
-            <span>{z.icon}</span>
-            <span style={{ color: z.color }}>{z.displayName}</span>
-            {!z.isDefault && (
-              <button onClick={() => removeZone(z.id)} className="text-gray-600 hover:text-red-400 cursor-pointer opacity-0 group-hover:opacity-100 ml-0.5">✕</button>
-            )}
-          </span>
-        ))}
-      </div>
-
       {buffs.length === 0 && buffGroups.length === 0 ? (
-        <p className="text-gray-600 text-sm text-center py-4">尚未新增 Buff</p>
+        <p className="text-gray-600 text-xs text-center py-3">尚未新增 Buff</p>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter}
           onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
 
           {/* Ungrouped */}
-          <div className="mb-3">
-            {buffGroups.length > 0 && <div className="text-xs text-gray-500 mb-1.5">未分組</div>}
-            <SortableContext items={ungroupedBuffs.map(b => b.id)} strategy={rectSortingStrategy}>
-              <DroppableGroupArea groupId="" isEmpty={ungroupedBuffs.length === 0}>
-                {ungroupedBuffs.map(b => (
-                  <SortableBuffChip key={b.id} buff={b}
-                    zone={zones.find(z => z.id === b.zoneId)}
-                    groupColor={undefined}
-                    onClick={() => setEditingBuff({ ...b })}
-                    onToggle={() => toggleBuff(b.id)}
-                    onCopy={() => copyBuff(b)}
-                    onRemove={() => removeBuff(b.id)} />
-                ))}
-              </DroppableGroupArea>
-            </SortableContext>
-          </div>
+          {(ungroupedBuffs.length > 0 || buffGroups.length > 0) && (
+            <div className="mb-2">
+              {buffGroups.length > 0 && <div className="text-[10px] text-gray-600 mb-1">未分組</div>}
+              <SortableContext items={ungroupedBuffs.map(b => b.id)} strategy={verticalListSortingStrategy}>
+                <DroppableGroupArea groupId="" isEmpty={ungroupedBuffs.length === 0}>
+                  {ungroupedBuffs.map(b => (
+                    <SortableBuffChip key={b.id} buff={b}
+                      zone={zones.find(z => z.id === b.zoneId)}
+                      groupColor={undefined}
+                      onClick={() => setEditingBuff({ ...b })}
+                      onToggle={() => toggleBuff(b.id)}
+                      onCopy={() => copyBuff(b)}
+                      onRemove={() => removeBuff(b.id)} />
+                  ))}
+                </DroppableGroupArea>
+              </SortableContext>
+            </div>
+          )}
 
           {/* Named groups */}
           {buffGroups.map(g => {
             const groupBuffs = groupedMap.get(g.id) || [];
             return (
-              <div key={g.id} className="mb-3 border border-gray-700/50 rounded-xl overflow-hidden">
-                {/* Inline editable group header */}
+              <div key={g.id} className="mb-2 border border-gray-700/50 rounded-xl overflow-hidden">
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800/40" style={{ borderLeft: `3px solid ${g.color}` }}>
                   <ColorDotPicker
                     color={g.color}
@@ -389,11 +381,11 @@ export default function BuffSection({ buffs, zones, buffGroups, onBuffsChange, o
                   <input
                     value={g.name}
                     onChange={e => updateGroup({ ...g, name: e.target.value })}
-                    className="bg-transparent text-sm font-medium text-gray-200 flex-1 focus:outline-none focus:border-b focus:border-indigo-500 min-w-0"
+                    className="bg-transparent text-xs font-medium text-gray-200 flex-1 focus:outline-none focus:border-b focus:border-indigo-500 min-w-0"
                   />
                   <button onClick={() => removeGroup(g.id)} className="text-gray-500 hover:text-red-400 text-xs cursor-pointer shrink-0">✕</button>
                 </div>
-                <SortableContext items={groupBuffs.map(b => b.id)} strategy={rectSortingStrategy}>
+                <SortableContext items={groupBuffs.map(b => b.id)} strategy={verticalListSortingStrategy}>
                   <DroppableGroupArea groupId={g.id} isEmpty={groupBuffs.length === 0}>
                     {groupBuffs.map(b => (
                       <SortableBuffChip key={b.id} buff={b}
