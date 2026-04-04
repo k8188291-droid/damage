@@ -60,6 +60,7 @@ export function migrateV1ToV2(data: V1AppData): AppData {
     skillGroups: [],
     rotationGroups: data.rotationGroups.map(g => ({
       ...g,
+      disabledBuffIds: [],
       entries: g.entries.map(e => ({
         ...e,
         disabledBuffIds: [],
