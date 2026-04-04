@@ -30,10 +30,17 @@ export function calculateSkillDamage(
   characters: Character[],
   buffs: Buff[],
   zones: DamageZone[],
+  entryDisabledBuffIds: string[] = [],
 ): SkillDamageResult {
   const character = characters.find(c => c.id === skill.characterId);
   const attackPower = character ? calculateAttackPower(character) : 0;
-  const enabledBuffs = buffs.filter(b => skill.enabledBuffIds.includes(b.id));
+
+  // Filter: must be globally enabled, in skill's enabledBuffIds, and not disabled by this entry
+  const enabledBuffs = buffs.filter(b =>
+    b.enabled &&
+    skill.enabledBuffIds.includes(b.id) &&
+    !entryDisabledBuffIds.includes(b.id)
+  );
 
   const zoneMap = new Map<string, { zone: DamageZone; sources: { buffName: string; value: number }[] }>();
 
@@ -83,7 +90,7 @@ export function calculateRotationGroup(
   for (const entry of group.entries) {
     const skill = skills.find(s => s.id === entry.skillId);
     if (!skill) continue;
-    const result = calculateSkillDamage(skill, characters, buffs, zones);
+    const result = calculateSkillDamage(skill, characters, buffs, zones, entry.disabledBuffIds || []);
     const subtotal = result.finalDamage * entry.count;
     totalDamage += subtotal;
     skillResults.push({ result, count: entry.count, subtotal });

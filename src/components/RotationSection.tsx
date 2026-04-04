@@ -8,7 +8,7 @@ import {
   arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { Skill, Buff, Character, DamageZone, RotationGroup, RotationEntry } from '../types';
+import type { Skill, Buff, BuffGroup, Character, DamageZone, RotationGroup, RotationEntry } from '../types';
 import { calculateRotationGroup, type RotationGroupResult, type SkillDamageResult } from '../utils/damage';
 import Modal from './Modal';
 
@@ -16,9 +16,11 @@ interface Props {
   rotationGroups: RotationGroup[];
   skills: Skill[];
   buffs: Buff[];
+  buffGroups: BuffGroup[];
   characters: Character[];
   zones: DamageZone[];
   onChange: (groups: RotationGroup[]) => void;
+  pushUndo: (label: string, restore: () => void) => void;
 }
 
 function fmt(n: number) { return Math.round(n).toLocaleString(); }
@@ -52,7 +54,7 @@ function SkillDetail({ sr, count, subtotal }: { sr: SkillDamageResult; count: nu
         <div>
           <span className="text-sm font-semibold text-gray-100">{sr.skill.name}</span>
           {sr.character && <span className="text-xs text-gray-500 ml-2">({sr.character.name})</span>}
-          {count > 1 && <span className="text-xs text-gray-400 ml-2">×{count}</span>}
+          {count > 1 && <span className="text-xs text-gray-400 ml-2">x{count}</span>}
         </div>
         <span className="text-base font-bold text-amber-400">{fmt(subtotal)}</span>
       </div>
@@ -68,7 +70,7 @@ function SkillDetail({ sr, count, subtotal }: { sr: SkillDamageResult; count: nu
           <div key={zb.zone.id}>
             <div className="flex items-center justify-between text-xs">
               <span style={{ color: zb.zone.color }}>{zb.zone.icon} {zb.zone.displayName}</span>
-              <span className="text-gray-300 font-mono">×{zb.multiplier.toFixed(4)}</span>
+              <span className="text-gray-300 font-mono">x{zb.multiplier.toFixed(4)}</span>
             </div>
             <div className="ml-4 text-[11px] text-gray-600 space-y-0.5">
               {zb.sources.map((s, j) => (
@@ -86,42 +88,79 @@ function SkillDetail({ sr, count, subtotal }: { sr: SkillDamageResult; count: nu
       <div className="text-[11px] text-gray-600 border-t border-gray-800 pt-1.5 break-all">
         <span className="text-gray-500">公式: </span>{fmt(sr.attackPower)}
         {sr.zones.map(zb => (
-          <span key={zb.zone.id}>{' × '}<span style={{ color: zb.zone.color }}>{zb.multiplier.toFixed(4)}</span></span>
+          <span key={zb.zone.id}>{' x '}<span style={{ color: zb.zone.color }}>{zb.multiplier.toFixed(4)}</span></span>
         ))}
         {' = '}<span className="text-amber-400">{fmt(sr.finalDamage)}</span>
-        {count > 1 && <span> × {count} = <span className="text-amber-400">{fmt(subtotal)}</span></span>}
+        {count > 1 && <span> x {count} = <span className="text-amber-400">{fmt(subtotal)}</span></span>}
       </div>
     </div>
   );
 }
 
-/* ── Sortable Entry ── */
-function SortableEntry({ entry, skills, onUpdate, onRemove }: {
-  entry: RotationEntry; skills: Skill[];
+/* ── Sortable Entry with per-entry buff disable ── */
+function SortableEntry({ entry, skills, buffs, buffGroups, onUpdate, onRemove }: {
+  entry: RotationEntry; skills: Skill[]; buffs: Buff[]; buffGroups: BuffGroup[];
   onUpdate: (id: string, patch: Partial<RotationEntry>) => void;
   onRemove: (id: string) => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: entry.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
 
+  const skill = skills.find(s => s.id === entry.skillId);
+  const enabledBuffIds = skill?.enabledBuffIds || [];
+  const relevantBuffs = buffs.filter(b => b.enabled && enabledBuffIds.includes(b.id));
+  const disabledSet = new Set(entry.disabledBuffIds || []);
+  const hasOverrides = disabledSet.size > 0;
+
+  const toggleBuffForEntry = (buffId: string) => {
+    const current = entry.disabledBuffIds || [];
+    const next = current.includes(buffId) ? current.filter(x => x !== buffId) : [...current, buffId];
+    onUpdate(entry.id, { disabledBuffIds: next });
+  };
+
   return (
-    <div ref={setNodeRef} style={style}
-      className="flex items-center gap-2 bg-gray-800/40 border border-gray-700 rounded-lg px-3 py-1.5 text-sm">
-      <span {...attributes} {...listeners} className="text-gray-600 cursor-grab active:cursor-grabbing text-xs">⠿</span>
-      <select value={entry.skillId} onChange={e => onUpdate(entry.id, { skillId: e.target.value })}
-        className="flex-1 bg-transparent text-gray-200 focus:outline-none text-sm min-w-0">
-        <option value="" className="bg-gray-900">選擇技能</option>
-        {skills.map(s => <option key={s.id} value={s.id} className="bg-gray-900">{s.name}</option>)}
-      </select>
-      <span className="text-gray-600">×</span>
-      <input type="number" min={1} value={entry.count} onChange={e => onUpdate(entry.id, { count: Math.max(1, Number(e.target.value) || 1) })}
-        className="w-12 bg-transparent text-gray-200 text-center focus:outline-none font-mono text-sm" />
-      <button onClick={() => onRemove(entry.id)} className="text-gray-600 hover:text-red-400 cursor-pointer text-xs">✕</button>
+    <div ref={setNodeRef} style={style} className="space-y-1">
+      <div className="flex items-center gap-2 bg-gray-800/40 border border-gray-700 rounded-lg px-3 py-1.5 text-sm">
+        <span {...attributes} {...listeners} className="text-gray-600 cursor-grab active:cursor-grabbing text-xs">⠿</span>
+        <select value={entry.skillId} onChange={e => onUpdate(entry.id, { skillId: e.target.value })}
+          className="flex-1 bg-transparent text-gray-200 focus:outline-none text-sm min-w-0">
+          <option value="" className="bg-gray-900">選擇技能</option>
+          {skills.map(s => <option key={s.id} value={s.id} className="bg-gray-900">{s.name}</option>)}
+        </select>
+        <span className="text-gray-600">x</span>
+        <input type="number" min={1} value={entry.count} onChange={e => onUpdate(entry.id, { count: Math.max(1, Number(e.target.value) || 1) })}
+          className="w-12 bg-transparent text-gray-200 text-center focus:outline-none font-mono text-sm" />
+        <button onClick={() => setExpanded(!expanded)}
+          className={`text-xs cursor-pointer transition-colors ${hasOverrides ? 'text-amber-400' : 'text-gray-600 hover:text-gray-400'}`}
+          title="Buff 設定">
+          ⚙
+        </button>
+        <button onClick={() => onRemove(entry.id)} className="text-gray-600 hover:text-red-400 cursor-pointer text-xs">✕</button>
+      </div>
+
+      {/* Per-entry buff toggle panel */}
+      {expanded && relevantBuffs.length > 0 && (
+        <div className="ml-6 flex flex-wrap gap-1 py-1">
+          {relevantBuffs.map(b => {
+            const off = disabledSet.has(b.id);
+            const group = buffGroups.find(g => g.id === b.groupId);
+            const color = group?.color || '#64748b';
+            return (
+              <button key={b.id} onClick={() => toggleBuffForEntry(b.id)}
+                className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer border transition-all ${off ? 'border-gray-700 text-gray-600 opacity-50 line-through' : 'text-white'}`}
+                style={off ? undefined : { backgroundColor: color + '25', borderColor: color + '60', color }}>
+                {b.icon} {b.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
 
-/* ── Skill Palette (drag source) ── */
+/* ── Skill Palette ── */
 function SkillChip({ skill, onAdd }: { skill: Skill; onAdd: () => void }) {
   return (
     <button onClick={onAdd}
@@ -132,12 +171,15 @@ function SkillChip({ skill, onAdd }: { skill: Skill; onAdd: () => void }) {
 }
 
 /* ── Single Group Card ── */
-function GroupCard({ group, groupResult, skills, onUpdate, onRemove, onShowDetail }: {
+function GroupCard({ group, groupResult, skills, buffs, buffGroups, onUpdate, onRemove, onCopy, onShowDetail }: {
   group: RotationGroup;
   groupResult: RotationGroupResult;
   skills: Skill[];
+  buffs: Buff[];
+  buffGroups: BuffGroup[];
   onUpdate: (g: RotationGroup) => void;
   onRemove: () => void;
+  onCopy: () => void;
   onShowDetail: () => void;
 }) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -149,7 +191,7 @@ function GroupCard({ group, groupResult, skills, onUpdate, onRemove, onShowDetai
     onUpdate({ ...group, entries: group.entries.filter(e => e.id !== id) });
   };
   const addSkill = (skillId: string) => {
-    onUpdate({ ...group, entries: [...group.entries, { id: uuid(), skillId, count: 1 }] });
+    onUpdate({ ...group, entries: [...group.entries, { id: uuid(), skillId, count: 1, disabledBuffIds: [] }] });
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -169,6 +211,7 @@ function GroupCard({ group, groupResult, skills, onUpdate, onRemove, onShowDetai
           className="bg-transparent text-gray-100 font-semibold focus:outline-none focus:border-b focus:border-indigo-500 text-sm" />
         <div className="flex items-center gap-3">
           <button onClick={onShowDetail} className="text-xs text-indigo-400 hover:text-indigo-300 cursor-pointer">詳情</button>
+          <button onClick={onCopy} className="text-xs text-gray-500 hover:text-indigo-400 cursor-pointer" title="複製">⧉</button>
           <button onClick={onRemove} className="text-gray-600 hover:text-red-400 text-xs cursor-pointer">✕</button>
         </div>
       </div>
@@ -191,7 +234,8 @@ function GroupCard({ group, groupResult, skills, onUpdate, onRemove, onShowDetai
         <SortableContext items={group.entries.map(e => e.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-1.5 max-h-64 overflow-y-auto">
             {group.entries.map(e => (
-              <SortableEntry key={e.id} entry={e} skills={skills} onUpdate={updateEntry} onRemove={removeEntry} />
+              <SortableEntry key={e.id} entry={e} skills={skills} buffs={buffs} buffGroups={buffGroups}
+                onUpdate={updateEntry} onRemove={removeEntry} />
             ))}
           </div>
         </SortableContext>
@@ -205,7 +249,7 @@ function GroupCard({ group, groupResult, skills, onUpdate, onRemove, onShowDetai
 }
 
 /* ── Main Section ── */
-export default function RotationSection({ rotationGroups, skills, buffs, characters, zones, onChange }: Props) {
+export default function RotationSection({ rotationGroups, skills, buffs, buffGroups, characters, zones, onChange, pushUndo }: Props) {
   const [detailResult, setDetailResult] = useState<RotationGroupResult | null>(null);
 
   const addGroup = () => {
@@ -217,7 +261,21 @@ export default function RotationSection({ rotationGroups, skills, buffs, charact
   };
 
   const removeGroup = (id: string) => {
+    const grp = rotationGroups.find(g => g.id === id);
+    if (!grp) return;
+    const prev = [...rotationGroups];
     onChange(rotationGroups.filter(g => g.id !== id));
+    pushUndo(`已刪除循環: ${grp.name}`, () => onChange(prev));
+  };
+
+  const copyGroup = (g: RotationGroup) => {
+    const copy: RotationGroup = {
+      ...g,
+      id: uuid(),
+      name: `${g.name} (複製)`,
+      entries: g.entries.map(e => ({ ...e, id: uuid(), disabledBuffIds: [...(e.disabledBuffIds || [])] })),
+    };
+    onChange([...rotationGroups, copy]);
   };
 
   const groupResults = rotationGroups.map(g => calculateRotationGroup(g, skills, characters, buffs, zones));
@@ -239,8 +297,11 @@ export default function RotationSection({ rotationGroups, skills, buffs, charact
               group={g}
               groupResult={groupResults[i]}
               skills={skills}
+              buffs={buffs}
+              buffGroups={buffGroups}
               onUpdate={updateGroup}
               onRemove={() => removeGroup(g.id)}
+              onCopy={() => copyGroup(g)}
               onShowDetail={() => setDetailResult(groupResults[i])}
             />
           ))}

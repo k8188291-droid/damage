@@ -7,13 +7,20 @@ export interface DamageZone {
   isDefault: boolean;
 }
 
+export interface BuffGroup {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export interface Buff {
   id: string;
   name: string;
   zoneId: string;
+  groupId: string;
   value: number;
   icon: string;
-  color: string;
+  enabled: boolean;
 }
 
 export interface Character {
@@ -24,6 +31,12 @@ export interface Character {
   attackPercentBonus: number;
 }
 
+export interface SkillGroup {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export interface Skill {
   id: string;
   name: string;
@@ -31,12 +44,14 @@ export interface Skill {
   skillMultiplier: number;
   enabledBuffIds: string[];
   order: number;
+  groupId: string;
 }
 
 export interface RotationEntry {
   id: string;
   skillId: string;
   count: number;
+  disabledBuffIds: string[];
 }
 
 export interface RotationGroup {
@@ -45,13 +60,25 @@ export interface RotationGroup {
   entries: RotationEntry[];
 }
 
+export interface CalcRow {
+  id: string;
+  name: string;
+  formula: string;
+}
+
 export interface AppData {
+  version: number;
   zones: DamageZone[];
   buffs: Buff[];
+  buffGroups: BuffGroup[];
   characters: Character[];
   skills: Skill[];
+  skillGroups: SkillGroup[];
   rotationGroups: RotationGroup[];
+  calcRows: CalcRow[];
 }
+
+export const CURRENT_VERSION = 2;
 
 export const DEFAULT_ZONES: DamageZone[] = [
   { id: 'zone-skill', name: '技能倍率', displayName: '技能倍率', icon: '⚔️', color: '#ef4444', isDefault: true },
