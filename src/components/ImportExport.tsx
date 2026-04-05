@@ -3,6 +3,7 @@ import type { AppData } from '../types';
 import { CURRENT_VERSION } from '../types';
 import { migrateToLatest } from '../migrations';
 import Modal from './Modal';
+import { exampleData } from '../constants';
 
 interface Props {
   getData: () => AppData;
@@ -85,6 +86,17 @@ export default function ImportExport({ getData, onImport }: Props) {
       {showModal && (
         <Modal open title="匯入設定" onClose={() => { setShowModal(false); setError(''); }}>
           <div className="space-y-4">
+            <button onClick={() => processImport(exampleData)}
+              className="w-full py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg font-medium transition-colors cursor-pointer">
+              匯入範例資料
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="flex-1 border-t border-gray-700" />
+              <span className="text-xs text-gray-500">或</span>
+              <div className="flex-1 border-t border-gray-700" />
+            </div>
+
             <div>
               <label className="block text-xs text-gray-400 mb-1">從檔案匯入</label>
               <input ref={fileRef} type="file" accept=".json" onChange={handleImportFromFile}

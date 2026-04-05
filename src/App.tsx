@@ -15,6 +15,7 @@ import ImportExport from './components/ImportExport';
 import CalcPanel from './components/CalcPanel';
 import TabBar from './components/TabBar';
 import PresetSection from './components/PresetSection';
+import { Tooltip } from './components/ui';
 
 interface UndoItem {
   id: string;
@@ -466,7 +467,12 @@ function App() {
           <aside className="w-[360px] bg-gray-900/30 border-r border-gray-800 overflow-y-auto shrink-0 flex flex-col">
             {/* Header area with import/export */}
             <div className="px-4 py-2.5 border-b border-gray-800 flex items-center justify-between shrink-0">
-              <span className="text-xs text-gray-500 font-medium">設定面板</span>
+              <div className='flex items-center'>
+                <span className="text-xs text-gray-500 font-medium">設定面板</span>
+                <Tooltip label='點擊匯入按鈕可匯入範例資料' > 
+                  <span className="text-yellow-500 hover:text-yellow-400 text-md cursor-pointer px-2">🛈</span>
+                </Tooltip>
+              </div>
               <div className="flex items-center gap-2">
                 <ImportExport getData={getData} onImport={handleImport} />
                 <button onClick={clearAll}
