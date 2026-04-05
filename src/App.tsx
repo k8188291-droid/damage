@@ -621,8 +621,9 @@ function App() {
                   {!collapsedSections.buffs && (
                     <div className="px-3 pb-3">
                       <BuffSection buffs={buffs} zones={zones} buffGroups={buffGroups}
+                        skills={skills} skillGroups={skillGroups}
                         onBuffsChange={setBuffs} onZonesChange={setZones} onBuffGroupsChange={setBuffGroups}
-                        pushUndo={pushUndo} />
+                        onSkillsChange={setSkills} pushUndo={pushUndo} />
                     </div>
                   )}
                 </div>

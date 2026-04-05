@@ -8,7 +8,7 @@ import {
   arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { Buff, BuffGroup, DamageZone } from '../types';
+import type { Buff, BuffGroup, DamageZone, Skill, SkillGroup } from '../types';
 import Modal from './Modal';
 import { Tooltip, ColorDotPicker, COLORS } from './ui';
 
@@ -16,9 +16,12 @@ interface Props {
   buffs: Buff[];
   zones: DamageZone[];
   buffGroups: BuffGroup[];
+  skills: Skill[];
+  skillGroups: SkillGroup[];
   onBuffsChange: (buffs: Buff[]) => void;
   onZonesChange: (zones: DamageZone[]) => void;
   onBuffGroupsChange: (groups: BuffGroup[]) => void;
+  onSkillsChange: (skills: Skill[]) => void;
   pushUndo: (label: string, restore: () => void) => void;
 }
 
@@ -63,20 +66,41 @@ function ZoneModal({ zone, onSave, onClose }: { zone: DamageZone; onSave: (z: Da
 }
 
 /* ── Buff Modal ── */
-function BuffModal({ buff, zones, buffGroups, onSave, onClose, onAddZone }: {
-  buff: Buff; zones: DamageZone[]; buffGroups: BuffGroup[];
-  onSave: (b: Buff) => void; onClose: () => void; onAddZone: () => void;
+function BuffModal({ buff, zones, buffGroups, skills, skillGroups, onSave, onClose, onAddZone }: {
+  buff: Buff; zones: DamageZone[]; buffGroups: BuffGroup[]; skills: Skill[]; skillGroups: SkillGroup[];
+  onSave: (b: Buff, enabledSkillIds: string[]) => void; onClose: () => void; onAddZone: () => void;
 }) {
   const [d, setD] = useState({ ...buff });
   const p = (patch: Partial<Buff>) => setD(v => ({ ...v, ...patch }));
 
+  // Track which skills have this buff enabled
+  const [enabledSkillIds, setEnabledSkillIds] = useState<string[]>(
+    () => skills.filter(s => s.enabledBuffIds.includes(buff.id)).map(s => s.id)
+  );
+
+  const toggleSkill = (skillId: string) => {
+    setEnabledSkillIds(prev =>
+      prev.includes(skillId) ? prev.filter(id => id !== skillId) : [...prev, skillId]
+    );
+  };
+
+  // Group skills by skill group
+  const skillsByGroup = new Map<string, Skill[]>();
+  skillsByGroup.set('', []);
+  for (const g of skillGroups) skillsByGroup.set(g.id, []);
+  for (const s of skills) {
+    const key = s.groupId || '';
+    if (!skillsByGroup.has(key)) skillsByGroup.set(key, []);
+    skillsByGroup.get(key)!.push(s);
+  }
+
   return (
-    <Modal open title={buff.name ? '編輯 Buff' : '新增 Buff'} onClose={onClose}>
+    <Modal open title={buff.name ? '編輯 Buff' : '新增 Buff'} onClose={onClose} width="max-w-xl">
       <div className="space-y-4">
         <div>
           <label className="block text-xs text-gray-400 mb-1">名稱</label>
           <input value={d.name} onChange={e => p({ name: e.target.value })}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" />
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-indigo-500" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -116,7 +140,51 @@ function BuffModal({ buff, zones, buffGroups, onSave, onClose, onAddZone }: {
             ))}
           </div>
         </div>
-        <button onClick={() => onSave(d)} className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-medium transition-colors cursor-pointer">儲存</button>
+
+        {/* Skills that enable this buff */}
+        {skills.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs text-gray-400 font-medium">啟用此 Buff 的技能</label>
+              <div className="flex gap-3">
+                <button onClick={() => setEnabledSkillIds(skills.map(s => s.id))} className="text-xs text-indigo-400 hover:text-indigo-300 cursor-pointer">全選</button>
+                <button onClick={() => setEnabledSkillIds([])} className="text-xs text-gray-500 hover:text-gray-300 cursor-pointer">全不選</button>
+              </div>
+            </div>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {Array.from(skillsByGroup.entries()).map(([gId, groupSkills]) => {
+                if (groupSkills.length === 0) return null;
+                const sg = skillGroups.find(g => g.id === gId);
+                const label = sg ? sg.name : '未分組';
+                const labelColor = sg?.color || '#64748b';
+                return (
+                  <div key={gId || '__ungrouped'}>
+                    {skillGroups.length > 0 && (
+                      <div className="text-xs font-medium mb-1" style={{ color: labelColor }}>
+                        {sg ? '●' : '○'} {label}
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-1.5">
+                      {groupSkills.map(s => {
+                        const on = enabledSkillIds.includes(s.id);
+                        const chipColor = sg?.color || '#64748b';
+                        return (
+                          <button key={s.id} onClick={() => toggleSkill(s.id)}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all ${on ? 'text-white border-opacity-60' : 'border-gray-700 text-gray-500 opacity-40 hover:opacity-70'}`}
+                            style={on ? { backgroundColor: chipColor + '30', borderColor: chipColor } : undefined}>
+                            ⚔️ {s.name} ({s.skillMultiplier}%)
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <button onClick={() => onSave(d, enabledSkillIds)} className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-medium transition-colors cursor-pointer">儲存</button>
       </div>
     </Modal>
   );
@@ -192,16 +260,26 @@ function DroppableGroupArea({ groupId, children, isEmpty }: {
 }
 
 /* ── Main Section ── */
-export default function BuffSection({ buffs, zones, buffGroups, onBuffsChange, onZonesChange, onBuffGroupsChange, pushUndo }: Props) {
+export default function BuffSection({ buffs, zones, buffGroups, skills, skillGroups, onBuffsChange, onZonesChange, onBuffGroupsChange, onSkillsChange, pushUndo }: Props) {
   const [editingBuff, setEditingBuff] = useState<Buff | null>(null);
   const [editingZone, setEditingZone] = useState<DamageZone | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  const saveBuff = (b: Buff) => {
+  const saveBuff = (b: Buff, enabledSkillIds?: string[]) => {
     const exists = buffs.find(x => x.id === b.id);
     onBuffsChange(exists ? buffs.map(x => x.id === b.id ? b : x) : [...buffs, b]);
+    // Update skills' enabledBuffIds based on which skills should have this buff
+    if (enabledSkillIds !== undefined) {
+      onSkillsChange(skills.map(s => {
+        const shouldEnable = enabledSkillIds.includes(s.id);
+        const hasIt = s.enabledBuffIds.includes(b.id);
+        if (shouldEnable && !hasIt) return { ...s, enabledBuffIds: [...s.enabledBuffIds, b.id] };
+        if (!shouldEnable && hasIt) return { ...s, enabledBuffIds: s.enabledBuffIds.filter(id => id !== b.id) };
+        return s;
+      }));
+    }
     setEditingBuff(null);
   };
 
@@ -420,7 +498,7 @@ export default function BuffSection({ buffs, zones, buffGroups, onBuffsChange, o
       )}
 
       {editingBuff && (
-        <BuffModal buff={editingBuff} zones={zones} buffGroups={buffGroups}
+        <BuffModal buff={editingBuff} zones={zones} buffGroups={buffGroups} skills={skills} skillGroups={skillGroups}
           onSave={saveBuff} onClose={() => setEditingBuff(null)} onAddZone={newZone} />
       )}
       {editingZone && (
