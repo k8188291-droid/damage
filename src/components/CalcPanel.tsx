@@ -1,12 +1,8 @@
 import { useState, useMemo } from 'react';
 import { v4 as uuid } from 'uuid';
+import { useAppStore } from '../stores/appStore';
+import { useUndoStore } from '../stores/undoStore';
 import type { CalcRow } from '../types';
-
-interface Props {
-  calcRows: CalcRow[];
-  onChange: (rows: CalcRow[]) => void;
-  pushUndo: (label: string, restore: () => void) => void;
-}
 
 function safeEval(formula: string): number {
   const cleaned = formula.trim();
@@ -18,7 +14,6 @@ function safeEval(formula: string): number {
     /\bMath\.(abs|ceil|floor|round|sqrt|pow|min|max|log|log2|log10|sin|cos|tan|PI|E)\b/g, '0'
   );
   if (/[a-zA-Z_$]/.test(stripped)) throw new Error('不允許的操作');
-  // Single-string body: new Function('body') — all args before last are param names
   const result = new Function(
     '"use strict"; const {abs,ceil,floor,round,sqrt,pow,min,max,log,log2,log10,sin,cos,tan,PI,E}=Math; return (' + cleaned + ');'
   )();
@@ -66,28 +61,30 @@ function CalcRowItem({ row, onUpdate, onRemove }: {
   );
 }
 
-export default function CalcPanel({ calcRows, onChange, pushUndo }: Props) {
+export default function CalcPanel() {
+  const calcRows = useAppStore(s => s.calcRows);
+  const setCalcRows = useAppStore(s => s.setCalcRows);
+  const pushUndo = useUndoStore(s => s.pushUndo);
   const [open, setOpen] = useState(false);
 
   const addRow = () => {
-    onChange([...calcRows, { id: uuid(), name: '', formula: '' }]);
+    setCalcRows([...calcRows, { id: uuid(), name: '', formula: '' }]);
   };
 
   const updateRow = (id: string, patch: Partial<CalcRow>) => {
-    onChange(calcRows.map(r => r.id === id ? { ...r, ...patch } : r));
+    setCalcRows(calcRows.map(r => r.id === id ? { ...r, ...patch } : r));
   };
 
   const removeRow = (id: string) => {
     const row = calcRows.find(r => r.id === id);
     if (!row) return;
     const prev = [...calcRows];
-    onChange(calcRows.filter(r => r.id !== id));
-    pushUndo(`已刪除計算列: ${row.name || '(未命名)'}`, () => onChange(prev));
+    setCalcRows(calcRows.filter(r => r.id !== id));
+    pushUndo(`已刪除計算列: ${row.name || '(未命名)'}`, () => setCalcRows(prev));
   };
 
   return (
     <>
-      {/* Toggle button */}
       <button
         onClick={() => setOpen(v => !v)}
         className={`fixed bottom-4 right-4 z-[90] w-10 h-10 rounded-full shadow-lg flex items-center justify-center cursor-pointer transition-colors text-lg ${open ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-gray-800 hover:bg-gray-700 border border-gray-700'}`}
@@ -96,7 +93,6 @@ export default function CalcPanel({ calcRows, onChange, pushUndo }: Props) {
         🧮
       </button>
 
-      {/* Panel */}
       {open && (
         <div className="fixed bottom-16 right-4 z-[90] w-[420px] max-h-[50vh] bg-gray-900 border border-gray-700 rounded-xl shadow-2xl flex flex-col">
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-800 shrink-0">

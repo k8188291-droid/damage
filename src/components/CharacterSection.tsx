@@ -1,12 +1,8 @@
 import { useState } from 'react';
 import { v4 as uuid } from 'uuid';
+import { useAppStore } from '../stores/appStore';
 import type { Character } from '../types';
 import Modal from './Modal';
-
-interface Props {
-  characters: Character[];
-  onChange: (characters: Character[]) => void;
-}
 
 function CharEditModal({ char, onSave, onClose }: { char: Character; onSave: (c: Character) => void; onClose: () => void }) {
   const [draft, setDraft] = useState<Character>({ ...char });
@@ -50,16 +46,18 @@ function CharEditModal({ char, onSave, onClose }: { char: Character; onSave: (c:
   );
 }
 
-export default function CharacterSection({ characters, onChange }: Props) {
+export default function CharacterSection() {
+  const characters = useAppStore(s => s.characters);
+  const setCharacters = useAppStore(s => s.setCharacters);
   const [editing, setEditing] = useState<Character | null>(null);
 
   const save = (c: Character) => {
     const exists = characters.find(x => x.id === c.id);
-    onChange(exists ? characters.map(x => x.id === c.id ? c : x) : [...characters, c]);
+    setCharacters(exists ? characters.map(x => x.id === c.id ? c : x) : [...characters, c]);
     setEditing(null);
   };
 
-  const remove = (id: string) => onChange(characters.filter(c => c.id !== id));
+  const remove = (id: string) => setCharacters(characters.filter(c => c.id !== id));
 
   const startNew = () => setEditing({ id: uuid(), name: `角色 ${characters.length + 1}`, baseAttack: 0, weaponAttack: 0, attackPercentBonus: 0 });
 

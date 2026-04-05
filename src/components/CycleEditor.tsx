@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { v4 as uuid } from 'uuid';
+import { useShallow } from 'zustand/shallow';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   type DragEndEvent,
@@ -8,19 +9,13 @@ import {
   arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useAppStore } from '../stores/appStore';
 import type { Skill, Buff, BuffGroup, Character, DamageZone, RotationGroup, RotationEntry } from '../types';
 import { calculateSkillDamage, type RotationGroupResult } from '../utils/damage';
 import Modal from './Modal';
 
 interface Props {
-  group: RotationGroup;
   groupResult: RotationGroupResult;
-  skills: Skill[];
-  buffs: Buff[];
-  buffGroups: BuffGroup[];
-  characters: Character[];
-  zones: DamageZone[];
-  onUpdate: (g: RotationGroup) => void;
 }
 
 function fmt(n: number) { return Math.round(n).toLocaleString(); }
@@ -105,14 +100,12 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
   const cycleDisabledSet = new Set(group.disabledBuffIds || []);
   const entryDisabledSet = new Set(entry.disabledBuffIds || []);
 
-  // Exclude buffs disabled globally or at cycle level (req 7)
   const relevantBuffs = buffs.filter(b =>
     b.enabled &&
     enabledBuffIds.includes(b.id) &&
     !cycleDisabledSet.has(b.id)
   );
 
-  // Sort relevant buffs by group order then position within group
   const sortedRelevantBuffs = [...relevantBuffs].sort((a, b) => {
     const aGroupIdx = a.groupId ? buffGroups.findIndex(g => g.id === a.groupId) : -1;
     const bGroupIdx = b.groupId ? buffGroups.findIndex(g => g.id === b.groupId) : -1;
@@ -120,12 +113,10 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
     return buffs.indexOf(a) - buffs.indexOf(b);
   });
 
-  // Calculate inline damage for this entry
   const sr = skill
     ? calculateSkillDamage(skill, characters, buffs, zones, entry.disabledBuffIds || [], group.disabledBuffIds || [])
     : null;
 
-  // Build formula: attackPower × skillZone × otherZones...  (req 6)
   const formulaParts: React.ReactNode[] = [];
   if (sr) {
     formulaParts.push(<span key="atk" className="text-gray-300">{fmt(sr.attackPower)}</span>);
@@ -151,15 +142,12 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
     <div ref={setNodeRef} style={style}>
       <div className="bg-gray-900/80 border border-gray-700 rounded-xl p-4">
         <div className="flex items-start gap-3">
-          {/* Drag handle + index */}
           <div className="flex items-center gap-2 shrink-0 pt-0.5">
             <span {...attributes} {...listeners} className="text-gray-600 cursor-grab active:cursor-grabbing text-xs" onClick={e => e.stopPropagation()}>⠿</span>
             <span className="text-xs font-mono text-gray-500 bg-gray-800 px-1.5 py-0.5 rounded">{String(index + 1).padStart(2, '0')}</span>
           </div>
 
-          {/* Main content */}
           <div className="flex-1 min-w-0">
-            {/* Skill name or selector */}
             {skill ? (
               <div className="text-sm font-semibold text-gray-100 mb-1">{skill.name}</div>
             ) : (
@@ -170,12 +158,10 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
               </select>
             )}
 
-            {/* Formula line (req 6) */}
             {sr && (
               <div className="text-xs font-mono mb-2">{formulaParts}</div>
             )}
 
-            {/* Per-entry buff toggles inline (req 6, 7) */}
             {sortedRelevantBuffs.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {sortedRelevantBuffs.map(b => {
@@ -196,7 +182,6 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
             )}
           </div>
 
-          {/* Quantity */}
           <div className="shrink-0 text-right">
             <div className="text-xs text-gray-500 mb-0.5 tracking-wider">施放次數</div>
             <input type="number" min={1} value={entry.count}
@@ -204,7 +189,6 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
               className="w-20 bg-gray-800 border border-gray-700 rounded-lg text-lg font-bold text-gray-100 text-center focus:outline-none focus:border-indigo-500 font-mono py-0.5 px-2" />
           </div>
 
-          {/* Delete */}
           <button onClick={() => onRemove(entry.id)} className="text-gray-600 hover:text-red-400 cursor-pointer shrink-0 pt-0.5 text-sm" title="刪除">
             ✕
           </button>
@@ -215,20 +199,32 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
 }
 
 /* ── Main CycleEditor ── */
-export default function CycleEditor({ group, groupResult, skills, buffs, buffGroups, characters, zones, onUpdate }: Props) {
+export default function CycleEditor({ groupResult }: Props) {
+  const { skills, buffs, buffGroups, characters, zones, activeRotationId, rotationGroups, updateRotationGroup } = useAppStore(useShallow(s => ({
+    skills: s.skills,
+    buffs: s.buffs,
+    buffGroups: s.buffGroups,
+    characters: s.characters,
+    zones: s.zones,
+    activeRotationId: s.activeRotationId,
+    rotationGroups: s.rotationGroups,
+    updateRotationGroup: s.updateRotationGroup,
+  })));
+
+  const group = rotationGroups.find(g => g.id === activeRotationId)!;
   const [detailResult, setDetailResult] = useState<RotationGroupResult | null>(null);
   const [showSkillPalette, setShowSkillPalette] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const updateEntry = (id: string, patch: Partial<RotationEntry>) => {
-    onUpdate({ ...group, entries: group.entries.map(e => e.id === id ? { ...e, ...patch } : e) });
+    updateRotationGroup({ ...group, entries: group.entries.map(e => e.id === id ? { ...e, ...patch } : e) });
   };
   const removeEntry = (id: string) => {
-    onUpdate({ ...group, entries: group.entries.filter(e => e.id !== id) });
+    updateRotationGroup({ ...group, entries: group.entries.filter(e => e.id !== id) });
   };
   const addSkill = (skillId: string) => {
-    onUpdate({ ...group, entries: [...group.entries, { id: uuid(), skillId, count: 1, disabledBuffIds: [] }] });
+    updateRotationGroup({ ...group, entries: [...group.entries, { id: uuid(), skillId, count: 1, disabledBuffIds: [] }] });
     setShowSkillPalette(false);
   };
 
@@ -237,20 +233,19 @@ export default function CycleEditor({ group, groupResult, skills, buffs, buffGro
     if (over && active.id !== over.id) {
       const oldIdx = group.entries.findIndex(e => e.id === active.id);
       const newIdx = group.entries.findIndex(e => e.id === over.id);
-      onUpdate({ ...group, entries: arrayMove(group.entries, oldIdx, newIdx) });
+      updateRotationGroup({ ...group, entries: arrayMove(group.entries, oldIdx, newIdx) });
     }
   };
 
   return (
     <div className="flex-1 overflow-y-auto relative">
       <div className="p-6 max-w-4xl mx-auto">
-        {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <input
                 value={group.name}
-                onChange={e => onUpdate({ ...group, name: e.target.value })}
+                onChange={e => updateRotationGroup({ ...group, name: e.target.value })}
                 className="bg-transparent text-xl font-bold text-gray-100 focus:outline-none border-b border-transparent focus:border-indigo-500"
               />
             </div>
@@ -265,7 +260,6 @@ export default function CycleEditor({ group, groupResult, skills, buffs, buffGro
           </div>
         </div>
 
-        {/* Entries */}
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={group.entries.map(e => e.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-3">
@@ -279,7 +273,6 @@ export default function CycleEditor({ group, groupResult, skills, buffs, buffGro
           </SortableContext>
         </DndContext>
 
-        {/* Add Next Skill */}
         <div className="mt-4">
           {showSkillPalette ? (
             <div className="border-2 border-dashed border-gray-700 rounded-xl p-4 space-y-3">

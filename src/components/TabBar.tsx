@@ -1,18 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
+import { useShallow } from 'zustand/shallow';
+import { useAppStore } from '../stores/appStore';
 import type { Tab } from '../types';
 import ConfirmDialog from './ConfirmDialog';
 
-interface Props {
-  tabs: Tab[];
-  activeTabId: string;
-  onSelectTab: (id: string) => void;
-  onAddTab: () => void;
-  onCloseTab: (id: string) => void;
-  onRenameTab: (id: string, name: string) => void;
-  onDuplicateTab: (id: string) => void;
-}
+export default function TabBar() {
+  const { tabs, activeTabId, switchTab, addTab, closeTab, renameTab, duplicateTab } = useAppStore(useShallow(s => ({
+    tabs: s.tabs,
+    activeTabId: s.activeTabId,
+    switchTab: s.switchTab,
+    addTab: s.addTab,
+    closeTab: s.closeTab,
+    renameTab: s.renameTab,
+    duplicateTab: s.duplicateTab,
+  })));
 
-export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onCloseTab, onRenameTab, onDuplicateTab }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
   const [closingTabId, setClosingTabId] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
 
   const commitRename = () => {
     if (editingId && editValue.trim()) {
-      onRenameTab(editingId, editValue.trim());
+      renameTab(editingId, editValue.trim());
     }
     setEditingId(null);
   };
@@ -59,7 +61,7 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
           return (
             <div
               key={tab.id}
-              onClick={() => { if (!isEditing) onSelectTab(tab.id); }}
+              onClick={() => { if (!isEditing) switchTab(tab.id); }}
               onDoubleClick={() => startRename(tab)}
               onContextMenu={e => { e.preventDefault(); setContextMenu({ tabId: tab.id, x: e.clientX, y: e.clientY }); }}
               className={`group relative flex items-center gap-1.5 px-3 py-1.5 text-xs cursor-pointer transition-colors rounded-t-lg min-w-0 max-w-[160px] shrink-0 ${
@@ -84,7 +86,7 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
               {!isEditing && (
                 <div className="flex gap-1.5 shrink-0">
                   <button
-                    onClick={e => { e.stopPropagation(); onDuplicateTab(tab.id); }}
+                    onClick={e => { e.stopPropagation(); duplicateTab(tab.id); }}
                     className="text-gray-600 hover:text-indigo-400 text-xs cursor-pointer"
                     title="複製頁籤"
                   >
@@ -104,9 +106,8 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
             </div>
           );
         })}
-        {/* Add tab button */}
         <button
-          onClick={onAddTab}
+          onClick={addTab}
           className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-gray-300 hover:bg-gray-800/40 rounded-lg cursor-pointer transition-colors shrink-0 mb-0.5 mr-1 text-sm"
           title="新增頁籤"
         >
@@ -114,7 +115,6 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
         </button>
       </div>
 
-      {/* Context menu */}
       {contextMenu && (
         <div
           className="fixed z-50 bg-gray-800 border border-gray-700 rounded-lg shadow-xl py-1 min-w-[120px]"
@@ -127,7 +127,7 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
             重新命名
           </button>
           <button
-            onClick={() => { onDuplicateTab(contextMenu.tabId); setContextMenu(null); }}
+            onClick={() => { duplicateTab(contextMenu.tabId); setContextMenu(null); }}
             className="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700 cursor-pointer"
           >
             複製頁籤
@@ -149,7 +149,7 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
         message={`確定要關閉「${closingTab?.name || ''}」？頁籤內的資料將會遺失。`}
         confirmLabel="關閉"
         confirmColor="red"
-        onConfirm={() => { if (closingTabId) onCloseTab(closingTabId); setClosingTabId(null); }}
+        onConfirm={() => { if (closingTabId) closeTab(closingTabId); setClosingTabId(null); }}
         onCancel={() => setClosingTabId(null)}
       />
     </div>

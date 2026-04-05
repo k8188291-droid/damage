@@ -1,24 +1,23 @@
 import { useRef, useState } from 'react';
 import type { AppData } from '../types';
 import { CURRENT_VERSION } from '../types';
+import { useAppStore } from '../stores/appStore';
 import { migrateToLatest } from '../migrations';
 import Modal from './Modal';
 import ConfirmDialog from './ConfirmDialog';
 import { exampleData } from '../constants';
 
-interface Props {
-  getData: () => AppData;
-  onImport: (data: AppData) => void;
-  clearAll: () => void;
-}
+export default function ImportExport() {
+  const getData = useAppStore(s => s.getData);
+  const importData = useAppStore(s => s.importData);
+  const clearAll = useAppStore(s => s.clearAll);
 
-export default function ImportExport({ getData, onImport, clearAll }: Props) {
   const [showModal, setShowModal] = useState(false);
   const [importText, setImportText] = useState('');
   const [error, setError] = useState('');
   const [copyDone, setCopyDone] = useState(false);
   const [pendingImport, setPendingImport] = useState<AppData | null>(null);
-  const [showDialog, setShowDialog] = useState(false);
+  const [showClearDialog, setShowClearDialog] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
@@ -49,7 +48,7 @@ export default function ImportExport({ getData, onImport, clearAll }: Props) {
 
   const handleConfirmImport = () => {
     if (!pendingImport) return;
-    onImport(pendingImport);
+    importData(pendingImport);
     setPendingImport(null);
     setShowModal(false);
     setImportText('');
@@ -94,7 +93,7 @@ export default function ImportExport({ getData, onImport, clearAll }: Props) {
           className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs font-medium transition-colors cursor-pointer">
           匯入
         </button>
-        <button onClick={() => setShowDialog(true)}
+        <button onClick={() => setShowClearDialog(true)}
           className="px-2 py-0.5 text-xs text-gray-600 hover:text-red-400 transition-colors cursor-pointer">
           清除
         </button>
@@ -154,18 +153,15 @@ export default function ImportExport({ getData, onImport, clearAll }: Props) {
         onConfirm={handleConfirmImport}
         onCancel={() => setPendingImport(null)}
       />
-      
+
       <ConfirmDialog
-        open={showDialog}
+        open={showClearDialog}
         title="確認清除"
         message="確定要清除所有資料嗎？"
         confirmLabel="清除"
         confirmColor="red"
-        onConfirm={() => {
-          clearAll();
-          setShowDialog(false);
-        }}
-        onCancel={() => setShowDialog(false)}
+        onConfirm={() => { clearAll(); setShowClearDialog(false); }}
+        onCancel={() => setShowClearDialog(false)}
       />
     </>
   );
