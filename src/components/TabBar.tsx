@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Tab } from '../types';
+import ConfirmDialog from './ConfirmDialog';
 
 interface Props {
   tabs: Tab[];
@@ -14,6 +15,7 @@ interface Props {
 export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onCloseTab, onRenameTab, onDuplicateTab }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [closingTabId, setClosingTabId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -43,6 +45,8 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
     window.addEventListener('click', close);
     return () => window.removeEventListener('click', close);
   }, [contextMenu]);
+
+  const closingTab = closingTabId ? tabs.find(t => t.id === closingTabId) : null;
 
   return (
     <div className="h-9 bg-gray-900/60 border-b border-gray-800 flex items-end px-1 shrink-0 relative">
@@ -87,7 +91,7 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
                   </button>
                   {tabs.length > 1 && (
                     <button
-                      onClick={e => { e.stopPropagation(); onCloseTab(tab.id); }}
+                      onClick={e => { e.stopPropagation(); setClosingTabId(tab.id); }}
                       className="text-gray-600 hover:text-red-400 text-[10px] cursor-pointer"
                       title="關閉頁籤"
                     >
@@ -130,7 +134,7 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
           </button>
           {tabs.length > 1 && (
             <button
-              onClick={() => { onCloseTab(contextMenu.tabId); setContextMenu(null); }}
+              onClick={() => { setClosingTabId(contextMenu.tabId); setContextMenu(null); }}
               className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-gray-700 cursor-pointer"
             >
               關閉頁籤
@@ -138,6 +142,16 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={closingTabId !== null}
+        title="關閉頁籤"
+        message={`確定要關閉「${closingTab?.name || ''}」？頁籤內的資料將會遺失。`}
+        confirmLabel="關閉"
+        confirmColor="red"
+        onConfirm={() => { if (closingTabId) onCloseTab(closingTabId); setClosingTabId(null); }}
+        onCancel={() => setClosingTabId(null)}
+      />
     </div>
   );
 }

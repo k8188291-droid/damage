@@ -8,6 +8,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Preset } from '../types';
+import ConfirmDialog from './ConfirmDialog';
 
 interface Props {
   presets: Preset[];
@@ -77,13 +78,18 @@ function SortablePresetCard({ preset, editingId, editValue, onEditChange, onStar
               {preset.name}
             </span>
           )}
-          <button
-            onClick={onDelete}
-            className="text-gray-600 hover:text-red-400 text-[10px] shrink-0 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-            title="刪除"
-          >
-            ✕
-          </button>
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+            <button onClick={onDuplicate}
+              className="text-gray-600 hover:text-indigo-400 text-[10px] cursor-pointer"
+              title="複製">
+              ⧉
+            </button>
+            <button onClick={onDelete}
+              className="text-gray-600 hover:text-red-400 text-[10px] cursor-pointer"
+              title="刪除">
+              ✕
+            </button>
+          </div>
         </div>
         <div className="text-[10px] text-gray-600 mb-1.5 ml-[18px]">{formatTime(preset.timestamp)}</div>
         <div className="flex gap-1.5 ml-[18px]">
@@ -94,10 +100,6 @@ function SortablePresetCard({ preset, editingId, editValue, onEditChange, onStar
           <button onClick={onOpenInNewTab}
             className="px-2 py-0.5 bg-gray-700 hover:bg-gray-600 rounded text-[10px] text-gray-300 cursor-pointer transition-colors">
             開新頁籤
-          </button>
-          <button onClick={onDuplicate}
-            className="px-2 py-0.5 bg-gray-700 hover:bg-gray-600 rounded text-[10px] text-gray-300 cursor-pointer transition-colors opacity-0 group-hover:opacity-100">
-            複製
           </button>
           <button onClick={onOverwrite}
             className="px-2 py-0.5 bg-gray-700 hover:bg-amber-600/40 rounded text-[10px] text-amber-400 cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
@@ -110,10 +112,13 @@ function SortablePresetCard({ preset, editingId, editValue, onEditChange, onStar
   );
 }
 
+type ConfirmAction = { type: 'load'; preset: Preset } | { type: 'delete'; id: string; name: string } | { type: 'overwrite'; id: string; name: string };
+
 export default function PresetSection({ presets, onSavePreset, onOverwritePreset, onLoadPreset, onOpenInNewTab, onDuplicatePreset, onRenamePreset, onDeletePreset, onReorderPresets }: Props) {
   const [newName, setNewName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const handleSave = () => {
@@ -142,6 +147,25 @@ export default function PresetSection({ presets, onSavePreset, onOverwritePreset
       onReorderPresets(arrayMove(presets, oldIdx, newIdx));
     }
   };
+
+  const handleConfirm = () => {
+    if (!confirmAction) return;
+    switch (confirmAction.type) {
+      case 'load': onLoadPreset(confirmAction.preset); break;
+      case 'delete': onDeletePreset(confirmAction.id); break;
+      case 'overwrite': onOverwritePreset(confirmAction.id); break;
+    }
+    setConfirmAction(null);
+  };
+
+  const confirmTitle = confirmAction?.type === 'load' ? '載入檔案' : confirmAction?.type === 'delete' ? '刪除檔案' : '覆蓋檔案';
+  const confirmMessage = confirmAction?.type === 'load'
+    ? `確定要載入「${confirmAction.preset.name}」？目前的設定將被覆蓋。`
+    : confirmAction?.type === 'delete'
+      ? `確定要刪除「${confirmAction.name}」？此操作無法復原。`
+      : confirmAction ? `確定要以目前設定覆蓋「${confirmAction.name}」？` : '';
+  const confirmColor = confirmAction?.type === 'delete' ? 'red' as const : confirmAction?.type === 'overwrite' ? 'amber' as const : 'indigo' as const;
+  const confirmLabel = confirmAction?.type === 'load' ? '載入' : confirmAction?.type === 'delete' ? '刪除' : '覆蓋';
 
   return (
     <div className="space-y-2">
@@ -180,16 +204,26 @@ export default function PresetSection({ presets, onSavePreset, onOverwritePreset
                 onStartRename={startRename}
                 onCommitRename={commitRename}
                 onCancelRename={() => setEditingId(null)}
-                onLoad={() => onLoadPreset(p)}
+                onLoad={() => setConfirmAction({ type: 'load', preset: p })}
                 onOpenInNewTab={() => onOpenInNewTab(p)}
                 onDuplicate={() => onDuplicatePreset(p.id)}
-                onOverwrite={() => onOverwritePreset(p.id)}
-                onDelete={() => onDeletePreset(p.id)}
+                onOverwrite={() => setConfirmAction({ type: 'overwrite', id: p.id, name: p.name })}
+                onDelete={() => setConfirmAction({ type: 'delete', id: p.id, name: p.name })}
               />
             ))}
           </div>
         </SortableContext>
       </DndContext>
+
+      <ConfirmDialog
+        open={confirmAction !== null}
+        title={confirmTitle}
+        message={confirmMessage}
+        confirmLabel={confirmLabel}
+        confirmColor={confirmColor}
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmAction(null)}
+      />
     </div>
   );
 }
