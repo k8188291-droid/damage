@@ -72,20 +72,22 @@ function SortablePresetCard({ preset, editingId, editValue, onEditChange, onStar
           ) : (
             <span
               className="text-xs text-gray-200 truncate flex-1 min-w-0 cursor-text"
-              onDoubleClick={() => onStartRename(preset)}
-              title="雙擊重新命名"
+              onClick={() => onStartRename(preset)}
+              title="點擊重新命名"
             >
               {preset.name}
             </span>
           )}
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <div className="flex gap-1.5 shrink-0">
             <button onClick={onDuplicate}
-              className="text-gray-600 hover:text-indigo-400 text-[10px] cursor-pointer"
+              className="text-gray-600 hover:text-indigo-400 cursor-pointer"
+              style={{ fontSize: 12 }}
               title="複製">
               ⧉
             </button>
             <button onClick={onDelete}
-              className="text-gray-600 hover:text-red-400 text-[10px] cursor-pointer"
+              className="text-gray-600 hover:text-red-400 cursor-pointer"
+              style={{ fontSize: 12 }}
               title="刪除">
               ✕
             </button>

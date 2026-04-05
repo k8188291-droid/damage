@@ -50,6 +50,14 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
 
   return (
     <div className="h-9 bg-gray-900/60 border-b border-gray-800 flex items-end px-1 shrink-0 relative">
+      {/* Add tab button — left side */}
+      <button
+        onClick={onAddTab}
+        className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-gray-300 hover:bg-gray-800/40 rounded-lg cursor-pointer transition-colors shrink-0 mb-0.5 mr-1 text-sm"
+        title="新增頁籤"
+      >
+        +
+      </button>
       <div className="flex items-end gap-0.5 overflow-x-auto min-w-0 flex-1 scrollbar-none">
         {tabs.map(tab => {
           const isActive = tab.id === activeTabId;
@@ -78,13 +86,14 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
                   onClick={e => e.stopPropagation()}
                 />
               ) : (
-                <span className="truncate">{tab.name}</span>
+                <span className="truncate mr-1">{tab.name}</span>
               )}
               {!isEditing && (
-                <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                <div className="flex gap-1 shrink-0">
                   <button
                     onClick={e => { e.stopPropagation(); onDuplicateTab(tab.id); }}
-                    className="text-gray-600 hover:text-indigo-400 text-[10px] cursor-pointer"
+                    className="text-gray-600 hover:text-indigo-400 cursor-pointer"
+                    style={{ fontSize: 12 }}
                     title="複製頁籤"
                   >
                     ⧉
@@ -92,7 +101,8 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
                   {tabs.length > 1 && (
                     <button
                       onClick={e => { e.stopPropagation(); setClosingTabId(tab.id); }}
-                      className="text-gray-600 hover:text-red-400 text-[10px] cursor-pointer"
+                      className="text-gray-600 hover:text-red-400 cursor-pointer"
+                      style={{ fontSize: 12 }}
                       title="關閉頁籤"
                     >
                       ✕
@@ -104,15 +114,6 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
           );
         })}
       </div>
-
-      {/* Add tab button */}
-      <button
-        onClick={onAddTab}
-        className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-gray-300 hover:bg-gray-800/40 rounded-lg cursor-pointer transition-colors shrink-0 mb-0.5 ml-1 text-sm"
-        title="新增頁籤"
-      >
-        +
-      </button>
 
       {/* Context menu */}
       {contextMenu && (
