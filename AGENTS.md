@@ -1,160 +1,151 @@
-# Damage Calculator — AI Agent Overview
+# 傷害計算器 — AI 助手參考文件
 
-## Purpose
-
-This is a browser-based **game damage calculation and rotation analysis tool** written in React + TypeScript. It helps users model skill rotations, apply buff stacking, and compare total damage output across different configurations — targeting Chinese-speaking players of action RPGs (e.g. Honkai: Star Rail-style games).
-
-Deployed at base path `/damage/`.
+本文件供 AI 閱讀，目的是讓 AI 能夠協助使用者理解並正確使用這個傷害計算網頁。
 
 ---
 
-## Core Domain Model
+## 這個網頁是什麼？
 
-### Damage Formula
-
-```
-finalDamage = attackPower
-            × (skillMultiplier / 100)
-            × (1 + dmgBonus% / 100)
-            × (1 + vulnerability% / 100)
-            × (1 + critDmg% / 100)
-            × (1 + stagger% / 100)
-            × (1 + resist% / 100)
-            × (1 + fragile% / 100)
-            × (1 + amplify% / 100)
-
-attackPower = (baseAttack + weaponAttack) × (1 + attackPercentBonus / 100)
-```
-
-Each damage zone multiplies independently. The `zone-skill` zone uses `value / 100` directly (not `1 + value/100`).
-
-### Key Entities
-
-| Entity | Description |
-|--------|-------------|
-| `DamageZone` | A multiplicative damage category (8 defaults: skill, dmgBonus, vuln, crit, stagger, resist, fragile, amp) |
-| `Buff` | A named modifier assigned to one zone; has a numeric `value` (%) and a global `enabled` toggle |
-| `BuffGroup` | Optional grouping/coloring for buffs |
-| `Character` | Holds `baseAttack`, `weaponAttack`, `attackPercentBonus` |
-| `Skill` | References a character; has `skillMultiplier` (%); declares which buff IDs it uses via `enabledBuffIds` |
-| `SkillGroup` | Optional grouping for skills |
-| `RotationEntry` | One skill in a rotation: `skillId`, `count` (executions), `disabledBuffIds` (entry-level overrides) |
-| `RotationGroup` | A sequence of `RotationEntry` items; has its own `disabledBuffIds` (cycle-level overrides) |
-| `Tab` | An independent workspace containing a full `AppData` snapshot |
-| `Preset` | A named, timestamped `AppData` snapshot for reuse |
-| `CalcRow` | A row in the floating calculator with a custom formula string |
-
-### Buff Activation Rules
-
-A buff is active for a given skill execution if ALL of the following are true:
-1. `buff.enabled === true` (global toggle)
-2. `skill.enabledBuffIds.includes(buff.id)` (skill-level opt-in)
-3. `!cycleDisabledBuffIds.includes(buff.id)` (rotation-group override)
-4. `!entryDisabledBuffIds.includes(buff.id)` (per-entry override)
+這是一個**遊戲傷害計算與技能輪轉分析工具**，介面語言為繁體中文。使用者可以輸入角色屬性、技能倍率和各種增益效果（Buff），計算不同技能組合的總傷害，並比較哪種輪轉方案輸出最高。
 
 ---
 
-## Architecture
+## 核心概念
 
-### Stack
+### 1. 傷害公式
 
-- **React 19** + **TypeScript 5** + **Vite 8**
-- **Tailwind CSS 4** for styling
-- **@dnd-kit** for drag-and-drop (rotation entries, preset reordering)
-- **localStorage** for persistence via `useLocalStorage` hook
-- **UUID** for entity IDs
-
-### File Structure
+傷害 = 攻擊力 × 技能倍率 × 各 Zone 加成相乘
 
 ```
-src/
-├── main.tsx                  # Entry point
-├── App.tsx                   # Root state: tabs, presets, working data, undo, layout
-├── constants.ts              # Large example dataset (demo import)
-├── types/index.ts            # All TypeScript interfaces + DEFAULT_ZONES
-├── utils/damage.ts           # calculateAttackPower / calculateSkillDamage / calculateRotationGroup
-├── hooks/useLocalStorage.ts  # Persistent state hook
-├── migrations/
-│   ├── index.ts              # Version routing
-│   └── v1_to_v2.ts          # Adds groupId to buffs/skills, disabledBuffIds to rotations
-└── components/
-    ├── TabBar.tsx            # Tab CRUD
-    ├── CharacterSection.tsx  # Character management
-    ├── BuffSection.tsx       # Buff + zone management
-    ├── SkillSection.tsx      # Skill management
-    ├── RotationSection.tsx   # Rotation group list (left panel)
-    ├── CycleEditor.tsx       # Rotation entry editor (center panel)
-    ├── CycleBuffBar.tsx      # Cycle-level buff toggles
-    ├── AnalysisPanel.tsx     # Damage comparison (right panel)
-    ├── CalcPanel.tsx         # Floating calculator
-    ├── PresetSection.tsx     # Preset management
-    ├── ImportExport.tsx      # JSON import/export
-    ├── ConfirmDialog.tsx     # Reusable confirm modal
-    ├── Modal.tsx             # Generic modal wrapper
-    ├── ui.tsx                # Tooltip component
-    └── IconSidebar.tsx       # Left icon sidebar
+攻擊力 = (基礎攻擊 + 武器攻擊) × (1 + 攻擊%加成 / 100)
+
+最終傷害 = 攻擊力
+         × (技能倍率 / 100)
+         × (1 + 增傷合計% / 100)
+         × (1 + 易傷合計% / 100)
+         × (1 + 暴擊傷害合計% / 100)
+         × (1 + 失衡合計% / 100)
+         × (1 + 抗性合計% / 100)
+         × (1 + 脆弱合計% / 100)
+         × (1 + 增幅合計% / 100)
 ```
 
-### State Flow
+重點：每個 Zone 的加成獨立相乘（乘法堆疊），同一 Zone 內的多個 Buff 數值先加總再計算。技能倍率是唯一不加 1 的 Zone。
 
-```
-localStorage
-    └── tabs[]  (Tab[])
-    └── presets[] (Preset[])
-         │
-         ▼
-    App.tsx (working state)
-         │
-         ├── CharacterSection / BuffSection / SkillSection / RotationSection
-         │       (left panel — mutate working state)
-         │
-         ├── CycleEditor
-         │       (center — edit selected RotationGroup entries)
-         │
-         └── AnalysisPanel
-                 (right — read-only calculated results)
-```
+### 2. Zone（傷害區間）
 
-Working state is written back to the active tab on every change. Tab switch saves current tab and loads the selected tab's data.
+8 個預設 Zone，代表傷害公式的 8 個乘法段：
 
-### Migration Strategy
+| Zone 名稱 | 說明 | 計算方式 |
+|-----------|------|---------|
+| 技能倍率 | 技能本身的倍率 | 直接 ÷ 100 |
+| 增傷 | 自身傷害加成 | 1 + 合計% |
+| 易傷 | 目標受傷加成 | 1 + 合計% |
+| 暴擊 | 暴擊傷害 | 1 + 合計% |
+| 失衡 | 失衡狀態加成 | 1 + 合計% |
+| 抗性 | 抗性調整（降抗填負值） | 1 + 合計% |
+| 脆弱 | 脆弱狀態加成 | 1 + 合計% |
+| 增幅 | 其他倍率加成 | 1 + 合計% |
 
-- `AppData.version` field tracks schema version
-- Current version: `2`
-- v1 → v2: adds `groupId` (empty string) to all buffs and skills; adds `disabledBuffIds: []` to all rotation groups
+### 3. Buff
+
+Buff 是附掛在某個 Zone 上的數值修正。例如「隊友技能A 提供 +30% 增傷」就是一個 Buff。
+
+Buff 有 **三層開關**，必須全部通過才會生效：
+1. **全域開關**：Buff 列表中的啟用狀態
+2. **技能層**：技能設定中有勾選此 Buff
+3. **輪轉層**：在輪轉組或技能條目中沒有被停用
+
+這個設計讓使用者可以模擬「只有特定技能享有某 Buff」或「某條輪轉不含某個增益」的情境。
+
+### 4. 技能（Skill）
+
+技能代表遊戲中的一個攻擊動作，包含：
+- 對應角色（決定攻擊力來源）
+- 技能倍率（%）
+- 勾選適用的 Buff 清單
+
+### 5. 輪轉組（Rotation Group）
+
+輪轉組是一段技能序列，模擬一回合的技能施放順序。每個技能條目可設定：
+- 使用哪個技能
+- 施放幾次
+- 是否停用某些 Buff（針對這次施放）
+
+右側分析面板會顯示各輪轉組的總傷害，並以最高傷害為基準顯示差距百分比。
 
 ---
 
-## UI Layout
+## 使用流程
 
-- **Three-column layout**: left panel (config) | center (cycle editor) | right panel (analysis)
-- Left and right panels are resizable via drag handles
-- On narrow screens both panels collapse to overlay mode
-- Left sidebar: icon buttons toggle visibility of each config section
-- Undo system: toast at bottom of screen, 5-second auto-dismiss, single-level undo
+使用者的標準操作順序：
+
+```
+建立角色 → 建立 Buff → 建立技能 → 建立輪轉組 → 在分析面板比較結果
+```
+
+### 步驟說明
+
+**建立角色**
+在左側「角色」區塊新增，填入基礎攻擊、武器攻擊、攻擊%加成。
+
+**建立 Buff**
+在左側「Buff」區塊新增，指定 Zone 和數值（%）。可用群組功能整理。
+
+**建立技能**
+在左側「技能」區塊新增，選擇對應角色、填入技能倍率，勾選這個技能適用哪些 Buff。
+
+**建立輪轉組**
+在左側「輪轉組」區塊新增，然後在中央編輯區加入技能、設定次數。
+
+**查看結果**
+右側「分析面板」自動顯示各輪轉組的總傷害和比較百分比。點擊技能條目可查看各 Zone 的詳細分解。
 
 ---
 
-## Data Persistence
+## 其他功能
 
-- All state lives in `localStorage` under two keys
-- Import/export via JSON (full `AppData` object)
-- No server-side storage; fully client-side
-
----
-
-## Internationalization
-
-- UI language: **Traditional Chinese**
-- Zone names, labels, and tooltips are all in Chinese
-- No i18n framework — strings are hardcoded in components
+| 功能 | 說明 |
+|------|------|
+| **分頁（Tab）** | 多個獨立工作區，適合比較不同角色或配置方案 |
+| **預設（Preset）** | 儲存當前設定的快照，方便日後載入還原 |
+| **匯入 / 匯出** | JSON 格式，可備份或分享設定；也可載入範例資料快速上手 |
+| **浮動計算機** | 右下角，支援自訂公式行，用於輔助手動計算 |
+| **復原（Undo）** | 誤操作後 5 秒內可在畫面下方點擊復原 |
+| **備注欄** | 分析面板底部可記錄文字備注 |
+| **排除切換** | 在分析面板可勾選排除某輪轉組，不納入比較基準 |
 
 ---
 
-## Notable Constraints
+## 常見問題與解答
 
-- No authentication or multi-user support
-- No server; purely static SPA
-- Buff zone list is editable but defaults are fixed system zones
-- Damage formula assumes all zones multiply independently (no additive cross-zone interactions)
-- `zone-skill` (技能倍率) is the only zone computed as `value/100` rather than `1 + value/100`
+**Q：技能傷害是 0？**
+原因通常是技能沒有指定角色，或角色的攻擊力數值為 0。請確認角色已建立且攻擊數值正確。
+
+**Q：Buff 沒有生效？**
+依序確認：① Buff 列表中是否啟用、② 技能設定中是否勾選了這個 Buff、③ 輪轉組或技能條目中是否將它停用。
+
+**Q：同一個 Zone 有多個 Buff，如何計算？**
+同 Zone 的 Buff 數值先相加，再代入公式。例如增傷有 +30% 和 +20%，合計 50%，計算為 × 1.5。
+
+**Q：如何模擬「只有某技能享有隊友 Buff」？**
+在那個技能的設定中勾選該 Buff，其他技能不勾選。
+
+**Q：如何模擬「某條輪轉不含某增益」？**
+在輪轉組的 Buff 欄位或技能條目上停用該 Buff（不影響其他輪轉）。
+
+**Q：資料會遺失嗎？**
+資料存在瀏覽器 localStorage，關閉頁面不會遺失。清除瀏覽器資料才會刪除。建議定期使用「匯出」功能備份。
+
+**Q：怎麼快速開始？**
+點擊「匯入」按鈕，選擇「載入範例資料」，即可看到一組預設好的角色、技能、Buff 和輪轉組。
+
+---
+
+## 回答使用者問題的注意事項
+
+- 使用者提到「Zone」或「區間」時，指的是傷害公式的乘法段（增傷、易傷、暴擊…等）
+- 使用者提到「輪轉」或「Rotation」時，指的是一段技能施放序列
+- 使用者提到「Buff 沒算進去」時，先確認三層開關是否都通過
+- 各 Zone 之間是乘法關係，同 Zone 內是加法關係——這是理解傷害計算的關鍵
+- 技能倍率 Zone 的計算方式與其他 Zone 不同（不加 1），需特別說明
