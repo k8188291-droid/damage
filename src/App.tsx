@@ -293,7 +293,7 @@ function App() {
   // Responsive: auto-collapse sidebars when window is narrow
   useEffect(() => {
     const checkWidth = () => {
-      setIsNarrow(window.innerWidth < 900);
+      setIsNarrow(window.innerWidth < 1024);
     };
     checkWidth();
     window.addEventListener('resize', checkWidth);
@@ -696,12 +696,13 @@ function App() {
         </main>
 
         {/* Right panel toggle tab (when panel is closed) */}
-        {!rightPanelOpen && rotationGroups.length > 0 && (
+        {rotationGroups.length > 0 && (
           <button
-            onClick={() => setRightPanelOpen(true)}
+            onClick={() => setRightPanelOpen(v => !v)}
             className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-12 bg-gray-800 border border-gray-700 border-r-0 rounded-l-lg flex items-center justify-center text-gray-500 hover:text-gray-300 cursor-pointer transition-colors text-xs z-10"
+            style={{ right: rightPanelOpen ? rightPanelWidth : 0 }}
           >
-            ‹
+            {rightPanelOpen ? '›' : '‹'}
           </button>
         )}
 
@@ -731,7 +732,6 @@ function App() {
               onCopyRotation={copyRotationGroup}
               onReorderRotations={reorderRotationGroups}
               onToggleExclude={toggleExclude}
-              onClose={() => setRightPanelOpen(false)}
               notes={notes}
               onNotesChange={setNotes}
             />

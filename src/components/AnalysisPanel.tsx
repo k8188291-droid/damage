@@ -21,7 +21,6 @@ interface Props {
   onCopyRotation: (g: RotationGroup) => void;
   onReorderRotations: (groups: RotationGroup[]) => void;
   onToggleExclude: (id: string) => void;
-  onClose: () => void;
   notes: string;
   onNotesChange: (notes: string) => void;
 }
@@ -106,7 +105,7 @@ function SortableCycleCard({ group, result, isActive, maxDamage, diff, excluded,
 export default function AnalysisPanel({
   rotationGroups, groupResults, activeRotationId, excludedGroupIds,
   onSelectRotation, onAddRotation, onRemoveRotation, onCopyRotation,
-  onReorderRotations, onToggleExclude, onClose, notes, onNotesChange,
+  onReorderRotations, onToggleExclude, notes, onNotesChange,
 }: Props) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -133,11 +132,6 @@ export default function AnalysisPanel({
         <div className="flex items-center gap-2">
           <span className="text-sm">📊</span>
           <span className="text-sm font-semibold text-gray-200 flex-1">數據分析對比</span>
-          <button onClick={onClose}
-            className="text-gray-500 hover:text-gray-300 cursor-pointer text-sm transition-colors"
-            title="收起面板">
-            ›
-          </button>
         </div>
       </div>
 
