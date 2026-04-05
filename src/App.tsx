@@ -124,6 +124,7 @@ function App() {
   const [skillGroups, setSkillGroups] = useState<SkillGroup[]>(tabData.skillGroups || []);
   const [rotationGroups, setRotationGroups] = useState<RotationGroup[]>(tabData.rotationGroups);
   const [calcRows, setCalcRows] = useState<CalcRow[]>(tabData.calcRows || []);
+  const [notes, setNotes] = useState<string>(tabData.notes || '');
 
   // Save working state back to tabs whenever it changes
   const currentDataRef = useRef<AppData>(tabData);
@@ -273,9 +274,6 @@ function App() {
   const reorderPresets = useCallback((newPresets: Preset[]) => {
     setPresets(newPresets);
   }, [setPresets]);
-
-  // Notes state (per-tab)
-  const [notes, setNotes] = useState<string>(tabData.notes || '');
 
   // Layout state
   const [activeRotationId, setActiveRotationId] = useState<string>('');
