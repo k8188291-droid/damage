@@ -69,7 +69,7 @@ function SkillDetailCard({ sr, count, subtotal }: { sr: ReturnType<typeof calcul
               <span style={{ color: zb.zone.color }}>{zb.zone.icon} {zb.zone.displayName}</span>
               <span className="text-gray-300 font-mono">×{zb.multiplier.toFixed(4)}</span>
             </div>
-            <div className="ml-4 text-[11px] text-gray-600 space-y-0.5">
+            <div className="ml-4 text-xs text-gray-600 space-y-0.5">
               {zb.sources.map((s, j) => (
                 <div key={j} className="flex justify-between"><span>{s.buffName}</span><span>{s.value}%</span></div>
               ))}
@@ -80,7 +80,7 @@ function SkillDetailCard({ sr, count, subtotal }: { sr: ReturnType<typeof calcul
           </div>
         ))}
       </div>
-      <div className="text-[11px] text-gray-600 border-t border-gray-800 pt-1.5 break-all">
+      <div className="text-xs text-gray-600 border-t border-gray-800 pt-1.5 break-all">
         <span className="text-gray-500">公式: </span>{fmt(sr.attackPower)}
         {sr.zones.map(zb => (
           <span key={zb.zone.id}>{' × '}<span style={{ color: zb.zone.color }}>{zb.multiplier.toFixed(4)}</span></span>
@@ -113,6 +113,14 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
     enabledBuffIds.includes(b.id) &&
     !cycleDisabledSet.has(b.id)
   );
+
+  // Sort relevant buffs by group order then position within group
+  const sortedRelevantBuffs = [...relevantBuffs].sort((a, b) => {
+    const aGroupIdx = a.groupId ? buffGroups.findIndex(g => g.id === a.groupId) : -1;
+    const bGroupIdx = b.groupId ? buffGroups.findIndex(g => g.id === b.groupId) : -1;
+    if (aGroupIdx !== bGroupIdx) return aGroupIdx - bGroupIdx;
+    return buffs.indexOf(a) - buffs.indexOf(b);
+  });
 
   // Calculate inline damage for this entry
   const sr = skill
@@ -170,15 +178,15 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
             )}
 
             {/* Per-entry buff toggles inline (req 6, 7) */}
-            {relevantBuffs.length > 0 && (
+            {sortedRelevantBuffs.length > 0 && (
               <div className="flex flex-wrap gap-1">
-                {relevantBuffs.map(b => {
+                {sortedRelevantBuffs.map(b => {
                   const off = entryDisabledSet.has(b.id);
                   const bGroup = buffGroups.find(g => g.id === b.groupId);
                   const color = bGroup?.color || '#64748b';
                   return (
                     <button key={b.id} onClick={() => toggleBuffForEntry(b.id)}
-                      className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer border transition-all ${
+                      className={`px-1.5 py-0.5 rounded text-xs cursor-pointer border transition-all ${
                         off ? 'border-gray-700 text-gray-600 opacity-40 line-through' : 'text-white'
                       }`}
                       style={off ? undefined : { backgroundColor: color + '25', borderColor: color + '60', color }}>
@@ -192,15 +200,15 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
 
           {/* Quantity */}
           <div className="shrink-0 text-right">
-            <div className="text-[10px] text-gray-500 mb-0.5 tracking-wider">數量</div>
+            <div className="text-xs text-gray-500 mb-0.5 tracking-wider">數量</div>
             <input type="number" min={1} value={entry.count}
               onChange={e => onUpdate(entry.id, { count: Math.max(1, Number(e.target.value) || 1) })}
-              className="w-14 bg-gray-800 border border-gray-700 rounded-lg text-lg font-bold text-gray-100 text-center focus:outline-none focus:border-indigo-500 font-mono py-0.5" />
+              className="w-20 bg-gray-800 border border-gray-700 rounded-lg text-lg font-bold text-gray-100 text-center focus:outline-none focus:border-indigo-500 font-mono py-0.5 px-2" />
           </div>
 
           {/* Delete */}
-          <button onClick={() => onRemove(entry.id)} className="text-gray-600 hover:text-red-400 cursor-pointer shrink-0 pt-0.5 text-base" title="刪除">
-            🗑
+          <button onClick={() => onRemove(entry.id)} className="text-gray-600 hover:text-red-400 cursor-pointer shrink-0 pt-0.5 text-sm" title="刪除">
+            ✕
           </button>
         </div>
       </div>
@@ -256,7 +264,7 @@ export default function CycleEditor({ group, groupResult, skills, buffs, buffGro
               onClick={() => setDetailResult(groupResult)}>
               {fmt(groupResult.totalDamage)}
             </div>
-            <div className="text-[10px] text-gray-500 tracking-wider">TOTAL DMG OUTPUT</div>
+            <div className="text-xs text-gray-500 tracking-wider">TOTAL DMG OUTPUT</div>
           </div>
         </div>
 

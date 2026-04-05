@@ -324,7 +324,7 @@ export default function BuffSection({ buffs, zones, buffGroups, onBuffsChange, o
       {zones.filter(z => z.id !== 'zone-skill').length > 0 && (
         <div className="flex gap-1.5 flex-wrap mb-2">
           {zones.filter(z => z.id !== 'zone-skill').map(z => (
-            <span key={z.id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border group" style={{ borderColor: z.color + '40', color: z.color }}>
+            <span key={z.id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border group" style={{ borderColor: z.color + '40', color: z.color }}>
               <span>{z.icon}</span>
               <span>{z.displayName}</span>
               {!z.isDefault && (
@@ -338,15 +338,15 @@ export default function BuffSection({ buffs, zones, buffGroups, onBuffsChange, o
       {/* Action buttons (req 1: pill button style) */}
       <div className="flex gap-2 mb-3 flex-wrap">
         <button onClick={newZone}
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 cursor-pointer transition-colors">
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 cursor-pointer transition-colors">
           + 分區
         </button>
         <button onClick={addGroup}
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 cursor-pointer transition-colors">
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 cursor-pointer transition-colors">
           + 群組
         </button>
         <button onClick={newBuff}
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer transition-colors">
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer transition-colors">
           + Buff
         </button>
       </div>
