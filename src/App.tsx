@@ -537,10 +537,10 @@ function App() {
         {/* Left Panel */}
         {hasLeftPanel && (
           <aside
-            className={`bg-gray-900/95 border-r border-gray-800 flex flex-col relative ${
+            className={`bg-gray-900/95 border-r border-gray-800 flex flex-col ${
               isNarrow
                 ? 'absolute top-0 bottom-0 left-12 z-30 shadow-2xl'
-                : 'shrink-0'
+                : 'relative shrink-0'
             }`}
             style={{ width: leftPanelWidth }}
           >
@@ -708,10 +708,10 @@ function App() {
         {/* Right Panel */}
         {rightPanelOpen && rotationGroups.length > 0 && (
           <aside
-            className={`bg-gray-900/95 border-l border-gray-800 flex flex-col relative ${
+            className={`bg-gray-900/95 border-l border-gray-800 flex flex-col ${
               isNarrow
                 ? 'absolute top-0 bottom-0 right-0 z-30 shadow-2xl'
-                : 'shrink-0'
+                : 'relative shrink-0'
             }`}
             style={{ width: rightPanelWidth }}
           >
