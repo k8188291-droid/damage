@@ -100,7 +100,7 @@ function BuffModal({ buff, zones, buffGroups, skills, skillGroups, onSave, onClo
         <div>
           <label className="block text-xs text-gray-400 mb-1">名稱</label>
           <input value={d.name} onChange={e => p({ name: e.target.value })}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" />
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-indigo-500" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>

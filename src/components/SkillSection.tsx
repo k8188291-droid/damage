@@ -30,7 +30,7 @@ function SkillModal({ skill, buffs, buffGroups, characters, zones, skillGroups, 
   onSave: (s: Skill) => void; onClose: () => void;
 }) {
   const [d, setD] = useState({ ...skill });
-  const [groupBy, setGroupBy] = useState<'zone' | 'group'>('zone');
+  const [groupBy, setGroupBy] = useState<'zone' | 'group'>('group');
   const p = (patch: Partial<Skill>) => setD(v => ({ ...v, ...patch }));
 
   const toggleBuff = (id: string) => {
@@ -61,7 +61,7 @@ function SkillModal({ skill, buffs, buffGroups, characters, zones, skillGroups, 
           <div>
             <label className="block text-xs text-gray-400 mb-1">技能名稱</label>
             <input value={d.name} onChange={e => p({ name: e.target.value })}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" />
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-indigo-500" />
           </div>
           <div>
             <label className="block text-xs text-gray-400 mb-1">角色</label>
@@ -91,13 +91,13 @@ function SkillModal({ skill, buffs, buffGroups, characters, zones, skillGroups, 
             <div className="flex items-center gap-3">
               <label className="text-xs text-gray-400 font-medium">啟用的 Buff</label>
               <div className="flex items-center bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-                <button onClick={() => setGroupBy('zone')}
-                  className={`px-2 py-0.5 text-[10px] font-medium cursor-pointer transition-colors ${groupBy === 'zone' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}>
-                  依分區
-                </button>
                 <button onClick={() => setGroupBy('group')}
-                  className={`px-2 py-0.5 text-[10px] font-medium cursor-pointer transition-colors ${groupBy === 'group' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}>
+                  className={`px-2 py-1 text-xs font-medium cursor-pointer transition-colors ${groupBy === 'group' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}>
                   依群組
+                </button>
+                <button onClick={() => setGroupBy('zone')}
+                  className={`px-2 py-1 text-xs font-medium cursor-pointer transition-colors ${groupBy === 'zone' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}>
+                  依分區
                 </button>
               </div>
             </div>
