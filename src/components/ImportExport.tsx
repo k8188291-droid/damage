@@ -111,7 +111,7 @@ export default function ImportExport({ getData, onImport }: Props) {
               匯入
             </button>
 
-            <p className="text-[11px] text-gray-600">注意：匯入會覆蓋目前所有設定</p>
+            <p className="text-xs text-gray-600">注意：匯入會覆蓋目前所有設定</p>
           </div>
         </Modal>
       )}

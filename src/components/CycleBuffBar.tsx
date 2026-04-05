@@ -8,8 +8,14 @@ interface Props {
 }
 
 export default function CycleBuffBar({ buffs, buffGroups, cycleDisabledBuffIds, onToggleBuff }: Props) {
-  // Only show globally enabled buffs
+  // Only show globally enabled buffs, sorted by group order then position within group
   const enabledBuffs = buffs.filter(b => b.enabled);
+  const sortedBuffs = [...enabledBuffs].sort((a, b) => {
+    const aGroupIdx = a.groupId ? buffGroups.findIndex(g => g.id === a.groupId) : -1;
+    const bGroupIdx = b.groupId ? buffGroups.findIndex(g => g.id === b.groupId) : -1;
+    if (aGroupIdx !== bGroupIdx) return aGroupIdx - bGroupIdx;
+    return buffs.indexOf(a) - buffs.indexOf(b);
+  });
   const disabledSet = new Set(cycleDisabledBuffIds);
 
   return (
@@ -19,7 +25,7 @@ export default function CycleBuffBar({ buffs, buffGroups, cycleDisabledBuffIds, 
         <span className="text-xs font-semibold text-gray-400 tracking-wide">當前循環 BUFF 生效開關</span>
       </div>
       <div className="flex flex-wrap gap-2">
-        {enabledBuffs.map(b => {
+        {sortedBuffs.map(b => {
           const group = buffGroups.find(g => g.id === b.groupId);
           const isDisabled = disabledSet.has(b.id);
           const color = group?.color || '#64748b';
@@ -44,7 +50,7 @@ export default function CycleBuffBar({ buffs, buffGroups, cycleDisabledBuffIds, 
             </button>
           );
         })}
-        {enabledBuffs.length === 0 && (
+        {sortedBuffs.length === 0 && (
           <span className="text-xs text-gray-600">尚未設定任何 Buff</span>
         )}
       </div>

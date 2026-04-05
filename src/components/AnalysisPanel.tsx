@@ -94,7 +94,7 @@ export default function AnalysisPanel({ rotationGroups, groupResults, activeRota
       {activeResult && activeResult.skillResults.length > 0 && (
         <div className="px-4 py-3 flex-1">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] text-gray-500 tracking-wider font-semibold">DAMAGE BREAKDOWN</span>
+            <span className="text-xs text-gray-500 tracking-wider font-semibold">DAMAGE BREAKDOWN</span>
             <span className="text-gray-600 text-xs cursor-help" title="各技能在當前循環中的傷害佔比">ⓘ</span>
           </div>
           <div className="space-y-3">
