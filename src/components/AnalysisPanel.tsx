@@ -8,6 +8,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import type { RotationGroup } from '../types';
 import type { RotationGroupResult } from '../utils/damage';
+import { Tooltip } from './ui';
 
 interface Props {
   rotationGroups: RotationGroup[];
@@ -58,18 +59,12 @@ function SortableCycleCard({ group, result, isActive, maxDamage, diff, excluded,
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5 min-w-0">
             <span {...attributes} {...listeners}
-              className="text-gray-600 cursor-grab active:cursor-grabbing text-[10px] shrink-0"
+              className="text-gray-600 cursor-grab active:cursor-grabbing text-xs shrink-0"
               onClick={e => e.stopPropagation()}>⠿</span>
             <span className={`text-sm truncate min-w-0 ${excluded ? 'text-gray-500 line-through' : 'text-gray-200'}`}>{group.name}</span>
           </div>
           <div className="flex items-center gap-2 shrink-0 ml-2">
-            <span className="text-sm font-bold text-gray-100">{fmt(result.totalDamage)}</span>
             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={e => { e.stopPropagation(); onToggleExclude(); }}
-                className={`text-xs cursor-pointer ${excluded ? 'text-yellow-400' : 'text-gray-500 hover:text-yellow-400'}`}
-                title={excluded ? '取消排除' : '排除此循環'}>
-                {excluded ? '◉' : '◎'}
-              </button>
               <button onClick={e => { e.stopPropagation(); onCopy(); }}
                 className="text-gray-500 hover:text-indigo-400 text-xs cursor-pointer" title="複製">⧉</button>
               <button onClick={e => { e.stopPropagation(); onRemove(); }}
@@ -79,22 +74,27 @@ function SortableCycleCard({ group, result, isActive, maxDamage, diff, excluded,
         </div>
 
         {/* Progress bar vs max damage */}
-        <div className="h-1.5 bg-gray-900 rounded-full overflow-hidden mb-1">
+        <div className="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden mb-1">
           <div
             className={`h-full rounded-full transition-all duration-500 ${isActive ? 'bg-indigo-500' : excluded ? 'bg-gray-600' : 'bg-gray-500'}`}
             style={{ width: `${pct}%` }}
           />
         </div>
-
-        {/* Diff vs active */}
-        {diff && !excluded && (
-          <div className={`text-[10px] font-mono ${Number(diff) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-            {Number(diff) >= 0 ? '+' : ''}{diff}%
-          </div>
-        )}
-        {excluded && (
-          <div className="text-[10px] text-gray-600 italic">已排除</div>
-        )}
+        <div className='flex items-center gap-2'>
+          <Tooltip label={excluded ? '點擊加入分析' : '點擊排除分析'}>
+            <button 
+              onClick={e => { e.stopPropagation(); onToggleExclude(); }}
+              className={`w-3 h-3 rounded-full border-2 cursor-pointer shrink-0 transition-colors ${excluded ? 'border-gray-600 bg-transparent' : 'border-green-500 bg-green-500/30'}`}
+            />
+          </Tooltip>
+          <span className="text-sm font-bold text-gray-100">{fmt(result.totalDamage)}</span>
+          {/* Diff vs active */}
+          {diff && !excluded && (
+            <div className={`text-xs font-mono ${Number(diff) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {Number(diff) >= 0 ? '+' : ''}{diff}%
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -136,7 +136,7 @@ export default function AnalysisPanel({
       {/* Saved Cycles */}
       <div className="px-4 py-3 border-b border-gray-800">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] text-gray-500 tracking-wider font-semibold">SAVED CYCLES</span>
+          <span className="text-xs text-gray-500 tracking-wider font-semibold">SAVED CYCLES</span>
           <button onClick={onAddRotation}
             className="text-xs text-indigo-400 hover:text-indigo-300 cursor-pointer">+ 新增</button>
         </div>
@@ -178,7 +178,6 @@ export default function AnalysisPanel({
         <div className="px-4 py-3 flex-1">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs text-gray-500 tracking-wider font-semibold">DAMAGE BREAKDOWN</span>
-            <span className="text-gray-600 text-xs cursor-help" title="各技能在當前循環中的傷害佔比">ⓘ</span>
           </div>
           <div className="space-y-3">
             {activeResult.skillResults.map(({ result: sr, subtotal }, i) => {

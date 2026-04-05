@@ -58,7 +58,7 @@ function SortablePresetCard({ preset, editingId, editValue, onEditChange, onStar
       <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-2.5 py-2 group">
         <div className="flex items-center gap-1.5 mb-0.5">
           <span {...attributes} {...listeners}
-            className="text-gray-600 cursor-grab active:cursor-grabbing text-[10px] shrink-0"
+            className="text-gray-600 cursor-grab active:cursor-grabbing text-xs shrink-0"
             onClick={e => e.stopPropagation()}>⠿</span>
           {isEditing ? (
             <input
@@ -78,7 +78,7 @@ function SortablePresetCard({ preset, editingId, editValue, onEditChange, onStar
               {preset.name}
             </span>
           )}
-          <div className="flex gap-1.5 shrink-0">
+          <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
             <button onClick={onDuplicate}
               className="text-gray-600 hover:text-indigo-400 cursor-pointer"
               style={{ fontSize: 12 }}
@@ -93,18 +93,18 @@ function SortablePresetCard({ preset, editingId, editValue, onEditChange, onStar
             </button>
           </div>
         </div>
-        <div className="text-[10px] text-gray-600 mb-1.5 ml-[18px]">{formatTime(preset.timestamp)}</div>
-        <div className="flex gap-1.5 ml-[18px]">
+        <div className="text-[10px] text-gray-600 mb-1.5 ml-[14px]">{formatTime(preset.timestamp)}</div>
+        <div className="flex gap-1.5 ml-[14px]">
           <button onClick={onLoad}
-            className="px-2 py-0.5 bg-gray-700 hover:bg-gray-600 rounded text-[10px] text-gray-300 cursor-pointer transition-colors">
+            className="px-2 py-0.5 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 cursor-pointer transition-colors">
             載入
           </button>
           <button onClick={onOpenInNewTab}
-            className="px-2 py-0.5 bg-gray-700 hover:bg-gray-600 rounded text-[10px] text-gray-300 cursor-pointer transition-colors">
+            className="px-2 py-0.5 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 cursor-pointer transition-colors">
             開新頁籤
           </button>
           <button onClick={onOverwrite}
-            className="px-2 py-0.5 bg-gray-700 hover:bg-amber-600/40 rounded text-[10px] text-amber-400 cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
+            className="px-2 py-0.5 bg-gray-700 hover:bg-amber-600/40 rounded text-xs text-amber-400 cursor-pointer transition-colors"
             title="以目前設定覆蓋此預設">
             覆蓋
           </button>
@@ -190,7 +190,7 @@ export default function PresetSection({ presets, onSavePreset, onOverwritePreset
 
       {/* Preset list */}
       {presets.length === 0 && (
-        <p className="text-[11px] text-gray-600 text-center py-2">尚無檔案</p>
+        <p className="text-xs text-gray-600 text-center py-2">尚無檔案</p>
       )}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
