@@ -25,29 +25,40 @@ interface Props {
 }
 
 /* ── Skill Modal ── */
-function SkillModal({ skill, buffs, buffGroups, characters, zones, onSave, onClose }: {
-  skill: Skill; buffs: Buff[]; buffGroups: BuffGroup[]; characters: Character[]; zones: DamageZone[];
+function SkillModal({ skill, buffs, buffGroups, characters, zones, skillGroups, onSave, onClose }: {
+  skill: Skill; buffs: Buff[]; buffGroups: BuffGroup[]; characters: Character[]; zones: DamageZone[]; skillGroups: SkillGroup[];
   onSave: (s: Skill) => void; onClose: () => void;
 }) {
   const [d, setD] = useState({ ...skill });
+  const [groupBy, setGroupBy] = useState<'zone' | 'group'>('zone');
   const p = (patch: Partial<Skill>) => setD(v => ({ ...v, ...patch }));
 
   const toggleBuff = (id: string) => {
     p({ enabledBuffIds: d.enabledBuffIds.includes(id) ? d.enabledBuffIds.filter(x => x !== id) : [...d.enabledBuffIds, id] });
   };
 
+  // Group buffs by zone
   const buffsByZone = new Map<string, Buff[]>();
   for (const b of buffs) {
-    const key = b.zoneId;
-    if (!buffsByZone.has(key)) buffsByZone.set(key, []);
-    buffsByZone.get(key)!.push(b);
+    if (!buffsByZone.has(b.zoneId)) buffsByZone.set(b.zoneId, []);
+    buffsByZone.get(b.zoneId)!.push(b);
+  }
+
+  // Group buffs by buff group
+  const buffsByGroup = new Map<string, Buff[]>();
+  buffsByGroup.set('', []);
+  for (const g of buffGroups) buffsByGroup.set(g.id, []);
+  for (const b of buffs) {
+    const key = b.groupId || '';
+    if (!buffsByGroup.has(key)) buffsByGroup.set(key, []);
+    buffsByGroup.get(key)!.push(b);
   }
 
   return (
-    <Modal open title="編輯技能" onClose={onClose} width="max-w-xl">
+    <Modal open title="編輯技能" onClose={onClose} width="max-w-2xl">
       <div className="space-y-4">
-        <div className="grid grid-cols-3 gap-3">
-          <div className="col-span-1">
+        <div className="grid grid-cols-4 gap-3">
+          <div>
             <label className="block text-xs text-gray-400 mb-1">技能名稱</label>
             <input value={d.name} onChange={e => p({ name: e.target.value })}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" />
@@ -65,11 +76,31 @@ function SkillModal({ skill, buffs, buffGroups, characters, zones, onSave, onClo
             <input type="number" value={d.skillMultiplier || ''} onChange={e => p({ skillMultiplier: Number(e.target.value) || 0 })}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="100" />
           </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">群組</label>
+            <select value={d.groupId} onChange={e => p({ groupId: e.target.value })}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-2 text-sm text-gray-100 focus:outline-none focus:border-indigo-500">
+              <option value="">未分組</option>
+              {skillGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
+          </div>
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-xs text-gray-400 font-medium">啟用的 Buff</label>
+            <div className="flex items-center gap-3">
+              <label className="text-xs text-gray-400 font-medium">啟用的 Buff</label>
+              <div className="flex items-center bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                <button onClick={() => setGroupBy('zone')}
+                  className={`px-2 py-0.5 text-[10px] font-medium cursor-pointer transition-colors ${groupBy === 'zone' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}>
+                  依分區
+                </button>
+                <button onClick={() => setGroupBy('group')}
+                  className={`px-2 py-0.5 text-[10px] font-medium cursor-pointer transition-colors ${groupBy === 'group' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}>
+                  依群組
+                </button>
+              </div>
+            </div>
             <div className="flex gap-3">
               <button onClick={() => p({ enabledBuffIds: buffs.map(b => b.id) })} className="text-xs text-indigo-400 hover:text-indigo-300 cursor-pointer">全選</button>
               <button onClick={() => p({ enabledBuffIds: [] })} className="text-xs text-gray-500 hover:text-gray-300 cursor-pointer">全不選</button>
@@ -78,29 +109,59 @@ function SkillModal({ skill, buffs, buffGroups, characters, zones, onSave, onClo
           {buffs.length === 0 ? (
             <p className="text-xs text-gray-600">尚未設定 Buff</p>
           ) : (
-            <div className="space-y-3 max-h-60 overflow-y-auto">
-              {Array.from(buffsByZone.entries()).map(([zoneId, zoneBuffs]) => {
-                const zone = zones.find(z => z.id === zoneId);
-                return (
-                  <div key={zoneId}>
-                    {zone && <div className="text-xs font-medium mb-1" style={{ color: zone.color }}>{zone.icon} {zone.displayName}</div>}
-                    <div className="flex flex-wrap gap-1.5">
-                      {zoneBuffs.map(b => {
-                        const on = d.enabledBuffIds.includes(b.id);
-                        const group = buffGroups.find(g => g.id === b.groupId);
-                        const chipColor = group?.color || '#64748b';
-                        return (
-                          <button key={b.id} onClick={() => toggleBuff(b.id)}
-                            className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all ${on ? 'text-white border-opacity-60' : 'border-gray-700 text-gray-500 opacity-40 hover:opacity-70'}`}
-                            style={on ? { backgroundColor: chipColor + '30', borderColor: chipColor } : undefined}>
-                            {b.icon} {b.name} ({b.value}%)
-                          </button>
-                        );
-                      })}
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {groupBy === 'zone' ? (
+                Array.from(buffsByZone.entries()).map(([zoneId, zoneBuffs]) => {
+                  const zone = zones.find(z => z.id === zoneId);
+                  return (
+                    <div key={zoneId}>
+                      {zone && <div className="text-xs font-medium mb-1" style={{ color: zone.color }}>{zone.icon} {zone.displayName}</div>}
+                      <div className="flex flex-wrap gap-1.5">
+                        {zoneBuffs.map(b => {
+                          const on = d.enabledBuffIds.includes(b.id);
+                          const group = buffGroups.find(g => g.id === b.groupId);
+                          const chipColor = group?.color || '#64748b';
+                          return (
+                            <button key={b.id} onClick={() => toggleBuff(b.id)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all ${on ? 'text-white border-opacity-60' : 'border-gray-700 text-gray-500 opacity-40 hover:opacity-70'}`}
+                              style={on ? { backgroundColor: chipColor + '30', borderColor: chipColor } : undefined}>
+                              {b.icon} {b.name} ({b.value}%)
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                Array.from(buffsByGroup.entries()).map(([gId, groupBuffs]) => {
+                  if (groupBuffs.length === 0) return null;
+                  const bg = buffGroups.find(g => g.id === gId);
+                  const label = bg ? bg.name : '未分組';
+                  const labelColor = bg?.color || '#64748b';
+                  return (
+                    <div key={gId || '__ungrouped'}>
+                      <div className="text-xs font-medium mb-1" style={{ color: labelColor }}>
+                        {bg ? '●' : '○'} {label}
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {groupBuffs.map(b => {
+                          const on = d.enabledBuffIds.includes(b.id);
+                          const zone = zones.find(z => z.id === b.zoneId);
+                          const chipColor = zone?.color || '#64748b';
+                          return (
+                            <button key={b.id} onClick={() => toggleBuff(b.id)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all ${on ? 'text-white border-opacity-60' : 'border-gray-700 text-gray-500 opacity-40 hover:opacity-70'}`}
+                              style={on ? { backgroundColor: chipColor + '30', borderColor: chipColor } : undefined}>
+                              {b.icon} {b.name} ({b.value}%)
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           )}
         </div>
@@ -351,7 +412,7 @@ export default function SkillSection({ skills, buffs, buffGroups, characters, zo
       )}
 
       {editing && (
-        <SkillModal skill={editing} buffs={buffs} buffGroups={buffGroups} characters={characters} zones={zones}
+        <SkillModal skill={editing} buffs={buffs} buffGroups={buffGroups} characters={characters} zones={zones} skillGroups={skillGroups}
           onSave={save} onClose={() => setEditing(null)} />
       )}
     </section>
