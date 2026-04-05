@@ -21,8 +21,6 @@ interface Props {
   characters: Character[];
   zones: DamageZone[];
   onUpdate: (g: RotationGroup) => void;
-  onToggleRightPanel: () => void;
-  rightPanelOpen: boolean;
 }
 
 function fmt(n: number) { return Math.round(n).toLocaleString(); }
@@ -217,7 +215,7 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
 }
 
 /* ── Main CycleEditor ── */
-export default function CycleEditor({ group, groupResult, skills, buffs, buffGroups, characters, zones, onUpdate, onToggleRightPanel, rightPanelOpen }: Props) {
+export default function CycleEditor({ group, groupResult, skills, buffs, buffGroups, characters, zones, onUpdate }: Props) {
   const [detailResult, setDetailResult] = useState<RotationGroupResult | null>(null);
   const [showSkillPalette, setShowSkillPalette] = useState(false);
 
@@ -313,14 +311,6 @@ export default function CycleEditor({ group, groupResult, skills, buffs, buffGro
           <p className="text-gray-600 text-xs text-center py-4 mt-2">點擊上方按鈕加入技能</p>
         )}
       </div>
-
-      {/* Right panel toggle button */}
-      <button
-        onClick={onToggleRightPanel}
-        className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-12 bg-gray-800 border border-gray-700 border-r-0 rounded-l-lg flex items-center justify-center text-gray-500 hover:text-gray-300 cursor-pointer transition-colors text-xs"
-      >
-        {rightPanelOpen ? '›' : '‹'}
-      </button>
 
       {detailResult && <DamageDetailModal result={detailResult} onClose={() => setDetailResult(null)} />}
     </div>

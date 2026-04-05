@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, type MouseEvent as ReactMouseEvent } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { DEFAULT_ZONES, CURRENT_VERSION } from './types';
@@ -129,7 +129,7 @@ function App() {
   const currentDataRef = useRef<AppData>(tabData);
   currentDataRef.current = {
     version: CURRENT_VERSION,
-    zones, buffs, buffGroups, characters, skills, skillGroups, rotationGroups, calcRows,
+    zones, buffs, buffGroups, characters, skills, skillGroups, rotationGroups, calcRows, notes,
   };
 
   // Persist working state to active tab on every change
@@ -138,7 +138,7 @@ function App() {
       t.id === activeTabId ? { ...t, data: currentDataRef.current } : t
     ));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zones, buffs, buffGroups, characters, skills, skillGroups, rotationGroups, calcRows, activeTabId]);
+  }, [zones, buffs, buffGroups, characters, skills, skillGroups, rotationGroups, calcRows, notes, activeTabId]);
 
   // Load tab data when switching tabs
   const loadTabData = useCallback((data: AppData) => {
@@ -150,6 +150,7 @@ function App() {
     setSkillGroups(data.skillGroups || []);
     setRotationGroups(data.rotationGroups || []);
     setCalcRows(data.calcRows || []);
+    setNotes(data.notes || '');
   }, []);
 
   const switchTab = useCallback((tabId: string) => {
@@ -273,6 +274,9 @@ function App() {
     setPresets(newPresets);
   }, [setPresets]);
 
+  // Notes state (per-tab)
+  const [notes, setNotes] = useState<string>(tabData.notes || '');
+
   // Layout state
   const [activeRotationId, setActiveRotationId] = useState<string>('');
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
@@ -283,6 +287,61 @@ function App() {
     skills: true,
   });
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [leftPanelWidth, setLeftPanelWidth] = useState(360);
+  const [rightPanelWidth, setRightPanelWidth] = useState(280);
+  const [isNarrow, setIsNarrow] = useState(false);
+  const prevNarrowRef = useRef(false);
+
+  // Responsive: auto-collapse sidebars when window is narrow
+  useEffect(() => {
+    const checkWidth = () => {
+      setIsNarrow(window.innerWidth < 900);
+    };
+    checkWidth();
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
+  }, []);
+
+  useEffect(() => {
+    if (isNarrow && !prevNarrowRef.current) {
+      setRightPanelOpen(false);
+      setVisibleSections({ presets: false, characters: false, buffs: false, skills: false });
+    }
+    prevNarrowRef.current = isNarrow;
+  }, [isNarrow]);
+
+  // Resize handlers
+  const resizeRef = useRef<{ startX: number; startWidth: number; side: 'left' | 'right' } | null>(null);
+
+  const startResize = useCallback((e: ReactMouseEvent, side: 'left' | 'right', currentWidth: number) => {
+    e.preventDefault();
+    resizeRef.current = { startX: e.clientX, startWidth: currentWidth, side };
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, []);
+
+  useEffect(() => {
+    const onMouseMove = (e: globalThis.MouseEvent) => {
+      if (!resizeRef.current) return;
+      const { startX, startWidth, side } = resizeRef.current;
+      const delta = side === 'left' ? e.clientX - startX : startX - e.clientX;
+      const newWidth = Math.min(600, Math.max(200, startWidth + delta));
+      if (side === 'left') setLeftPanelWidth(newWidth);
+      else setRightPanelWidth(newWidth);
+    };
+    const onMouseUp = () => {
+      if (!resizeRef.current) return;
+      resizeRef.current = null;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+  }, []);
 
   // One-time migration for existing data (v1 → v2 field patches)
   useEffect(() => {
@@ -363,7 +422,7 @@ function App() {
 
   const getData = (): AppData => ({
     version: CURRENT_VERSION,
-    zones, buffs, buffGroups, characters, skills, skillGroups, rotationGroups, calcRows,
+    zones, buffs, buffGroups, characters, skills, skillGroups, rotationGroups, calcRows, notes,
   });
 
   const handleImport = (data: AppData) => {
@@ -419,7 +478,17 @@ function App() {
   };
 
   const toggleSection = (key: string) => {
-    setVisibleSections(prev => ({ ...prev, [key]: !(prev[key] !== false) }));
+    setVisibleSections(prev => {
+      const next = { ...prev, [key]: !(prev[key] !== false) };
+      return next;
+    });
+  };
+
+  const closeOverlays = () => {
+    if (isNarrow) {
+      setRightPanelOpen(false);
+      setVisibleSections({ presets: false, characters: false, buffs: false, skills: false });
+    }
   };
 
   const toggleCollapse = (key: string) => {
@@ -458,18 +527,30 @@ function App() {
         onDuplicateTab={duplicateTab}
       />
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* Icon Sidebar */}
         <IconSidebar visibleSections={visibleSections} onToggle={toggleSection} />
 
+        {/* Backdrop for narrow overlay mode */}
+        {isNarrow && (hasLeftPanel || rightPanelOpen) && (
+          <div className="absolute inset-0 bg-black/40 z-20" onClick={closeOverlays} />
+        )}
+
         {/* Left Panel */}
         {hasLeftPanel && (
-          <aside className="w-[360px] bg-gray-900/30 border-r border-gray-800 overflow-y-auto shrink-0 flex flex-col">
+          <aside
+            className={`bg-gray-900/95 border-r border-gray-800 flex flex-col relative ${
+              isNarrow
+                ? 'absolute top-0 bottom-0 left-12 z-30 shadow-2xl'
+                : 'shrink-0'
+            }`}
+            style={{ width: leftPanelWidth }}
+          >
             {/* Header area with import/export */}
             <div className="px-4 py-2.5 border-b border-gray-800 flex items-center justify-between shrink-0">
               <div className='flex items-center'>
                 <span className="text-xs text-gray-500 font-medium">設定面板</span>
-                <Tooltip label='點擊匯入按鈕可匯入範例資料' > 
+                <Tooltip label='點擊匯入按鈕可匯入範例資料' >
                   <span className="text-yellow-500 hover:text-yellow-400 text-md cursor-pointer px-2">🛈</span>
                 </Tooltip>
               </div>
@@ -570,6 +651,12 @@ function App() {
                 </div>
               )}
             </div>
+
+            {/* Left panel resize handle */}
+            <div
+              className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-indigo-500/40 transition-colors z-10"
+              onMouseDown={e => startResize(e, 'left', leftPanelWidth)}
+            />
           </aside>
         )}
 
@@ -596,8 +683,6 @@ function App() {
               characters={characters}
               zones={zones}
               onUpdate={updateRotationGroup}
-              onToggleRightPanel={() => setRightPanelOpen(!rightPanelOpen)}
-              rightPanelOpen={rightPanelOpen}
             />
           ) : (
             <div className="flex-1 flex items-center justify-center">
@@ -612,20 +697,47 @@ function App() {
           )}
         </main>
 
+        {/* Right panel toggle tab (when panel is closed) */}
+        {!rightPanelOpen && rotationGroups.length > 0 && (
+          <button
+            onClick={() => setRightPanelOpen(true)}
+            className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-12 bg-gray-800 border border-gray-700 border-r-0 rounded-l-lg flex items-center justify-center text-gray-500 hover:text-gray-300 cursor-pointer transition-colors text-xs z-10"
+          >
+            ‹
+          </button>
+        )}
+
         {/* Right Panel */}
         {rightPanelOpen && rotationGroups.length > 0 && (
-          <AnalysisPanel
-            rotationGroups={rotationGroups}
-            groupResults={groupResults}
-            activeRotationId={activeRotationId}
-            excludedGroupIds={excludedGroupIds}
-            onSelectRotation={setActiveRotationId}
-            onAddRotation={addRotationGroup}
-            onRemoveRotation={removeRotationGroup}
-            onCopyRotation={copyRotationGroup}
-            onReorderRotations={reorderRotationGroups}
-            onToggleExclude={toggleExclude}
-          />
+          <aside
+            className={`bg-gray-900/95 border-l border-gray-800 flex flex-col relative ${
+              isNarrow
+                ? 'absolute top-0 bottom-0 right-0 z-30 shadow-2xl'
+                : 'shrink-0'
+            }`}
+            style={{ width: rightPanelWidth }}
+          >
+            {/* Right panel resize handle */}
+            <div
+              className="absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-indigo-500/40 transition-colors z-10"
+              onMouseDown={e => startResize(e, 'right', rightPanelWidth)}
+            />
+            <AnalysisPanel
+              rotationGroups={rotationGroups}
+              groupResults={groupResults}
+              activeRotationId={activeRotationId}
+              excludedGroupIds={excludedGroupIds}
+              onSelectRotation={setActiveRotationId}
+              onAddRotation={addRotationGroup}
+              onRemoveRotation={removeRotationGroup}
+              onCopyRotation={copyRotationGroup}
+              onReorderRotations={reorderRotationGroups}
+              onToggleExclude={toggleExclude}
+              onClose={() => setRightPanelOpen(false)}
+              notes={notes}
+              onNotesChange={setNotes}
+            />
+          </aside>
         )}
       </div>
 
