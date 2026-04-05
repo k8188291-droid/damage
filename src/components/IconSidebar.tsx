@@ -1,6 +1,7 @@
 interface Props {
   visibleSections: Record<string, boolean>;
   onToggle: (key: string) => void;
+  onHelp: () => void;
 }
 
 const SECTIONS = [
@@ -10,7 +11,7 @@ const SECTIONS = [
   { key: 'skills', icon: '⚔️', label: '技能' },
 ] as const;
 
-export default function IconSidebar({ visibleSections, onToggle }: Props) {
+export default function IconSidebar({ visibleSections, onToggle, onHelp }: Props) {
   return (
     <aside className="w-12 bg-gray-900/80 border-r border-gray-800 flex flex-col items-center py-3 gap-1 shrink-0">
       {SECTIONS.map(s => {
@@ -27,9 +28,13 @@ export default function IconSidebar({ visibleSections, onToggle }: Props) {
         );
       })}
       <div className="mt-auto">
-        <div className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-600 text-sm">
-          ⚙
-        </div>
+        <button
+          onClick={onHelp}
+          className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-500 hover:text-indigo-400 hover:bg-indigo-600/20 cursor-pointer transition-colors text-base"
+          title="說明 / AI Prompt"
+        >
+          ?
+        </button>
       </div>
     </aside>
   );

@@ -16,6 +16,7 @@ import CalcPanel from './components/CalcPanel';
 import TabBar from './components/TabBar';
 import PresetSection from './components/PresetSection';
 import { Tooltip } from './components/ui';
+import HelpModal from './components/HelpModal';
 
 interface UndoItem {
   id: string;
@@ -493,6 +494,9 @@ function App() {
     setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
+  // ── Help modal ──
+  const [helpOpen, setHelpOpen] = useState(false);
+
   // ── Excluded rotation groups ──
   const [excludedGroupIds, setExcludedGroupIds] = useState<Set<string>>(new Set());
 
@@ -527,7 +531,7 @@ function App() {
 
       <div className="flex-1 flex overflow-hidden relative">
         {/* Icon Sidebar */}
-        <IconSidebar visibleSections={visibleSections} onToggle={toggleSection} />
+        <IconSidebar visibleSections={visibleSections} onToggle={toggleSection} onHelp={() => setHelpOpen(true)} />
 
         {/* Backdrop for narrow overlay mode */}
         {isNarrow && (hasLeftPanel || rightPanelOpen) && (
@@ -739,6 +743,9 @@ function App() {
           </aside>
         )}
       </div>
+
+      {/* Help modal */}
+      <HelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
 
       {/* Floating calculator */}
       <CalcPanel calcRows={calcRows} onChange={setCalcRows} pushUndo={pushUndo} />
