@@ -1,3 +1,11 @@
+import {
+  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { RotationGroup } from '../types';
 import type { RotationGroupResult } from '../utils/damage';
 
@@ -5,20 +13,115 @@ interface Props {
   rotationGroups: RotationGroup[];
   groupResults: RotationGroupResult[];
   activeRotationId: string;
+  excludedGroupIds: Set<string>;
   onSelectRotation: (id: string) => void;
   onAddRotation: () => void;
   onRemoveRotation: (id: string) => void;
   onCopyRotation: (g: RotationGroup) => void;
+  onReorderRotations: (groups: RotationGroup[]) => void;
+  onToggleExclude: (id: string) => void;
 }
 
 function fmt(n: number) { return Math.round(n).toLocaleString(); }
 
 const SKILL_COLORS = ['#3b82f6', '#f59e0b', '#ef4444', '#22c55e', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#14b8a6', '#a855f7'];
 
-export default function AnalysisPanel({ rotationGroups, groupResults, activeRotationId, onSelectRotation, onAddRotation, onRemoveRotation, onCopyRotation }: Props) {
+function SortableCycleCard({ group, result, isActive, maxDamage, diff, excluded, onSelect, onCopy, onRemove, onToggleExclude }: {
+  group: RotationGroup;
+  result: RotationGroupResult;
+  isActive: boolean;
+  maxDamage: number;
+  diff: string | null;
+  excluded: boolean;
+  onSelect: () => void;
+  onCopy: () => void;
+  onRemove: () => void;
+  onToggleExclude: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: group.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  const pct = (result.totalDamage / maxDamage) * 100;
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <div
+        onClick={onSelect}
+        className={`rounded-xl px-3 py-2.5 cursor-pointer transition-colors group ${
+          excluded ? 'opacity-50' : ''
+        } ${
+          isActive
+            ? 'bg-indigo-600/20 border border-indigo-500/40'
+            : 'bg-gray-800/60 border border-gray-700 hover:border-gray-600'
+        }`}
+      >
+        {/* Name + damage */}
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span {...attributes} {...listeners}
+              className="text-gray-600 cursor-grab active:cursor-grabbing text-[10px] shrink-0"
+              onClick={e => e.stopPropagation()}>⠿</span>
+            <span className={`text-sm truncate min-w-0 ${excluded ? 'text-gray-500 line-through' : 'text-gray-200'}`}>{group.name}</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 ml-2">
+            <span className="text-sm font-bold text-gray-100">{fmt(result.totalDamage)}</span>
+            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onClick={e => { e.stopPropagation(); onToggleExclude(); }}
+                className={`text-xs cursor-pointer ${excluded ? 'text-yellow-400' : 'text-gray-500 hover:text-yellow-400'}`}
+                title={excluded ? '取消排除' : '排除此循環'}>
+                {excluded ? '◉' : '◎'}
+              </button>
+              <button onClick={e => { e.stopPropagation(); onCopy(); }}
+                className="text-gray-500 hover:text-indigo-400 text-xs cursor-pointer" title="複製">⧉</button>
+              <button onClick={e => { e.stopPropagation(); onRemove(); }}
+                className="text-gray-500 hover:text-red-400 text-xs cursor-pointer" title="刪除">✕</button>
+            </div>
+          </div>
+        </div>
+
+        {/* Progress bar vs max damage */}
+        <div className="h-1.5 bg-gray-900 rounded-full overflow-hidden mb-1">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${isActive ? 'bg-indigo-500' : excluded ? 'bg-gray-600' : 'bg-gray-500'}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+
+        {/* Diff vs active */}
+        {diff && !excluded && (
+          <div className={`text-[10px] font-mono ${Number(diff) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+            {Number(diff) >= 0 ? '+' : ''}{diff}%
+          </div>
+        )}
+        {excluded && (
+          <div className="text-[10px] text-gray-600 italic">已排除</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function AnalysisPanel({
+  rotationGroups, groupResults, activeRotationId, excludedGroupIds,
+  onSelectRotation, onAddRotation, onRemoveRotation, onCopyRotation,
+  onReorderRotations, onToggleExclude,
+}: Props) {
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
   const activeIdx = rotationGroups.findIndex(g => g.id === activeRotationId);
   const activeResult = activeIdx >= 0 ? groupResults[activeIdx] : null;
-  const maxDamage = Math.max(...groupResults.map(r => r.totalDamage), 1);
+
+  // Max damage computed only among non-excluded groups
+  const includedResults = groupResults.filter((_, i) => !excludedGroupIds.has(rotationGroups[i].id));
+  const maxDamage = Math.max(...includedResults.map(r => r.totalDamage), 1);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIdx = rotationGroups.findIndex(g => g.id === active.id);
+      const newIdx = rotationGroups.findIndex(g => g.id === over.id);
+      onReorderRotations(arrayMove(rotationGroups, oldIdx, newIdx));
+    }
+  };
 
   return (
     <aside className="w-[280px] bg-gray-900/40 border-l border-gray-800 flex flex-col overflow-y-auto shrink-0">
@@ -37,57 +140,37 @@ export default function AnalysisPanel({ rotationGroups, groupResults, activeRota
           <button onClick={onAddRotation}
             className="text-xs text-indigo-400 hover:text-indigo-300 cursor-pointer">+ 新增</button>
         </div>
-        <div className="space-y-2">
-          {rotationGroups.map((g, i) => {
-            const isActive = g.id === activeRotationId;
-            const result = groupResults[i];
-            const pct = (result.totalDamage / maxDamage) * 100;
-            const diff = activeResult && activeResult.totalDamage > 0 && !isActive
-              ? ((result.totalDamage / activeResult.totalDamage - 1) * 100).toFixed(1)
-              : null;
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={rotationGroups.map(g => g.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {rotationGroups.map((g, i) => {
+                const isActive = g.id === activeRotationId;
+                const result = groupResults[i];
+                const excluded = excludedGroupIds.has(g.id);
+                // Diff only among non-excluded
+                const diff = activeResult && activeResult.totalDamage > 0 && !isActive && !excluded && !excludedGroupIds.has(activeRotationId)
+                  ? ((result.totalDamage / activeResult.totalDamage - 1) * 100).toFixed(1)
+                  : null;
 
-            return (
-              <div
-                key={g.id}
-                onClick={() => onSelectRotation(g.id)}
-                className={`rounded-xl px-3 py-2.5 cursor-pointer transition-colors group ${
-                  isActive
-                    ? 'bg-indigo-600/20 border border-indigo-500/40'
-                    : 'bg-gray-800/60 border border-gray-700 hover:border-gray-600'
-                }`}
-              >
-                {/* Name + damage */}
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-sm text-gray-200 truncate min-w-0">{g.name}</span>
-                  <div className="flex items-center gap-2 shrink-0 ml-2">
-                    <span className="text-sm font-bold text-gray-100">{fmt(result.totalDamage)}</span>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={e => { e.stopPropagation(); onCopyRotation(g); }}
-                        className="text-gray-500 hover:text-indigo-400 text-xs cursor-pointer" title="複製">⧉</button>
-                      <button onClick={e => { e.stopPropagation(); onRemoveRotation(g.id); }}
-                        className="text-gray-500 hover:text-red-400 text-xs cursor-pointer" title="刪除">✕</button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Progress bar vs max damage (req 8) */}
-                <div className="h-1.5 bg-gray-900 rounded-full overflow-hidden mb-1">
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${isActive ? 'bg-indigo-500' : 'bg-gray-500'}`}
-                    style={{ width: `${pct}%` }}
+                return (
+                  <SortableCycleCard
+                    key={g.id}
+                    group={g}
+                    result={result}
+                    isActive={isActive}
+                    maxDamage={maxDamage}
+                    diff={diff}
+                    excluded={excluded}
+                    onSelect={() => onSelectRotation(g.id)}
+                    onCopy={() => onCopyRotation(g)}
+                    onRemove={() => onRemoveRotation(g.id)}
+                    onToggleExclude={() => onToggleExclude(g.id)}
                   />
-                </div>
-
-                {/* Diff vs active */}
-                {diff && (
-                  <div className={`text-[10px] font-mono ${Number(diff) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {Number(diff) >= 0 ? '+' : ''}{diff}%
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
+          </SortableContext>
+        </DndContext>
       </div>
 
       {/* Damage Breakdown */}

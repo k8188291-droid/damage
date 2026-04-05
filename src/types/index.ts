@@ -79,6 +79,19 @@ export interface AppData {
   calcRows: CalcRow[];
 }
 
+export interface Tab {
+  id: string;
+  name: string;
+  data: AppData;
+}
+
+export interface Preset {
+  id: string;
+  name: string;
+  timestamp: number;
+  data: AppData;
+}
+
 export const CURRENT_VERSION = 2;
 
 export const DEFAULT_ZONES: DamageZone[] = [
