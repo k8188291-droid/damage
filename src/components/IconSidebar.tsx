@@ -4,6 +4,7 @@ interface Props {
 }
 
 const SECTIONS = [
+  { key: 'presets', icon: '🗄️', label: '檔案庫' },
   { key: 'characters', icon: '👤', label: '角色' },
   { key: 'buffs', icon: '✨', label: 'Buff' },
   { key: 'skills', icon: '⚔️', label: '技能' },

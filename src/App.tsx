@@ -84,14 +84,14 @@ function migrateLegacyData(): Tab[] | null {
   // Clean up legacy keys
   keys.forEach(k => window.localStorage.removeItem(k));
 
-  return [makeTab('分頁 1', data)];
+  return [makeTab('頁籤 1', data)];
 }
 
 function App() {
   // ── Tab system ──
   const [tabs, setTabs] = useLocalStorage<Tab[]>('dmg-tabs', () => {
     const migrated = migrateLegacyData();
-    return migrated || [makeTab('分頁 1')];
+    return migrated || [makeTab('頁籤 1')];
   });
   const [activeTabId, setActiveTabId] = useLocalStorage<string>('dmg-active-tab', () => {
     try {
@@ -166,7 +166,7 @@ function App() {
   }, [activeTabId, tabs, setTabs, setActiveTabId, loadTabData]);
 
   const addTab = useCallback(() => {
-    const newTab = makeTab(`分頁 ${tabs.length + 1}`);
+    const newTab = makeTab(`頁籤 ${tabs.length + 1}`);
     setTabs(prev => {
       const updated = prev.map(t =>
         t.id === activeTabId ? { ...t, data: currentDataRef.current } : t
@@ -221,6 +221,12 @@ function App() {
     setPresets(prev => [...prev, preset]);
   }, [setPresets]);
 
+  const overwritePreset = useCallback((id: string) => {
+    setPresets(prev => prev.map(p =>
+      p.id === id ? { ...p, timestamp: Date.now(), data: JSON.parse(JSON.stringify(currentDataRef.current)) } : p
+    ));
+  }, [setPresets]);
+
   const loadPreset = useCallback((preset: Preset) => {
     loadTabData(JSON.parse(JSON.stringify(preset.data)));
   }, [loadTabData]);
@@ -237,6 +243,23 @@ function App() {
     setActiveTabId(newTab.id);
   }, [activeTabId, setTabs, setActiveTabId, loadTabData]);
 
+  const duplicatePreset = useCallback((id: string) => {
+    setPresets(prev => {
+      const source = prev.find(p => p.id === id);
+      if (!source) return prev;
+      const copy: Preset = {
+        id: uuid(),
+        name: `${source.name} (複製)`,
+        timestamp: Date.now(),
+        data: JSON.parse(JSON.stringify(source.data)),
+      };
+      const idx = prev.findIndex(p => p.id === id);
+      const next = [...prev];
+      next.splice(idx + 1, 0, copy);
+      return next;
+    });
+  }, [setPresets]);
+
   const renamePreset = useCallback((id: string, name: string) => {
     setPresets(prev => prev.map(p => p.id === id ? { ...p, name } : p));
   }, [setPresets]);
@@ -245,10 +268,15 @@ function App() {
     setPresets(prev => prev.filter(p => p.id !== id));
   }, [setPresets]);
 
+  const reorderPresets = useCallback((newPresets: Preset[]) => {
+    setPresets(newPresets);
+  }, [setPresets]);
+
   // Layout state
   const [activeRotationId, setActiveRotationId] = useState<string>('');
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [visibleSections, setVisibleSections] = useState<Record<string, boolean>>({
+    presets: true,
     characters: true,
     buffs: true,
     skills: true,
@@ -449,14 +477,14 @@ function App() {
             </div>
 
             <div className="flex-1 overflow-y-auto">
-              {/* Presets */}
-              {visibleSections.characters !== false && (
+              {/* 檔案庫 */}
+              {visibleSections.presets !== false && (
                 <div className="border-b border-gray-800">
                   <button onClick={() => toggleCollapse('presets')}
                     className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-800/30 cursor-pointer transition-colors">
                     <span className="text-sm font-semibold text-indigo-400 flex items-center gap-2">
                       <span className={`text-[10px] text-gray-500 transition-transform ${collapsedSections.presets ? '' : 'rotate-90'}`}>▶</span>
-                      預設集
+                      檔案庫
                     </span>
                   </button>
                   {!collapsedSections.presets && (
@@ -464,10 +492,13 @@ function App() {
                       <PresetSection
                         presets={presets}
                         onSavePreset={savePreset}
+                        onOverwritePreset={overwritePreset}
                         onLoadPreset={loadPreset}
                         onOpenInNewTab={openPresetInNewTab}
+                        onDuplicatePreset={duplicatePreset}
                         onRenamePreset={renamePreset}
                         onDeletePreset={deletePreset}
+                        onReorderPresets={reorderPresets}
                       />
                     </div>
                   )}

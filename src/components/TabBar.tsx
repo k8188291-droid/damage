@@ -76,13 +76,25 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
               ) : (
                 <span className="truncate">{tab.name}</span>
               )}
-              {tabs.length > 1 && !isEditing && (
-                <button
-                  onClick={e => { e.stopPropagation(); onCloseTab(tab.id); }}
-                  className="text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] shrink-0 cursor-pointer"
-                >
-                  ✕
-                </button>
+              {!isEditing && (
+                <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <button
+                    onClick={e => { e.stopPropagation(); onDuplicateTab(tab.id); }}
+                    className="text-gray-600 hover:text-indigo-400 text-[10px] cursor-pointer"
+                    title="複製頁籤"
+                  >
+                    ⧉
+                  </button>
+                  {tabs.length > 1 && (
+                    <button
+                      onClick={e => { e.stopPropagation(); onCloseTab(tab.id); }}
+                      className="text-gray-600 hover:text-red-400 text-[10px] cursor-pointer"
+                      title="關閉頁籤"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           );
@@ -93,7 +105,7 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
       <button
         onClick={onAddTab}
         className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-gray-300 hover:bg-gray-800/40 rounded-lg cursor-pointer transition-colors shrink-0 mb-0.5 ml-1 text-sm"
-        title="新增分頁"
+        title="新增頁籤"
       >
         +
       </button>
@@ -114,14 +126,14 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onAddTab, onClo
             onClick={() => { onDuplicateTab(contextMenu.tabId); setContextMenu(null); }}
             className="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700 cursor-pointer"
           >
-            複製分頁
+            複製頁籤
           </button>
           {tabs.length > 1 && (
             <button
               onClick={() => { onCloseTab(contextMenu.tabId); setContextMenu(null); }}
               className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-gray-700 cursor-pointer"
             >
-              關閉分頁
+              關閉頁籤
             </button>
           )}
         </div>
