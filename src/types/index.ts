@@ -77,6 +77,7 @@ export interface AppData {
   skillGroups: SkillGroup[];
   rotationGroups: RotationGroup[];
   calcRows: CalcRow[];
+  notes?: string;
 }
 
 export interface Tab {

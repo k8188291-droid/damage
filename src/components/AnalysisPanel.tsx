@@ -21,6 +21,8 @@ interface Props {
   onCopyRotation: (g: RotationGroup) => void;
   onReorderRotations: (groups: RotationGroup[]) => void;
   onToggleExclude: (id: string) => void;
+  notes: string;
+  onNotesChange: (notes: string) => void;
 }
 
 function fmt(n: number) { return Math.round(n).toLocaleString(); }
@@ -82,7 +84,7 @@ function SortableCycleCard({ group, result, isActive, maxDamage, diff, excluded,
         </div>
         <div className='flex items-center gap-2'>
           <Tooltip label={excluded ? '點擊加入分析' : '點擊排除分析'}>
-            <button 
+            <button
               onClick={e => { e.stopPropagation(); onToggleExclude(); }}
               className={`w-3 h-3 rounded-full border-2 cursor-pointer shrink-0 transition-colors ${excluded ? 'border-gray-600 bg-transparent' : 'border-green-500 bg-green-500/30'}`}
             />
@@ -103,7 +105,7 @@ function SortableCycleCard({ group, result, isActive, maxDamage, diff, excluded,
 export default function AnalysisPanel({
   rotationGroups, groupResults, activeRotationId, excludedGroupIds,
   onSelectRotation, onAddRotation, onRemoveRotation, onCopyRotation,
-  onReorderRotations, onToggleExclude,
+  onReorderRotations, onToggleExclude, notes, onNotesChange,
 }: Props) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -124,13 +126,25 @@ export default function AnalysisPanel({
   };
 
   return (
-    <aside className="w-[280px] bg-gray-900/40 border-l border-gray-800 flex flex-col overflow-y-auto shrink-0">
+    <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
       <div className="px-4 py-3 border-b border-gray-800 shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-sm">📊</span>
-          <span className="text-sm font-semibold text-gray-200">數據分析對比</span>
+          <span className="text-sm font-semibold text-gray-200 flex-1">數據分析對比</span>
         </div>
+      </div>
+
+      {/* Notes block */}
+      <div className="px-4 py-3 border-b border-gray-800 shrink-0">
+        <div className="text-xs text-gray-500 tracking-wider font-semibold mb-2">備註</div>
+        <textarea
+          value={notes}
+          onChange={e => onNotesChange(e.target.value)}
+          placeholder="輸入此設定的說明..."
+          className="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-300 resize-none focus:outline-none focus:border-indigo-500"
+          rows={3}
+        />
       </div>
 
       {/* Saved Cycles */}
@@ -202,6 +216,6 @@ export default function AnalysisPanel({
           </div>
         </div>
       )}
-    </aside>
+    </div>
   );
 }
