@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { DEFAULT_ZONES, CURRENT_VERSION } from './types';
-import type { DamageZone, Buff, BuffGroup, Character, Skill, SkillGroup, RotationGroup, CalcRow, AppData } from './types';
+import type { DamageZone, Buff, BuffGroup, Character, Skill, SkillGroup, RotationGroup, CalcRow, AppData, Tab, Preset } from './types';
 import { calculateRotationGroup } from './utils/damage';
 import IconSidebar from './components/IconSidebar';
 import CharacterSection from './components/CharacterSection';
@@ -13,6 +13,9 @@ import CycleEditor from './components/CycleEditor';
 import AnalysisPanel from './components/AnalysisPanel';
 import ImportExport from './components/ImportExport';
 import CalcPanel from './components/CalcPanel';
+import TabBar from './components/TabBar';
+import PresetSection from './components/PresetSection';
+import { Tooltip } from './components/ui';
 
 interface UndoItem {
   id: string;
@@ -39,27 +42,249 @@ function UndoToast({ stack, onUndo, onDismiss }: {
   );
 }
 
+function makeEmptyData(): AppData {
+  return {
+    version: CURRENT_VERSION,
+    zones: DEFAULT_ZONES,
+    buffs: [],
+    buffGroups: [],
+    characters: [],
+    skills: [],
+    skillGroups: [],
+    rotationGroups: [],
+    calcRows: [],
+  };
+}
+
+function makeTab(name: string, data?: AppData): Tab {
+  return { id: uuid(), name, data: data || makeEmptyData() };
+}
+
+/** Migrate legacy per-key localStorage into the first tab */
+function migrateLegacyData(): Tab[] | null {
+  const keys = ['dmg-zones', 'dmg-buffs', 'dmg-buff-groups', 'dmg-characters', 'dmg-skills', 'dmg-skill-groups', 'dmg-rotation-groups', 'dmg-calc-rows'];
+  const hasLegacy = keys.some(k => window.localStorage.getItem(k) !== null);
+  if (!hasLegacy) return null;
+
+  const parse = <T,>(key: string, fallback: T): T => {
+    try { const v = window.localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
+  };
+
+  const data: AppData = {
+    version: CURRENT_VERSION,
+    zones: parse<DamageZone[]>('dmg-zones', DEFAULT_ZONES),
+    buffs: parse<Buff[]>('dmg-buffs', []),
+    buffGroups: parse<BuffGroup[]>('dmg-buff-groups', []),
+    characters: parse<Character[]>('dmg-characters', []),
+    skills: parse<Skill[]>('dmg-skills', []),
+    skillGroups: parse<SkillGroup[]>('dmg-skill-groups', []),
+    rotationGroups: parse<RotationGroup[]>('dmg-rotation-groups', []),
+    calcRows: parse<CalcRow[]>('dmg-calc-rows', []),
+  };
+
+  // Clean up legacy keys
+  keys.forEach(k => window.localStorage.removeItem(k));
+
+  return [makeTab('頁籤 1', data)];
+}
+
 function App() {
-  const [zones, setZones] = useLocalStorage<DamageZone[]>('dmg-zones', DEFAULT_ZONES);
-  const [buffs, setBuffs] = useLocalStorage<Buff[]>('dmg-buffs', []);
-  const [buffGroups, setBuffGroups] = useLocalStorage<BuffGroup[]>('dmg-buff-groups', []);
-  const [characters, setCharacters] = useLocalStorage<Character[]>('dmg-characters', []);
-  const [skills, setSkills] = useLocalStorage<Skill[]>('dmg-skills', []);
-  const [skillGroups, setSkillGroups] = useLocalStorage<SkillGroup[]>('dmg-skill-groups', []);
-  const [rotationGroups, setRotationGroups] = useLocalStorage<RotationGroup[]>('dmg-rotation-groups', []);
-  const [calcRows, setCalcRows] = useLocalStorage<CalcRow[]>('dmg-calc-rows', []);
+  // ── Tab system ──
+  const [tabs, setTabs] = useLocalStorage<Tab[]>('dmg-tabs', () => {
+    const migrated = migrateLegacyData();
+    return migrated || [makeTab('頁籤 1')];
+  });
+  const [activeTabId, setActiveTabId] = useLocalStorage<string>('dmg-active-tab', () => {
+    try {
+      const t = window.localStorage.getItem('dmg-tabs');
+      if (t) { const parsed = JSON.parse(t); return parsed[0]?.id || ''; }
+    } catch { /* ignore */ }
+    return '';
+  });
+
+  // ── Presets ──
+  const [presets, setPresets] = useLocalStorage<Preset[]>('dmg-presets', []);
+
+  // Ensure activeTabId is valid
+  useEffect(() => {
+    if (tabs.length > 0 && !tabs.find(t => t.id === activeTabId)) {
+      setActiveTabId(tabs[0].id);
+    }
+  }, [tabs, activeTabId, setActiveTabId]);
+
+  const activeTab = tabs.find(t => t.id === activeTabId) || tabs[0];
+  const tabData = activeTab?.data || makeEmptyData();
+
+  // ── Working state (loaded from active tab) ──
+  const [zones, setZones] = useState<DamageZone[]>(tabData.zones);
+  const [buffs, setBuffs] = useState<Buff[]>(tabData.buffs);
+  const [buffGroups, setBuffGroups] = useState<BuffGroup[]>(tabData.buffGroups || []);
+  const [characters, setCharacters] = useState<Character[]>(tabData.characters);
+  const [skills, setSkills] = useState<Skill[]>(tabData.skills);
+  const [skillGroups, setSkillGroups] = useState<SkillGroup[]>(tabData.skillGroups || []);
+  const [rotationGroups, setRotationGroups] = useState<RotationGroup[]>(tabData.rotationGroups);
+  const [calcRows, setCalcRows] = useState<CalcRow[]>(tabData.calcRows || []);
+
+  // Save working state back to tabs whenever it changes
+  const currentDataRef = useRef<AppData>(tabData);
+  currentDataRef.current = {
+    version: CURRENT_VERSION,
+    zones, buffs, buffGroups, characters, skills, skillGroups, rotationGroups, calcRows,
+  };
+
+  // Persist working state to active tab on every change
+  useEffect(() => {
+    setTabs(prev => prev.map(t =>
+      t.id === activeTabId ? { ...t, data: currentDataRef.current } : t
+    ));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zones, buffs, buffGroups, characters, skills, skillGroups, rotationGroups, calcRows, activeTabId]);
+
+  // Load tab data when switching tabs
+  const loadTabData = useCallback((data: AppData) => {
+    setZones(data.zones || DEFAULT_ZONES);
+    setBuffs(data.buffs || []);
+    setBuffGroups(data.buffGroups || []);
+    setCharacters(data.characters || []);
+    setSkills(data.skills || []);
+    setSkillGroups(data.skillGroups || []);
+    setRotationGroups(data.rotationGroups || []);
+    setCalcRows(data.calcRows || []);
+  }, []);
+
+  const switchTab = useCallback((tabId: string) => {
+    if (tabId === activeTabId) return;
+    // Save current state first
+    setTabs(prev => prev.map(t =>
+      t.id === activeTabId ? { ...t, data: currentDataRef.current } : t
+    ));
+    // Load new tab
+    const target = tabs.find(t => t.id === tabId);
+    if (target) {
+      loadTabData(target.data);
+      setActiveTabId(tabId);
+    }
+  }, [activeTabId, tabs, setTabs, setActiveTabId, loadTabData]);
+
+  const addTab = useCallback(() => {
+    const newTab = makeTab(`頁籤 ${tabs.length + 1}`);
+    setTabs(prev => {
+      const updated = prev.map(t =>
+        t.id === activeTabId ? { ...t, data: currentDataRef.current } : t
+      );
+      return [...updated, newTab];
+    });
+    loadTabData(newTab.data);
+    setActiveTabId(newTab.id);
+  }, [tabs.length, activeTabId, setTabs, setActiveTabId, loadTabData]);
+
+  const closeTab = useCallback((tabId: string) => {
+    if (tabs.length <= 1) return;
+    const idx = tabs.findIndex(t => t.id === tabId);
+    const remaining = tabs.filter(t => t.id !== tabId);
+    setTabs(remaining);
+    if (tabId === activeTabId) {
+      const nextIdx = Math.min(idx, remaining.length - 1);
+      const nextTab = remaining[nextIdx];
+      loadTabData(nextTab.data);
+      setActiveTabId(nextTab.id);
+    }
+  }, [tabs, activeTabId, setTabs, setActiveTabId, loadTabData]);
+
+  const renameTab = useCallback((tabId: string, name: string) => {
+    setTabs(prev => prev.map(t => t.id === tabId ? { ...t, name } : t));
+  }, [setTabs]);
+
+  const duplicateTab = useCallback((tabId: string) => {
+    const source = tabs.find(t => t.id === tabId);
+    if (!source) return;
+    // If duplicating active tab, use current working state
+    const sourceData = tabId === activeTabId ? currentDataRef.current : source.data;
+    const newTab = makeTab(`${source.name} (複製)`, JSON.parse(JSON.stringify(sourceData)));
+    setTabs(prev => {
+      const updated = prev.map(t =>
+        t.id === activeTabId ? { ...t, data: currentDataRef.current } : t
+      );
+      return [...updated, newTab];
+    });
+    loadTabData(newTab.data);
+    setActiveTabId(newTab.id);
+  }, [tabs, activeTabId, setTabs, setActiveTabId, loadTabData]);
+
+  // ── Preset operations ──
+  const savePreset = useCallback((name: string) => {
+    const preset: Preset = {
+      id: uuid(),
+      name,
+      timestamp: Date.now(),
+      data: JSON.parse(JSON.stringify(currentDataRef.current)),
+    };
+    setPresets(prev => [...prev, preset]);
+  }, [setPresets]);
+
+  const overwritePreset = useCallback((id: string) => {
+    setPresets(prev => prev.map(p =>
+      p.id === id ? { ...p, timestamp: Date.now(), data: JSON.parse(JSON.stringify(currentDataRef.current)) } : p
+    ));
+  }, [setPresets]);
+
+  const loadPreset = useCallback((preset: Preset) => {
+    loadTabData(JSON.parse(JSON.stringify(preset.data)));
+  }, [loadTabData]);
+
+  const openPresetInNewTab = useCallback((preset: Preset) => {
+    const newTab = makeTab(preset.name, JSON.parse(JSON.stringify(preset.data)));
+    setTabs(prev => {
+      const updated = prev.map(t =>
+        t.id === activeTabId ? { ...t, data: currentDataRef.current } : t
+      );
+      return [...updated, newTab];
+    });
+    loadTabData(newTab.data);
+    setActiveTabId(newTab.id);
+  }, [activeTabId, setTabs, setActiveTabId, loadTabData]);
+
+  const duplicatePreset = useCallback((id: string) => {
+    setPresets(prev => {
+      const source = prev.find(p => p.id === id);
+      if (!source) return prev;
+      const copy: Preset = {
+        id: uuid(),
+        name: `${source.name} (複製)`,
+        timestamp: Date.now(),
+        data: JSON.parse(JSON.stringify(source.data)),
+      };
+      const idx = prev.findIndex(p => p.id === id);
+      const next = [...prev];
+      next.splice(idx + 1, 0, copy);
+      return next;
+    });
+  }, [setPresets]);
+
+  const renamePreset = useCallback((id: string, name: string) => {
+    setPresets(prev => prev.map(p => p.id === id ? { ...p, name } : p));
+  }, [setPresets]);
+
+  const deletePreset = useCallback((id: string) => {
+    setPresets(prev => prev.filter(p => p.id !== id));
+  }, [setPresets]);
+
+  const reorderPresets = useCallback((newPresets: Preset[]) => {
+    setPresets(newPresets);
+  }, [setPresets]);
 
   // Layout state
   const [activeRotationId, setActiveRotationId] = useState<string>('');
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [visibleSections, setVisibleSections] = useState<Record<string, boolean>>({
+    presets: true,
     characters: true,
     buffs: true,
     skills: true,
   });
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
-  // One-time migration for existing localStorage data (v1 → v2)
+  // One-time migration for existing data (v1 → v2 field patches)
   useEffect(() => {
     setBuffs(prev => prev.map(b => ({
       ...b,
@@ -70,7 +295,6 @@ function App() {
       ...s,
       groupId: s.groupId ?? '',
     })));
-    // Patch rotation groups & entries: add disabledBuffIds if missing
     setRotationGroups(prev => prev.map(g => ({
       ...g,
       disabledBuffIds: g.disabledBuffIds ?? [],
@@ -80,7 +304,7 @@ function App() {
       })),
     })));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [activeTabId]);
 
   // Auto-select first rotation if none selected
   useEffect(() => {
@@ -143,14 +367,7 @@ function App() {
   });
 
   const handleImport = (data: AppData) => {
-    setZones(data.zones);
-    setBuffs(data.buffs);
-    setBuffGroups(data.buffGroups || []);
-    setCharacters(data.characters);
-    setSkills(data.skills);
-    setSkillGroups(data.skillGroups || []);
-    setRotationGroups(data.rotationGroups);
-    setCalcRows(data.calcRows || []);
+    loadTabData(data);
   };
 
   // Rotation group operations
@@ -183,6 +400,10 @@ function App() {
     setRotationGroups([...rotationGroups, copy]);
   };
 
+  const reorderRotationGroups = (newGroups: RotationGroup[]) => {
+    setRotationGroups(newGroups);
+  };
+
   // Cycle-level buff toggle
   const toggleCycleBuff = (buffId: string) => {
     setRotationGroups(rotationGroups.map(g => {
@@ -205,6 +426,17 @@ function App() {
     setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
+  // ── Excluded rotation groups ──
+  const [excludedGroupIds, setExcludedGroupIds] = useState<Set<string>>(new Set());
+
+  const toggleExclude = (id: string) => {
+    setExcludedGroupIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
   // Calculate results for all rotation groups
   const groupResults = rotationGroups.map(g => calculateRotationGroup(g, skills, characters, buffs, zones));
   const activeRotation = rotationGroups.find(g => g.id === activeRotationId);
@@ -214,139 +446,188 @@ function App() {
   const hasLeftPanel = Object.values(visibleSections).some(v => v !== false);
 
   return (
-    <div className="h-screen flex bg-[#0f1117] text-gray-200 overflow-hidden">
-      {/* Icon Sidebar */}
-      <IconSidebar visibleSections={visibleSections} onToggle={toggleSection} />
+    <div className="h-screen flex flex-col bg-[#0f1117] text-gray-200 overflow-hidden">
+      {/* Tab Bar */}
+      <TabBar
+        tabs={tabs}
+        activeTabId={activeTabId}
+        onSelectTab={switchTab}
+        onAddTab={addTab}
+        onCloseTab={closeTab}
+        onRenameTab={renameTab}
+        onDuplicateTab={duplicateTab}
+      />
 
-      {/* Left Panel */}
-      {hasLeftPanel && (
-        <aside className="w-[360px] bg-gray-900/30 border-r border-gray-800 overflow-y-auto shrink-0 flex flex-col">
-          {/* Header area with import/export */}
-          <div className="px-4 py-2.5 border-b border-gray-800 flex items-center justify-between shrink-0">
-            <span className="text-xs text-gray-500 font-medium">設定面板</span>
-            <div className="flex items-center gap-2">
-              <ImportExport getData={getData} onImport={handleImport} />
-              <button onClick={clearAll}
-                className="px-2 py-0.5 text-[10px] text-gray-600 hover:text-red-400 transition-colors cursor-pointer">
-                清除
-              </button>
+      <div className="flex-1 flex overflow-hidden">
+        {/* Icon Sidebar */}
+        <IconSidebar visibleSections={visibleSections} onToggle={toggleSection} />
+
+        {/* Left Panel */}
+        {hasLeftPanel && (
+          <aside className="w-[360px] bg-gray-900/30 border-r border-gray-800 overflow-y-auto shrink-0 flex flex-col">
+            {/* Header area with import/export */}
+            <div className="px-4 py-2.5 border-b border-gray-800 flex items-center justify-between shrink-0">
+              <div className='flex items-center'>
+                <span className="text-xs text-gray-500 font-medium">設定面板</span>
+                <Tooltip label='點擊匯入按鈕可匯入範例資料' > 
+                  <span className="text-yellow-500 hover:text-yellow-400 text-md cursor-pointer px-2">🛈</span>
+                </Tooltip>
+              </div>
+              <div className="flex items-center gap-2">
+                <ImportExport getData={getData} onImport={handleImport} />
+                <button onClick={clearAll}
+                  className="px-2 py-0.5 text-[10px] text-gray-600 hover:text-red-400 transition-colors cursor-pointer">
+                  清除
+                </button>
+              </div>
             </div>
-          </div>
 
-          <div className="flex-1 overflow-y-auto">
-            {/* Characters */}
-            {visibleSections.characters !== false && (
-              <div className="border-b border-gray-800">
-                <button onClick={() => toggleCollapse('characters')}
-                  className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-800/30 cursor-pointer transition-colors">
-                  <span className="text-sm font-semibold text-indigo-400 flex items-center gap-2">
-                    <span className={`text-[10px] text-gray-500 transition-transform ${collapsedSections.characters ? '' : 'rotate-90'}`}>▶</span>
-                    角色
-                  </span>
-                </button>
-                {!collapsedSections.characters && (
-                  <div className="px-3 pb-3">
-                    <CharacterSection characters={characters} onChange={setCharacters} />
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="flex-1 overflow-y-auto">
+              {/* 檔案庫 */}
+              {visibleSections.presets !== false && (
+                <div className="border-b border-gray-800">
+                  <button onClick={() => toggleCollapse('presets')}
+                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-800/30 cursor-pointer transition-colors">
+                    <span className="text-sm font-semibold text-indigo-400 flex items-center gap-2">
+                      <span className={`text-[10px] text-gray-500 transition-transform ${collapsedSections.presets ? '' : 'rotate-90'}`}>▶</span>
+                      檔案庫
+                    </span>
+                  </button>
+                  {!collapsedSections.presets && (
+                    <div className="px-3 pb-3">
+                      <PresetSection
+                        presets={presets}
+                        onSavePreset={savePreset}
+                        onOverwritePreset={overwritePreset}
+                        onLoadPreset={loadPreset}
+                        onOpenInNewTab={openPresetInNewTab}
+                        onDuplicatePreset={duplicatePreset}
+                        onRenamePreset={renamePreset}
+                        onDeletePreset={deletePreset}
+                        onReorderPresets={reorderPresets}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
 
-            {/* Buffs */}
-            {visibleSections.buffs !== false && (
-              <div className="border-b border-gray-800">
-                <button onClick={() => toggleCollapse('buffs')}
-                  className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-800/30 cursor-pointer transition-colors">
-                  <span className="text-sm font-semibold text-indigo-400 flex items-center gap-2">
-                    <span className={`text-[10px] text-gray-500 transition-transform ${collapsedSections.buffs ? '' : 'rotate-90'}`}>▶</span>
-                    BUFF / 分區
-                  </span>
-                </button>
-                {!collapsedSections.buffs && (
-                  <div className="px-3 pb-3">
-                    <BuffSection buffs={buffs} zones={zones} buffGroups={buffGroups}
-                      onBuffsChange={setBuffs} onZonesChange={setZones} onBuffGroupsChange={setBuffGroups}
-                      pushUndo={pushUndo} />
-                  </div>
-                )}
-              </div>
-            )}
+              {/* Characters */}
+              {visibleSections.characters !== false && (
+                <div className="border-b border-gray-800">
+                  <button onClick={() => toggleCollapse('characters')}
+                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-800/30 cursor-pointer transition-colors">
+                    <span className="text-sm font-semibold text-indigo-400 flex items-center gap-2">
+                      <span className={`text-[10px] text-gray-500 transition-transform ${collapsedSections.characters ? '' : 'rotate-90'}`}>▶</span>
+                      角色
+                    </span>
+                  </button>
+                  {!collapsedSections.characters && (
+                    <div className="px-3 pb-3">
+                      <CharacterSection characters={characters} onChange={setCharacters} />
+                    </div>
+                  )}
+                </div>
+              )}
 
-            {/* Skills */}
-            {visibleSections.skills !== false && (
-              <div className="border-b border-gray-800">
-                <button onClick={() => toggleCollapse('skills')}
-                  className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-800/30 cursor-pointer transition-colors">
-                  <span className="text-sm font-semibold text-indigo-400 flex items-center gap-2">
-                    <span className={`text-[10px] text-gray-500 transition-transform ${collapsedSections.skills ? '' : 'rotate-90'}`}>▶</span>
-                    技能庫
-                  </span>
-                </button>
-                {!collapsedSections.skills && (
-                  <div className="px-3 pb-3">
-                    <SkillSection skills={skills} buffs={buffs} buffGroups={buffGroups}
-                      characters={characters} zones={zones} skillGroups={skillGroups}
-                      onChange={setSkills} onSkillGroupsChange={setSkillGroups}
-                      pushUndo={pushUndo} />
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </aside>
-      )}
+              {/* Buffs */}
+              {visibleSections.buffs !== false && (
+                <div className="border-b border-gray-800">
+                  <button onClick={() => toggleCollapse('buffs')}
+                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-800/30 cursor-pointer transition-colors">
+                    <span className="text-sm font-semibold text-indigo-400 flex items-center gap-2">
+                      <span className={`text-[10px] text-gray-500 transition-transform ${collapsedSections.buffs ? '' : 'rotate-90'}`}>▶</span>
+                      BUFF / 分區
+                    </span>
+                  </button>
+                  {!collapsedSections.buffs && (
+                    <div className="px-3 pb-3">
+                      <BuffSection buffs={buffs} zones={zones} buffGroups={buffGroups}
+                        onBuffsChange={setBuffs} onZonesChange={setZones} onBuffGroupsChange={setBuffGroups}
+                        pushUndo={pushUndo} />
+                    </div>
+                  )}
+                </div>
+              )}
 
-      {/* Center Panel */}
-      <main className="flex-1 flex flex-col overflow-hidden min-w-0">
-        {/* Buff Toggle Bar */}
-        {activeRotation && (
-          <CycleBuffBar
-            buffs={buffs}
-            buffGroups={buffGroups}
-            cycleDisabledBuffIds={activeRotation.disabledBuffIds || []}
-            onToggleBuff={toggleCycleBuff}
-          />
+              {/* Skills */}
+              {visibleSections.skills !== false && (
+                <div className="border-b border-gray-800">
+                  <button onClick={() => toggleCollapse('skills')}
+                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-800/30 cursor-pointer transition-colors">
+                    <span className="text-sm font-semibold text-indigo-400 flex items-center gap-2">
+                      <span className={`text-[10px] text-gray-500 transition-transform ${collapsedSections.skills ? '' : 'rotate-90'}`}>▶</span>
+                      技能庫
+                    </span>
+                  </button>
+                  {!collapsedSections.skills && (
+                    <div className="px-3 pb-3">
+                      <SkillSection skills={skills} buffs={buffs} buffGroups={buffGroups}
+                        characters={characters} zones={zones} skillGroups={skillGroups}
+                        onChange={setSkills} onSkillGroupsChange={setSkillGroups}
+                        pushUndo={pushUndo} />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </aside>
         )}
 
-        {/* Cycle Editor */}
-        {activeRotation && activeResult ? (
-          <CycleEditor
-            group={activeRotation}
-            groupResult={activeResult}
-            skills={skills}
-            buffs={buffs}
-            buffGroups={buffGroups}
-            characters={characters}
-            zones={zones}
-            onUpdate={updateRotationGroup}
-            onToggleRightPanel={() => setRightPanelOpen(!rightPanelOpen)}
-            rightPanelOpen={rightPanelOpen}
-          />
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-gray-600 text-sm mb-3">尚未建立技能循環</p>
-              <button onClick={addRotationGroup}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium transition-colors cursor-pointer">
-                + 新增循環
-              </button>
-            </div>
-          </div>
-        )}
-      </main>
+        {/* Center Panel */}
+        <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+          {/* Buff Toggle Bar */}
+          {activeRotation && (
+            <CycleBuffBar
+              buffs={buffs}
+              buffGroups={buffGroups}
+              cycleDisabledBuffIds={activeRotation.disabledBuffIds || []}
+              onToggleBuff={toggleCycleBuff}
+            />
+          )}
 
-      {/* Right Panel */}
-      {rightPanelOpen && rotationGroups.length > 0 && (
-        <AnalysisPanel
-          rotationGroups={rotationGroups}
-          groupResults={groupResults}
-          activeRotationId={activeRotationId}
-          onSelectRotation={setActiveRotationId}
-          onAddRotation={addRotationGroup}
-          onRemoveRotation={removeRotationGroup}
-          onCopyRotation={copyRotationGroup}
-        />
-      )}
+          {/* Cycle Editor */}
+          {activeRotation && activeResult ? (
+            <CycleEditor
+              group={activeRotation}
+              groupResult={activeResult}
+              skills={skills}
+              buffs={buffs}
+              buffGroups={buffGroups}
+              characters={characters}
+              zones={zones}
+              onUpdate={updateRotationGroup}
+              onToggleRightPanel={() => setRightPanelOpen(!rightPanelOpen)}
+              rightPanelOpen={rightPanelOpen}
+            />
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-gray-600 text-sm mb-3">尚未建立技能循環</p>
+                <button onClick={addRotationGroup}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium transition-colors cursor-pointer">
+                  + 新增循環
+                </button>
+              </div>
+            </div>
+          )}
+        </main>
+
+        {/* Right Panel */}
+        {rightPanelOpen && rotationGroups.length > 0 && (
+          <AnalysisPanel
+            rotationGroups={rotationGroups}
+            groupResults={groupResults}
+            activeRotationId={activeRotationId}
+            excludedGroupIds={excludedGroupIds}
+            onSelectRotation={setActiveRotationId}
+            onAddRotation={addRotationGroup}
+            onRemoveRotation={removeRotationGroup}
+            onCopyRotation={copyRotationGroup}
+            onReorderRotations={reorderRotationGroups}
+            onToggleExclude={toggleExclude}
+          />
+        )}
+      </div>
 
       {/* Floating calculator */}
       <CalcPanel calcRows={calcRows} onChange={setCalcRows} pushUndo={pushUndo} />
