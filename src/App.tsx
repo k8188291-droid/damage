@@ -15,6 +15,7 @@ import CalcPanel from './components/CalcPanel';
 import TabBar from './components/TabBar';
 import PresetSection from './components/PresetSection';
 import UndoToast from './components/UndoToast';
+import AIResourceModal from './components/AIResourceModal';
 import { Tooltip } from './components/ui';
 
 function App() {
@@ -255,6 +256,7 @@ function App() {
 
       <CalcPanel />
       <UndoToast />
+      <AIResourceModal />
     </div>
   );
 }
