@@ -198,7 +198,7 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
 
           {/* Quantity */}
           <div className="shrink-0 text-right">
-            <div className="text-xs text-gray-500 mb-0.5 tracking-wider">數量</div>
+            <div className="text-xs text-gray-500 mb-0.5 tracking-wider">施放次數</div>
             <input type="number" min={1} value={entry.count}
               onChange={e => onUpdate(entry.id, { count: Math.max(1, Number(e.target.value) || 1) })}
               className="w-20 bg-gray-800 border border-gray-700 rounded-lg text-lg font-bold text-gray-100 text-center focus:outline-none focus:border-indigo-500 font-mono py-0.5 px-2" />
@@ -253,9 +253,8 @@ export default function CycleEditor({ group, groupResult, skills, buffs, buffGro
                 onChange={e => onUpdate({ ...group, name: e.target.value })}
                 className="bg-transparent text-xl font-bold text-gray-100 focus:outline-none border-b border-transparent focus:border-indigo-500"
               />
-              <span className="text-xs text-gray-500">編排</span>
             </div>
-            <p className="text-xs text-gray-500">從左側技能庫拖放技能，並透過上方開關快速調整增益對比</p>
+            <p className="text-xs text-gray-500">新增技能到循環中計算傷害，設定個別技能的 Buff 生效狀態，或切換整體循環 Buff 生效狀態。</p>
           </div>
           <div className="text-right shrink-0 ml-4">
             <div className="text-4xl font-bold text-amber-400 cursor-pointer hover:text-amber-300 transition-colors"

@@ -27,39 +27,69 @@ interface Props {
 
 const ICONS = ['🗡️','🔥','💀','💥','🌀','🛡️','🔮','⚡','🎯','💎','🌟','💫','🔰','⭐','❄️','🌊','💨','🍃'];
 
-/* ── Zone Modal ── */
-function ZoneModal({ zone, onSave, onClose }: { zone: DamageZone; onSave: (z: DamageZone) => void; onClose: () => void }) {
+/* ── Zone Modal (edit for custom, view-only for default) ── */
+function ZoneModal({ zone, buffs, onSave, onClose, readOnly }: {
+  zone: DamageZone; buffs: Buff[]; onSave: (z: DamageZone) => void; onClose: () => void; readOnly?: boolean;
+}) {
   const [d, setD] = useState({ ...zone });
   const p = (patch: Partial<DamageZone>) => setD(v => ({ ...v, ...patch }));
+  const zoneBuffs = buffs.filter(b => b.zoneId === zone.id);
+
+  const title = readOnly ? `${zone.icon} ${zone.displayName}` : (zone.name ? '編輯分區' : '新增分區');
 
   return (
-    <Modal open title="新增分區" onClose={onClose}>
+    <Modal open title={title} onClose={onClose}>
       <div className="space-y-4">
+        {!readOnly && (
+          <>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">分區名稱</label>
+              <input value={d.displayName} onChange={e => p({ displayName: e.target.value, name: e.target.value })}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-2">圖示</label>
+              <div className="flex gap-1.5 flex-wrap">
+                {ICONS.map(e => (
+                  <button key={e} onClick={() => p({ icon: e })}
+                    className={`text-lg p-1 rounded cursor-pointer ${d.icon === e ? 'bg-gray-600 ring-1 ring-indigo-500' : 'hover:bg-gray-700'}`}>{e}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-2">顏色</label>
+              <div className="flex gap-2 flex-wrap">
+                {COLORS.map(c => (
+                  <button key={c} onClick={() => p({ color: c })}
+                    className={`w-7 h-7 rounded-full cursor-pointer border-2 transition-transform ${d.color === c ? 'border-white scale-110' : 'border-transparent hover:scale-105'}`}
+                    style={{ backgroundColor: c }} />
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Buffs belonging to this zone */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">分區名稱</label>
-          <input value={d.displayName} onChange={e => p({ displayName: e.target.value, name: e.target.value })}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" />
+          <label className="block text-xs text-gray-400 mb-2">此分區的 Buff ({zoneBuffs.length})</label>
+          {zoneBuffs.length === 0 ? (
+            <p className="text-xs text-gray-600 text-center py-2">尚無 Buff 屬於此分區</p>
+          ) : (
+            <div className="space-y-1">
+              {zoneBuffs.map(b => (
+                <div key={b.id} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800/60 border ${b.enabled ? 'border-gray-700' : 'border-gray-800 opacity-50'}`}>
+                  <span className="text-base shrink-0">{b.icon}</span>
+                  <span className={`text-sm flex-1 truncate ${b.enabled ? 'text-gray-200' : 'text-gray-500 line-through'}`}>{b.name}</span>
+                  <span className="text-xs text-gray-400 font-mono shrink-0">{b.value}%</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-        <div>
-          <label className="block text-xs text-gray-400 mb-2">圖示</label>
-          <div className="flex gap-1.5 flex-wrap">
-            {ICONS.map(e => (
-              <button key={e} onClick={() => p({ icon: e })}
-                className={`text-lg p-1 rounded cursor-pointer ${d.icon === e ? 'bg-gray-600 ring-1 ring-indigo-500' : 'hover:bg-gray-700'}`}>{e}</button>
-            ))}
-          </div>
-        </div>
-        <div>
-          <label className="block text-xs text-gray-400 mb-2">顏色</label>
-          <div className="flex gap-2 flex-wrap">
-            {COLORS.map(c => (
-              <button key={c} onClick={() => p({ color: c })}
-                className={`w-7 h-7 rounded-full cursor-pointer border-2 transition-transform ${d.color === c ? 'border-white scale-110' : 'border-transparent hover:scale-105'}`}
-                style={{ backgroundColor: c }} />
-            ))}
-          </div>
-        </div>
-        <button onClick={() => onSave(d)} className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-medium transition-colors cursor-pointer">儲存</button>
+
+        {!readOnly && (
+          <button onClick={() => onSave(d)} className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-medium transition-colors cursor-pointer">儲存</button>
+        )}
       </div>
     </Modal>
   );
@@ -151,7 +181,7 @@ function BuffModal({ buff, zones, buffGroups, skills, skillGroups, onSave, onClo
                 <button onClick={() => setEnabledSkillIds([])} className="text-xs text-gray-500 hover:text-gray-300 cursor-pointer">全不選</button>
               </div>
             </div>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+            <div className="space-y-2">
               {Array.from(skillsByGroup.entries()).map(([gId, groupSkills]) => {
                 if (groupSkills.length === 0) return null;
                 const sg = skillGroups.find(g => g.id === gId);
@@ -402,11 +432,12 @@ export default function BuffSection({ buffs, zones, buffGroups, skills, skillGro
       {zones.filter(z => z.id !== 'zone-skill').length > 0 && (
         <div className="flex gap-1.5 flex-wrap mb-2">
           {zones.filter(z => z.id !== 'zone-skill').map(z => (
-            <span key={z.id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border group" style={{ borderColor: z.color + '40', color: z.color }}>
+            <span key={z.id} onClick={() => setEditingZone({ ...z })}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border group cursor-pointer hover:brightness-125 transition-all" style={{ borderColor: z.color + '40', color: z.color }}>
               <span>{z.icon}</span>
               <span>{z.displayName}</span>
               {!z.isDefault && (
-                <button onClick={() => removeZone(z.id)} className="text-gray-600 hover:text-red-400 cursor-pointer opacity-0 group-hover:opacity-100 ml-0.5">✕</button>
+                <button onClick={e => { e.stopPropagation(); removeZone(z.id); }} className="text-gray-600 hover:text-red-400 cursor-pointer opacity-0 group-hover:opacity-100 ml-0.5">✕</button>
               )}
             </span>
           ))}
@@ -502,7 +533,8 @@ export default function BuffSection({ buffs, zones, buffGroups, skills, skillGro
           onSave={saveBuff} onClose={() => setEditingBuff(null)} onAddZone={newZone} />
       )}
       {editingZone && (
-        <ZoneModal zone={editingZone} onSave={saveZone} onClose={() => setEditingZone(null)} />
+        <ZoneModal zone={editingZone} buffs={buffs} readOnly={editingZone.isDefault}
+          onSave={saveZone} onClose={() => setEditingZone(null)} />
       )}
     </section>
   );
