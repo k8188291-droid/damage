@@ -653,7 +653,7 @@ function App() {
 
             {/* Left panel resize handle */}
             <div
-              className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-indigo-500/40 transition-colors z-10"
+              className="absolute -right-1.5 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-indigo-500/40 transition-colors z-10"
               onMouseDown={e => startResize(e, 'left', leftPanelWidth)}
             />
           </aside>

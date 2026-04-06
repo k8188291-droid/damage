@@ -75,7 +75,7 @@ function ZoneModal({ zone, buffs, onSave, onClose, readOnly }: {
           {zoneBuffs.length === 0 ? (
             <p className="text-xs text-gray-600 text-center py-2">尚無 Buff 屬於此分區</p>
           ) : (
-            <div className="space-y-1 max-h-48 overflow-y-auto">
+            <div className="space-y-1">
               {zoneBuffs.map(b => (
                 <div key={b.id} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800/60 border ${b.enabled ? 'border-gray-700' : 'border-gray-800 opacity-50'}`}>
                   <span className="text-base shrink-0">{b.icon}</span>
@@ -181,7 +181,7 @@ function BuffModal({ buff, zones, buffGroups, skills, skillGroups, onSave, onClo
                 <button onClick={() => setEnabledSkillIds([])} className="text-xs text-gray-500 hover:text-gray-300 cursor-pointer">全不選</button>
               </div>
             </div>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+            <div className="space-y-2">
               {Array.from(skillsByGroup.entries()).map(([gId, groupSkills]) => {
                 if (groupSkills.length === 0) return null;
                 const sg = skillGroups.find(g => g.id === gId);
