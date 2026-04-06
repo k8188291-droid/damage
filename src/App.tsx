@@ -407,7 +407,6 @@ function App() {
   }, []);
 
   const clearAll = () => {
-    if (!confirm('確定要清除所有資料嗎？')) return;
     setZones(DEFAULT_ZONES);
     setBuffs([]);
     setBuffGroups([]);
@@ -545,7 +544,7 @@ function App() {
             style={{ width: leftPanelWidth }}
           >
             {/* Header area with import/export */}
-            <div className="px-4 py-2.5 border-b border-gray-800 flex items-center justify-between shrink-0">
+            <div className="px-4 py-2.5 border-b border-gray-800 flex items-center justify-between shrink-0 overflow-auto whitespace-nowrap">
               <div className='flex items-center'>
                 <span className="text-xs text-gray-500 font-medium">設定面板</span>
                 <Tooltip label='點擊匯入按鈕可匯入範例資料' >
@@ -553,11 +552,7 @@ function App() {
                 </Tooltip>
               </div>
               <div className="flex items-center gap-2">
-                <ImportExport getData={getData} onImport={handleImport} />
-                <button onClick={clearAll}
-                  className="px-2 py-0.5 text-[10px] text-gray-600 hover:text-red-400 transition-colors cursor-pointer">
-                  清除
-                </button>
+                <ImportExport getData={getData} onImport={handleImport} clearAll={clearAll}/>
               </div>
             </div>
 

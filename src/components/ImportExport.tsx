@@ -3,17 +3,22 @@ import type { AppData } from '../types';
 import { CURRENT_VERSION } from '../types';
 import { migrateToLatest } from '../migrations';
 import Modal from './Modal';
+import ConfirmDialog from './ConfirmDialog';
 import { exampleData } from '../constants';
 
 interface Props {
   getData: () => AppData;
   onImport: (data: AppData) => void;
+  clearAll: () => void;
 }
 
-export default function ImportExport({ getData, onImport }: Props) {
+export default function ImportExport({ getData, onImport, clearAll }: Props) {
   const [showModal, setShowModal] = useState(false);
   const [importText, setImportText] = useState('');
   const [error, setError] = useState('');
+  const [copyDone, setCopyDone] = useState(false);
+  const [pendingImport, setPendingImport] = useState<AppData | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
@@ -31,13 +36,21 @@ export default function ImportExport({ getData, onImport }: Props) {
   const handleCopyToClipboard = () => {
     const data = { ...getData(), version: CURRENT_VERSION };
     navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+    setCopyDone(true);
+    setTimeout(() => setCopyDone(false), 1000);
   };
 
-  const processImport = (raw: string) => {
+  const requestImport = (raw: string) => {
     const parsed = JSON.parse(raw);
     const migrated = migrateToLatest(parsed);
     validate(migrated);
-    onImport(migrated);
+    setPendingImport(migrated);
+  };
+
+  const handleConfirmImport = () => {
+    if (!pendingImport) return;
+    onImport(pendingImport);
+    setPendingImport(null);
     setShowModal(false);
     setImportText('');
     setError('');
@@ -45,7 +58,7 @@ export default function ImportExport({ getData, onImport }: Props) {
 
   const handleImportFromText = () => {
     try {
-      processImport(importText);
+      requestImport(importText);
     } catch (e) {
       setError(e instanceof Error ? e.message : '格式錯誤');
     }
@@ -57,7 +70,7 @@ export default function ImportExport({ getData, onImport }: Props) {
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        processImport(reader.result as string);
+        requestImport(reader.result as string);
       } catch (err) {
         setError(err instanceof Error ? err.message : '格式錯誤');
       }
@@ -74,19 +87,23 @@ export default function ImportExport({ getData, onImport }: Props) {
           匯出
         </button>
         <button onClick={handleCopyToClipboard}
-          className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs font-medium transition-colors cursor-pointer">
-          複製
+          className={`px-3 py-1 ${copyDone ? 'bg-green-700' : 'bg-gray-700 hover:bg-gray-600'} rounded-lg text-xs font-medium transition-colors cursor-pointer`}>
+          {copyDone ? '已複製 ✓' : '複製'}
         </button>
         <button onClick={() => setShowModal(true)}
           className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs font-medium transition-colors cursor-pointer">
           匯入
+        </button>
+        <button onClick={() => setShowDialog(true)}
+          className="px-2 py-0.5 text-xs text-gray-600 hover:text-red-400 transition-colors cursor-pointer">
+          清除
         </button>
       </div>
 
       {showModal && (
         <Modal open title="匯入設定" onClose={() => { setShowModal(false); setError(''); }}>
           <div className="space-y-4">
-            <button onClick={() => processImport(exampleData)}
+            <button onClick={() => requestImport(exampleData)}
               className="w-full py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg font-medium transition-colors cursor-pointer">
               匯入範例資料
             </button>
@@ -127,6 +144,29 @@ export default function ImportExport({ getData, onImport }: Props) {
           </div>
         </Modal>
       )}
+
+      <ConfirmDialog
+        open={pendingImport !== null}
+        title="確認匯入"
+        message="確定要匯入？目前所有設定將被覆蓋，此操作無法復原。"
+        confirmLabel="匯入"
+        confirmColor="indigo"
+        onConfirm={handleConfirmImport}
+        onCancel={() => setPendingImport(null)}
+      />
+      
+      <ConfirmDialog
+        open={showDialog}
+        title="確認清除"
+        message="確定要清除所有資料嗎？"
+        confirmLabel="清除"
+        confirmColor="red"
+        onConfirm={() => {
+          clearAll();
+          setShowDialog(false);
+        }}
+        onCancel={() => setShowDialog(false)}
+      />
     </>
   );
 }
