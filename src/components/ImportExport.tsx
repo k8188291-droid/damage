@@ -9,15 +9,16 @@ import { exampleData } from '../constants';
 interface Props {
   getData: () => AppData;
   onImport: (data: AppData) => void;
+  clearAll: () => void;
 }
 
-export default function ImportExport({ getData, onImport }: Props) {
+export default function ImportExport({ getData, onImport, clearAll }: Props) {
   const [showModal, setShowModal] = useState(false);
   const [importText, setImportText] = useState('');
   const [error, setError] = useState('');
-  const [exportDone, setExportDone] = useState(false);
   const [copyDone, setCopyDone] = useState(false);
   const [pendingImport, setPendingImport] = useState<AppData | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
@@ -30,15 +31,13 @@ export default function ImportExport({ getData, onImport }: Props) {
     a.download = `damage-calc-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    setExportDone(true);
-    setTimeout(() => setExportDone(false), 2000);
   };
 
   const handleCopyToClipboard = () => {
     const data = { ...getData(), version: CURRENT_VERSION };
     navigator.clipboard.writeText(JSON.stringify(data, null, 2));
     setCopyDone(true);
-    setTimeout(() => setCopyDone(false), 2000);
+    setTimeout(() => setCopyDone(false), 1000);
   };
 
   const requestImport = (raw: string) => {
@@ -84,8 +83,8 @@ export default function ImportExport({ getData, onImport }: Props) {
     <>
       <div className="flex gap-2">
         <button onClick={handleExport}
-          className={`px-3 py-1 ${exportDone ? 'bg-green-700' : 'bg-gray-700 hover:bg-gray-600'} rounded-lg text-xs font-medium transition-colors cursor-pointer`}>
-          {exportDone ? '已匯出 ✓' : '匯出'}
+          className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs font-medium transition-colors cursor-pointer">
+          匯出
         </button>
         <button onClick={handleCopyToClipboard}
           className={`px-3 py-1 ${copyDone ? 'bg-green-700' : 'bg-gray-700 hover:bg-gray-600'} rounded-lg text-xs font-medium transition-colors cursor-pointer`}>
@@ -94,6 +93,10 @@ export default function ImportExport({ getData, onImport }: Props) {
         <button onClick={() => setShowModal(true)}
           className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs font-medium transition-colors cursor-pointer">
           匯入
+        </button>
+        <button onClick={() => setShowDialog(true)}
+          className="px-2 py-0.5 text-xs text-gray-600 hover:text-red-400 transition-colors cursor-pointer">
+          清除
         </button>
       </div>
 
@@ -150,6 +153,19 @@ export default function ImportExport({ getData, onImport }: Props) {
         confirmColor="indigo"
         onConfirm={handleConfirmImport}
         onCancel={() => setPendingImport(null)}
+      />
+      
+      <ConfirmDialog
+        open={showDialog}
+        title="確認清除"
+        message="確定要清除所有資料嗎？"
+        confirmLabel="清除"
+        confirmColor="red"
+        onConfirm={() => {
+          clearAll();
+          setShowDialog(false);
+        }}
+        onCancel={() => setShowDialog(false)}
       />
     </>
   );
