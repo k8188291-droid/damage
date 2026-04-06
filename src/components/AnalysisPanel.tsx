@@ -48,6 +48,7 @@ function SortableCycleCard({ group, result, isActive, maxDamage, diff, excluded,
             : 'bg-gray-800/60 border border-gray-700 hover:border-gray-600'
         }`}
       >
+        {/* Name + damage */}
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5 min-w-0">
             <span {...attributes} {...listeners}
@@ -65,6 +66,7 @@ function SortableCycleCard({ group, result, isActive, maxDamage, diff, excluded,
           </div>
         </div>
 
+        {/* Progress bar vs max damage */}
         <div className="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden mb-1">
           <div
             className={`h-full rounded-full transition-all duration-500 ${isActive ? 'bg-indigo-500' : excluded ? 'bg-gray-600' : 'bg-gray-500'}`}
@@ -79,6 +81,7 @@ function SortableCycleCard({ group, result, isActive, maxDamage, diff, excluded,
             />
           </Tooltip>
           <span className="text-sm font-bold text-gray-100">{fmt(result.totalDamage)}</span>
+          {/* Diff vs active */}
           {diff && !excluded && (
             <div className={`text-xs font-mono ${Number(diff) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
               {Number(diff) >= 0 ? '+' : ''}{diff}%
@@ -129,6 +132,7 @@ export default function AnalysisPanel({ groupResults }: Props) {
 
   return (
     <div className="flex flex-col h-full overflow-y-auto">
+      {/* Header */}
       <div className="px-4 py-3 border-b border-gray-800 shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-sm">📊</span>
@@ -136,6 +140,7 @@ export default function AnalysisPanel({ groupResults }: Props) {
         </div>
       </div>
 
+      {/* Notes block */}
       <div className="px-4 py-3 border-b border-gray-800 shrink-0">
         <div className="text-xs text-gray-500 tracking-wider font-semibold mb-2">NOTES</div>
         <textarea
@@ -147,6 +152,7 @@ export default function AnalysisPanel({ groupResults }: Props) {
         />
       </div>
 
+      {/* Saved Cycles */}
       <div className="px-4 py-3 border-b border-gray-800">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs text-gray-500 tracking-wider font-semibold">SAVED CYCLES</span>

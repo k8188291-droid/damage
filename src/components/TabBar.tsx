@@ -106,6 +106,7 @@ export default function TabBar() {
             </div>
           );
         })}
+        {/* Add tab button */}
         <button
           onClick={addTab}
           className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-gray-300 hover:bg-gray-800/40 rounded-lg cursor-pointer transition-colors shrink-0 mb-0.5 mr-1 text-sm"
@@ -115,6 +116,7 @@ export default function TabBar() {
         </button>
       </div>
 
+      {/* Context menu */}
       {contextMenu && (
         <div
           className="fixed z-50 bg-gray-800 border border-gray-700 rounded-lg shadow-xl py-1 min-w-[120px]"

@@ -159,6 +159,7 @@ function BuffModal({ buff, zones, buffGroups, skills, skillGroups, onSave, onClo
           </div>
         </div>
 
+        {/* Skills that enable this buff */}
         {skills.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -297,6 +298,7 @@ export default function BuffSection() {
   const saveBuff = (b: Buff, enabledSkillIds?: string[]) => {
     const exists = buffs.find(x => x.id === b.id);
     setBuffs(exists ? buffs.map(x => x.id === b.id ? b : x) : [...buffs, b]);
+    // Update skills' enabledBuffIds based on which skills should have this buff
     if (enabledSkillIds !== undefined) {
       setSkills(skills.map(s => {
         const shouldEnable = enabledSkillIds.includes(s.id);
@@ -424,6 +426,7 @@ export default function BuffSection() {
 
   return (
     <section>
+      {/* Zone pills (req 2: show name) */}
       {zones.filter(z => z.id !== 'zone-skill').length > 0 && (
         <div className="flex gap-1.5 flex-wrap mb-2">
           {zones.filter(z => z.id !== 'zone-skill').map(z => (
@@ -439,6 +442,7 @@ export default function BuffSection() {
         </div>
       )}
 
+      {/* Action buttons (req 1: pill button style) */}
       <div className="flex gap-2 mb-3 flex-wrap">
         <button onClick={newZone}
           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 cursor-pointer transition-colors">
@@ -460,6 +464,7 @@ export default function BuffSection() {
         <DndContext sensors={sensors} collisionDetection={closestCenter}
           onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
 
+          {/* Ungrouped */}
           {(ungroupedBuffs.length > 0 || buffGroups.length > 0) && (
             <div className="mb-2">
               {buffGroups.length > 0 && <div className="text-[10px] text-gray-600 mb-1">未分組</div>}
@@ -478,6 +483,7 @@ export default function BuffSection() {
             </div>
           )}
 
+          {/* Named groups */}
           {buffGroups.map(g => {
             const groupBuffs = groupedMap.get(g.id) || [];
             return (

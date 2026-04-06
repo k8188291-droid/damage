@@ -44,16 +44,16 @@ function SkillModal({ skill, buffs, buffGroups, characters, zones, skillGroups, 
   }
 
   return (
-    <Modal open title="編輯���能" onClose={onClose} width="max-w-2xl">
+    <Modal open title="編輯技能" onClose={onClose} width="max-w-2xl">
       <div className="space-y-4">
         <div className="grid grid-cols-4 gap-3">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">技��名稱</label>
+            <label className="block text-xs text-gray-400 mb-1">技能名稱</label>
             <input value={d.name} onChange={e => p({ name: e.target.value })}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-indigo-500" />
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">��色</label>
+            <label className="block text-xs text-gray-400 mb-1">角色</label>
             <select value={d.characterId} onChange={e => p({ characterId: e.target.value })}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-2 text-sm text-gray-100 focus:outline-none focus:border-indigo-500">
               <option value="">選擇角色</option>
@@ -344,11 +344,12 @@ export default function SkillSection() {
       </div>
 
       {skills.length === 0 && skillGroups.length === 0 ? (
-        <p className="text-gray-600 text-xs text-center py-3">尚未��增技能</p>
+        <p className="text-gray-600 text-xs text-center py-3">尚未新增技能</p>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter}
           onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
 
+          {/* Ungrouped */}
           {(ungroupedSkills.length > 0 || skillGroups.length > 0) && (
             <div className="mb-2">
               {skillGroups.length > 0 && <div className="text-[10px] text-gray-600 mb-1">未分組</div>}
@@ -366,6 +367,7 @@ export default function SkillSection() {
             </div>
           )}
 
+          {/* Skill groups */}
           {skillGroups.map(g => {
             const groupSkills = groupedMap.get(g.id) || [];
             return (

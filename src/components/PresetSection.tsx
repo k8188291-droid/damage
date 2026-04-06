@@ -177,6 +177,7 @@ export default function PresetSection() {
 
   return (
     <div className="space-y-2">
+      {/* Save new preset */}
       <div className="flex gap-1.5">
         <input
           value={newName}
@@ -193,8 +194,9 @@ export default function PresetSection() {
         </button>
       </div>
 
+      {/* Preset list */}
       {presets.length === 0 && (
-        <p className="text-xs text-gray-600 text-center py-2">尚無��案</p>
+        <p className="text-xs text-gray-600 text-center py-2">尚無檔案</p>
       )}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>

@@ -85,6 +85,7 @@ export default function CalcPanel() {
 
   return (
     <>
+      {/* Toggle button */}
       <button
         onClick={() => setOpen(v => !v)}
         className={`fixed bottom-4 right-4 z-[90] w-10 h-10 rounded-full shadow-lg flex items-center justify-center cursor-pointer transition-colors text-lg ${open ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-gray-800 hover:bg-gray-700 border border-gray-700'}`}
@@ -93,6 +94,7 @@ export default function CalcPanel() {
         🧮
       </button>
 
+      {/* Panel */}
       {open && (
         <div className="fixed bottom-16 right-4 z-[90] w-[420px] max-h-[50vh] bg-gray-900 border border-gray-700 rounded-xl shadow-2xl flex flex-col">
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-800 shrink-0">
