@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useShallow } from 'zustand/shallow';
 import {
-  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+  DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core';
 import {
@@ -159,7 +159,10 @@ export default function PresetSection() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+  );
 
   const handleSave = () => {
     const name = newName.trim() || `檔案 ${presets.length + 1}`;

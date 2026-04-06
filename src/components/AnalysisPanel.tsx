@@ -1,6 +1,6 @@
 import { useShallow } from 'zustand/shallow';
 import {
-  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+  DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core';
 import {
@@ -112,7 +112,10 @@ export default function AnalysisPanel({ groupResults }: Props) {
     setNotes: s.setNotes,
   })));
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+  );
   const excludedSet = new Set(excludedGroupIds);
 
   const activeIdx = rotationGroups.findIndex(g => g.id === activeRotationId);

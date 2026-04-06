@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useShallow } from 'zustand/shallow';
 import {
-  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+  DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
   type DragEndEvent, type DragStartEvent, DragOverlay, useDroppable,
 } from '@dnd-kit/core';
 import {
@@ -240,7 +240,10 @@ export default function SkillSection() {
   const [editing, setEditing] = useState<Skill | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+  );
 
   const save = (s: Skill) => {
     const exists = skills.find(x => x.id === s.id);
