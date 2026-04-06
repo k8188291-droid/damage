@@ -13,6 +13,7 @@ import { useAppStore } from '../stores/appStore';
 import type { Skill, Buff, BuffGroup, Character, DamageZone, RotationGroup, RotationEntry } from '../types';
 import { calculateSkillDamage, type RotationGroupResult } from '../utils/damage';
 import Modal from './Modal';
+import { Tooltip } from './ui';
 
 interface Props {
   groupResult: RotationGroupResult;
@@ -127,9 +128,11 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
     sr.zones.forEach((zb, i) => {
       formulaParts.push(<span key={`sep${i}`} className="text-gray-600"> × </span>);
       formulaParts.push(
-        <span key={`z${i}`} style={{ color: zb.zone.color }} title={zb.zone.displayName}>
-          {zb.multiplier.toFixed(2)}
-        </span>
+        <Tooltip key={`z${i}`} label={`${zb.zone.icon} ${zb.zone.displayName}`}>
+          <span style={{ color: zb.zone.color }}>
+            {zb.multiplier.toFixed(2)}
+          </span>
+        </Tooltip>
       );
     });
     formulaParts.push(<span key="eq" className="text-gray-600"> = </span>);
@@ -175,14 +178,20 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
                   const off = entryDisabledSet.has(b.id);
                   const bGroup = buffGroups.find(g => g.id === b.groupId);
                   const color = bGroup?.color || '#64748b';
+                  const zone = zones.find(z => z.id === b.zoneId);
+                  const tooltipLabel = zone
+                    ? `分區：${zone.icon} ${zone.displayName}・${off ? '點擊啟用' : '點擊停用'}`
+                    : `分區：未設定・${off ? '點擊啟用' : '點擊停用'}`;
                   return (
-                    <button key={b.id} onClick={() => toggleBuffForEntry(b.id)}
-                      className={`px-1.5 py-0.5 rounded text-xs cursor-pointer border transition-all ${
-                        off ? 'border-gray-700 text-gray-600 opacity-40 line-through' : 'text-white'
-                      }`}
-                      style={off ? undefined : { backgroundColor: color + '25', borderColor: color + '60', color }}>
-                      {b.icon} {b.name}
-                    </button>
+                    <Tooltip key={b.id} label={tooltipLabel}>
+                      <button onClick={() => toggleBuffForEntry(b.id)}
+                        className={`px-1.5 py-0.5 rounded text-xs cursor-pointer border transition-all ${
+                          off ? 'border-gray-700 text-gray-600 opacity-40 line-through' : 'text-white'
+                        }`}
+                        style={off ? undefined : { backgroundColor: color + '25', borderColor: color + '60', color }}>
+                        {b.icon} {b.name}
+                      </button>
+                    </Tooltip>
                   );
                 })}
               </div>
