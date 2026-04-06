@@ -136,7 +136,7 @@ export default function AIResourceModal() {
   })));
 
   // Dynamic prompts that include existing groups
-  const resourceConfigs = useMemo((): Record<ResourceType, ResourceConfig> => {
+  const resourceConfigs = useMemo(() => {
     const buffGroupList = buffGroups.length > 0
       ? `\n目前已有的 Buff 群組：\n${buffGroups.map(g => `- ID: "${g.id}"，名稱: "${g.name}"`).join('\n')}`
       : '\n目前尚無 Buff 群組。';
@@ -306,7 +306,7 @@ ${buffGroupList}
   { "name": "元素加成", "displayName": "元素加成", "icon": "🔷", "color": "#0ea5e9", "isDefault": false }
 ]`,
       },
-    };
+    } satisfies Record<ResourceType, ResourceConfig>;
   }, [buffGroups, skillGroups, characters]);
 
   const reset = useCallback(() => {
@@ -406,19 +406,19 @@ ${buffGroupList}
       }
     }
 
-    const config = resourceConfigs[resourceType];
-    const result = config.schema.safeParse(parsed);
-    if (!result.success) {
-      const issues = result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('\n');
-      setError(`資料驗證失敗：\n${issues}`);
-      return;
-    }
-
-    const data = result.data;
     const messages: string[] = [];
 
     switch (resourceType) {
       case 'character': {
+        const config = resourceConfigs[resourceType];
+        const result = config.schema.safeParse(parsed);
+        if (!result.success) {
+          const issues = result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('\n');
+          setError(`資料驗證失敗：\n${issues}`);
+          return;
+        }
+        const data = result.data;
+
         const items = Array.isArray(data) ? data : [data];
         const newChars = items.map((item: z.infer<typeof CharacterSchema>, i: number) => ({
           ...item, id: uuid(), order: characters.length + i,
@@ -429,15 +429,23 @@ ${buffGroupList}
       }
 
       case 'buff': {
+        const config = resourceConfigs[resourceType];
+        const result = config.schema.safeParse(parsed);
+        if (!result.success) {
+          const issues = result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('\n');
+          setError(`資料驗證失敗：\n${issues}`);
+          return;
+        }
+        const data = result.data;
         // Determine if wrapper format or simple format
         let newGroupDefs: z.infer<typeof InlineGroupSchema>[] = [];
-        let buffItems: z.infer<typeof BuffItemSchema>[];
+        let buffItems: z.infer<typeof BuffItemSchema>[] = [];
 
         if (!Array.isArray(data) && 'buffs' in data && Array.isArray(data.buffs)) {
           // Wrapper format
           newGroupDefs = data.newGroups || [];
           buffItems = data.buffs;
-        } else {
+        } else if (!('buffs' in data)) {
           buffItems = Array.isArray(data) ? data : [data];
         }
 
@@ -464,13 +472,21 @@ ${buffGroupList}
       }
 
       case 'skill': {
+        const config = resourceConfigs[resourceType];
+        const result = config.schema.safeParse(parsed);
+        if (!result.success) {
+          const issues = result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('\n');
+          setError(`資料驗證失敗：\n${issues}`);
+          return;
+        }
+        const data = result.data;
         let newGroupDefs: z.infer<typeof InlineGroupSchema>[] = [];
-        let skillItems: z.infer<typeof SkillItemSchema>[];
+        let skillItems: z.infer<typeof SkillItemSchema>[] = [];
 
         if (!Array.isArray(data) && 'skills' in data && Array.isArray(data.skills)) {
           newGroupDefs = data.newGroups || [];
           skillItems = data.skills;
-        } else {
+        } else if (!('skills' in data)) {
           skillItems = Array.isArray(data) ? data : [data];
         }
 
@@ -497,6 +513,14 @@ ${buffGroupList}
       }
 
       case 'buffGroup': {
+        const config = resourceConfigs[resourceType];
+        const result = config.schema.safeParse(parsed);
+        if (!result.success) {
+          const issues = result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('\n');
+          setError(`資料驗證失敗：\n${issues}`);
+          return;
+        }
+        const data = result.data;
         const items = Array.isArray(data) ? data : [data];
         const newGroups = items.map((item: z.infer<typeof BuffGroupSchema>) => ({ ...item, id: uuid() }));
         setBuffGroups([...buffGroups, ...newGroups]);
@@ -505,6 +529,14 @@ ${buffGroupList}
       }
 
       case 'zone': {
+        const config = resourceConfigs[resourceType];
+        const result = config.schema.safeParse(parsed);
+        if (!result.success) {
+          const issues = result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('\n');
+          setError(`資料驗證失敗：\n${issues}`);
+          return;
+        }
+        const data = result.data;
         const items = Array.isArray(data) ? data : [data];
         const newZones = items.map((item: z.infer<typeof ZoneSchema>) => ({ ...item, id: uuid() }));
         setZones([...zones, ...newZones]);
@@ -529,14 +561,6 @@ ${buffGroupList}
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl blur-md opacity-60 group-hover:opacity-90 transition-opacity animate-pulse" />
           <div className="relative flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-xl text-white font-semibold text-[14px] shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-violet-500/25">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2a4 4 0 0 1 4 4v1a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2V6a4 4 0 0 1 4-4z" />
-              <circle cx="10" cy="9" r="1" fill="currentColor" />
-              <circle cx="14" cy="9" r="1" fill="currentColor" />
-              <path d="M9 14v1a3 3 0 0 0 6 0v-1" />
-              <path d="M5 20h14" />
-              <path d="M12 17v3" />
-            </svg>
             AI
           </div>
         </div>
