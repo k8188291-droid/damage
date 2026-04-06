@@ -1,7 +1,4 @@
-interface Props {
-  visibleSections: Record<string, boolean>;
-  onToggle: (key: string) => void;
-}
+import { useUIStore } from '../stores/uiStore';
 
 const SECTIONS = [
   { key: 'presets', icon: '🗄️', label: '檔案庫' },
@@ -10,7 +7,10 @@ const SECTIONS = [
   { key: 'skills', icon: '⚔️', label: '技能' },
 ] as const;
 
-export default function IconSidebar({ visibleSections, onToggle }: Props) {
+export default function IconSidebar() {
+  const visibleSections = useUIStore(s => s.visibleSections);
+  const toggleSection = useUIStore(s => s.toggleSection);
+
   return (
     <aside className="w-12 bg-gray-900/80 border-r border-gray-800 flex flex-col items-center py-3 gap-1 shrink-0">
       {SECTIONS.map(s => {
@@ -18,7 +18,7 @@ export default function IconSidebar({ visibleSections, onToggle }: Props) {
         return (
           <button
             key={s.key}
-            onClick={() => onToggle(s.key)}
+            onClick={() => toggleSection(s.key)}
             className={`w-9 h-9 rounded-lg flex items-center justify-center text-base cursor-pointer transition-colors ${active ? 'bg-indigo-600/20 text-indigo-400' : 'text-gray-600 hover:text-gray-400 hover:bg-gray-800'}`}
             title={s.label}
           >

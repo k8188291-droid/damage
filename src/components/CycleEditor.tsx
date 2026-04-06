@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { v4 as uuid } from 'uuid';
+import { useShallow } from 'zustand/shallow';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   type DragEndEvent,
@@ -8,19 +9,13 @@ import {
   arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useAppStore } from '../stores/appStore';
 import type { Skill, Buff, BuffGroup, Character, DamageZone, RotationGroup, RotationEntry } from '../types';
 import { calculateSkillDamage, type RotationGroupResult } from '../utils/damage';
 import Modal from './Modal';
 
 interface Props {
-  group: RotationGroup;
   groupResult: RotationGroupResult;
-  skills: Skill[];
-  buffs: Buff[];
-  buffGroups: BuffGroup[];
-  characters: Character[];
-  zones: DamageZone[];
-  onUpdate: (g: RotationGroup) => void;
 }
 
 function fmt(n: number) { return Math.round(n).toLocaleString(); }
@@ -105,7 +100,7 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
   const cycleDisabledSet = new Set(group.disabledBuffIds || []);
   const entryDisabledSet = new Set(entry.disabledBuffIds || []);
 
-  // Exclude buffs disabled globally or at cycle level (req 7)
+  // Exclude buffs disabled globally or at cycle level
   const relevantBuffs = buffs.filter(b =>
     b.enabled &&
     enabledBuffIds.includes(b.id) &&
@@ -125,7 +120,7 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
     ? calculateSkillDamage(skill, characters, buffs, zones, entry.disabledBuffIds || [], group.disabledBuffIds || [])
     : null;
 
-  // Build formula: attackPower × skillZone × otherZones...  (req 6)
+  // Build formula: attackPower × skillZone × otherZones...
   const formulaParts: React.ReactNode[] = [];
   if (sr) {
     formulaParts.push(<span key="atk" className="text-gray-300">{fmt(sr.attackPower)}</span>);
@@ -170,12 +165,10 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
               </select>
             )}
 
-            {/* Formula line (req 6) */}
             {sr && (
               <div className="text-xs font-mono mb-2">{formulaParts}</div>
             )}
 
-            {/* Per-entry buff toggles inline (req 6, 7) */}
             {sortedRelevantBuffs.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {sortedRelevantBuffs.map(b => {
@@ -215,20 +208,32 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
 }
 
 /* ── Main CycleEditor ── */
-export default function CycleEditor({ group, groupResult, skills, buffs, buffGroups, characters, zones, onUpdate }: Props) {
+export default function CycleEditor({ groupResult }: Props) {
+  const { skills, buffs, buffGroups, characters, zones, activeRotationId, rotationGroups, updateRotationGroup } = useAppStore(useShallow(s => ({
+    skills: s.skills,
+    buffs: s.buffs,
+    buffGroups: s.buffGroups,
+    characters: s.characters,
+    zones: s.zones,
+    activeRotationId: s.activeRotationId,
+    rotationGroups: s.rotationGroups,
+    updateRotationGroup: s.updateRotationGroup,
+  })));
+
+  const group = rotationGroups.find(g => g.id === activeRotationId)!;
   const [detailResult, setDetailResult] = useState<RotationGroupResult | null>(null);
   const [showSkillPalette, setShowSkillPalette] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const updateEntry = (id: string, patch: Partial<RotationEntry>) => {
-    onUpdate({ ...group, entries: group.entries.map(e => e.id === id ? { ...e, ...patch } : e) });
+    updateRotationGroup({ ...group, entries: group.entries.map(e => e.id === id ? { ...e, ...patch } : e) });
   };
   const removeEntry = (id: string) => {
-    onUpdate({ ...group, entries: group.entries.filter(e => e.id !== id) });
+    updateRotationGroup({ ...group, entries: group.entries.filter(e => e.id !== id) });
   };
   const addSkill = (skillId: string) => {
-    onUpdate({ ...group, entries: [...group.entries, { id: uuid(), skillId, count: 1, disabledBuffIds: [] }] });
+    updateRotationGroup({ ...group, entries: [...group.entries, { id: uuid(), skillId, count: 1, disabledBuffIds: [] }] });
     setShowSkillPalette(false);
   };
 
@@ -237,7 +242,7 @@ export default function CycleEditor({ group, groupResult, skills, buffs, buffGro
     if (over && active.id !== over.id) {
       const oldIdx = group.entries.findIndex(e => e.id === active.id);
       const newIdx = group.entries.findIndex(e => e.id === over.id);
-      onUpdate({ ...group, entries: arrayMove(group.entries, oldIdx, newIdx) });
+      updateRotationGroup({ ...group, entries: arrayMove(group.entries, oldIdx, newIdx) });
     }
   };
 
@@ -250,7 +255,7 @@ export default function CycleEditor({ group, groupResult, skills, buffs, buffGro
             <div className="flex items-center gap-2 mb-1">
               <input
                 value={group.name}
-                onChange={e => onUpdate({ ...group, name: e.target.value })}
+                onChange={e => updateRotationGroup({ ...group, name: e.target.value })}
                 className="bg-transparent text-xl font-bold text-gray-100 focus:outline-none border-b border-transparent focus:border-indigo-500"
               />
             </div>

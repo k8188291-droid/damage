@@ -1,3 +1,4 @@
+import { useShallow } from 'zustand/shallow';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   type DragEndEvent,
@@ -6,23 +7,13 @@ import {
   arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useAppStore } from '../stores/appStore';
 import type { RotationGroup } from '../types';
 import type { RotationGroupResult } from '../utils/damage';
 import { Tooltip } from './ui';
 
 interface Props {
-  rotationGroups: RotationGroup[];
   groupResults: RotationGroupResult[];
-  activeRotationId: string;
-  excludedGroupIds: Set<string>;
-  onSelectRotation: (id: string) => void;
-  onAddRotation: () => void;
-  onRemoveRotation: (id: string) => void;
-  onCopyRotation: (g: RotationGroup) => void;
-  onReorderRotations: (groups: RotationGroup[]) => void;
-  onToggleExclude: (id: string) => void;
-  notes: string;
-  onNotesChange: (notes: string) => void;
 }
 
 function fmt(n: number) { return Math.round(n).toLocaleString(); }
@@ -102,18 +93,32 @@ function SortableCycleCard({ group, result, isActive, maxDamage, diff, excluded,
   );
 }
 
-export default function AnalysisPanel({
-  rotationGroups, groupResults, activeRotationId, excludedGroupIds,
-  onSelectRotation, onAddRotation, onRemoveRotation, onCopyRotation,
-  onReorderRotations, onToggleExclude, notes, onNotesChange,
-}: Props) {
+export default function AnalysisPanel({ groupResults }: Props) {
+  const {
+    rotationGroups, activeRotationId, excludedGroupIds, notes,
+    setActiveRotationId, addRotationGroup, removeRotationGroup,
+    copyRotationGroup, reorderRotationGroups, toggleExclude, setNotes,
+  } = useAppStore(useShallow(s => ({
+    rotationGroups: s.rotationGroups,
+    activeRotationId: s.activeRotationId,
+    excludedGroupIds: s.excludedGroupIds,
+    notes: s.notes,
+    setActiveRotationId: s.setActiveRotationId,
+    addRotationGroup: s.addRotationGroup,
+    removeRotationGroup: s.removeRotationGroup,
+    copyRotationGroup: s.copyRotationGroup,
+    reorderRotationGroups: s.reorderRotationGroups,
+    toggleExclude: s.toggleExclude,
+    setNotes: s.setNotes,
+  })));
+
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const excludedSet = new Set(excludedGroupIds);
 
   const activeIdx = rotationGroups.findIndex(g => g.id === activeRotationId);
   const activeResult = activeIdx >= 0 ? groupResults[activeIdx] : null;
 
-  // Max damage computed only among non-excluded groups
-  const includedResults = groupResults.filter((_, i) => !excludedGroupIds.has(rotationGroups[i].id));
+  const includedResults = groupResults.filter((_, i) => !excludedSet.has(rotationGroups[i].id));
   const maxDamage = Math.max(...includedResults.map(r => r.totalDamage), 1);
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -121,7 +126,7 @@ export default function AnalysisPanel({
     if (over && active.id !== over.id) {
       const oldIdx = rotationGroups.findIndex(g => g.id === active.id);
       const newIdx = rotationGroups.findIndex(g => g.id === over.id);
-      onReorderRotations(arrayMove(rotationGroups, oldIdx, newIdx));
+      reorderRotationGroups(arrayMove(rotationGroups, oldIdx, newIdx));
     }
   };
 
@@ -140,7 +145,7 @@ export default function AnalysisPanel({
         <div className="text-xs text-gray-500 tracking-wider font-semibold mb-2">NOTES</div>
         <textarea
           value={notes}
-          onChange={e => onNotesChange(e.target.value)}
+          onChange={e => setNotes(e.target.value)}
           placeholder="輸入此設定的說明..."
           className="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-300 resize-none focus:outline-none focus:border-indigo-500"
           rows={5}
@@ -151,7 +156,7 @@ export default function AnalysisPanel({
       <div className="px-4 py-3 border-b border-gray-800">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs text-gray-500 tracking-wider font-semibold">SAVED CYCLES</span>
-          <button onClick={onAddRotation}
+          <button onClick={addRotationGroup}
             className="text-xs text-indigo-400 hover:text-indigo-300 cursor-pointer">+ 新增</button>
         </div>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -160,9 +165,8 @@ export default function AnalysisPanel({
               {rotationGroups.map((g, i) => {
                 const isActive = g.id === activeRotationId;
                 const result = groupResults[i];
-                const excluded = excludedGroupIds.has(g.id);
-                // Diff only among non-excluded
-                const diff = activeResult && activeResult.totalDamage > 0 && !isActive && !excluded && !excludedGroupIds.has(activeRotationId)
+                const excluded = excludedSet.has(g.id);
+                const diff = activeResult && activeResult.totalDamage > 0 && !isActive && !excluded && !excludedSet.has(activeRotationId)
                   ? ((result.totalDamage / activeResult.totalDamage - 1) * 100).toFixed(1)
                   : null;
 
@@ -175,10 +179,10 @@ export default function AnalysisPanel({
                     maxDamage={maxDamage}
                     diff={diff}
                     excluded={excluded}
-                    onSelect={() => onSelectRotation(g.id)}
-                    onCopy={() => onCopyRotation(g)}
-                    onRemove={() => onRemoveRotation(g.id)}
-                    onToggleExclude={() => onToggleExclude(g.id)}
+                    onSelect={() => setActiveRotationId(g.id)}
+                    onCopy={() => copyRotationGroup(g)}
+                    onRemove={() => removeRotationGroup(g.id)}
+                    onToggleExclude={() => toggleExclude(g.id)}
                   />
                 );
               })}
@@ -187,7 +191,6 @@ export default function AnalysisPanel({
         </DndContext>
       </div>
 
-      {/* Damage Breakdown */}
       {activeResult && activeResult.skillResults.length > 0 && (
         <div className="px-4 py-3 flex-1">
           <div className="flex items-center justify-between mb-3">

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { v4 as uuid } from 'uuid';
+import { useShallow } from 'zustand/shallow';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   type DragEndEvent, type DragStartEvent, DragOverlay, useDroppable,
@@ -8,22 +9,11 @@ import {
   arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useAppStore } from '../stores/appStore';
+import { useUndoStore } from '../stores/undoStore';
 import type { Buff, BuffGroup, DamageZone, Skill, SkillGroup } from '../types';
 import Modal from './Modal';
 import { Tooltip, ColorDotPicker, COLORS } from './ui';
-
-interface Props {
-  buffs: Buff[];
-  zones: DamageZone[];
-  buffGroups: BuffGroup[];
-  skills: Skill[];
-  skillGroups: SkillGroup[];
-  onBuffsChange: (buffs: Buff[]) => void;
-  onZonesChange: (zones: DamageZone[]) => void;
-  onBuffGroupsChange: (groups: BuffGroup[]) => void;
-  onSkillsChange: (skills: Skill[]) => void;
-  pushUndo: (label: string, restore: () => void) => void;
-}
 
 const ICONS = ['🗡️','🔥','💀','💥','🌀','🛡️','🔮','⚡','🎯','💎','🌟','💫','🔰','⭐','❄️','🌊','💨','🍃'];
 
@@ -103,7 +93,6 @@ function BuffModal({ buff, zones, buffGroups, skills, skillGroups, onSave, onClo
   const [d, setD] = useState({ ...buff });
   const p = (patch: Partial<Buff>) => setD(v => ({ ...v, ...patch }));
 
-  // Track which skills have this buff enabled
   const [enabledSkillIds, setEnabledSkillIds] = useState<string[]>(
     () => skills.filter(s => s.enabledBuffIds.includes(buff.id)).map(s => s.id)
   );
@@ -114,7 +103,6 @@ function BuffModal({ buff, zones, buffGroups, skills, skillGroups, onSave, onClo
     );
   };
 
-  // Group skills by skill group
   const skillsByGroup = new Map<string, Skill[]>();
   skillsByGroup.set('', []);
   for (const g of skillGroups) skillsByGroup.set(g.id, []);
@@ -220,7 +208,7 @@ function BuffModal({ buff, zones, buffGroups, skills, skillGroups, onSave, onClo
   );
 }
 
-/* ── Sortable Buff Chip (compact single-column) ── */
+/* ── Sortable Buff Chip ── */
 function SortableBuffChip({ buff, zone, onClick, onToggle, onCopy, onRemove }: {
   buff: Buff; zone: DamageZone | undefined;
   onClick: () => void; onToggle: () => void; onCopy: () => void; onRemove: () => void;
@@ -271,7 +259,7 @@ function BuffChipOverlay({ buff, zone }: { buff: Buff; zone: DamageZone | undefi
   );
 }
 
-/* ── Droppable group container (single column) ── */
+/* ── Droppable group container ── */
 function DroppableGroupArea({ groupId, children, isEmpty }: {
   groupId: string; children: React.ReactNode; isEmpty: boolean;
 }) {
@@ -290,7 +278,17 @@ function DroppableGroupArea({ groupId, children, isEmpty }: {
 }
 
 /* ── Main Section ── */
-export default function BuffSection({ buffs, zones, buffGroups, skills, skillGroups, onBuffsChange, onZonesChange, onBuffGroupsChange, onSkillsChange, pushUndo }: Props) {
+export default function BuffSection() {
+  const { buffs, zones, buffGroups, skills, skillGroups } = useAppStore(useShallow(s => ({
+    buffs: s.buffs, zones: s.zones, buffGroups: s.buffGroups,
+    skills: s.skills, skillGroups: s.skillGroups,
+  })));
+  const setBuffs = useAppStore(s => s.setBuffs);
+  const setZones = useAppStore(s => s.setZones);
+  const setBuffGroups = useAppStore(s => s.setBuffGroups);
+  const setSkills = useAppStore(s => s.setSkills);
+  const pushUndo = useUndoStore(s => s.pushUndo);
+
   const [editingBuff, setEditingBuff] = useState<Buff | null>(null);
   const [editingZone, setEditingZone] = useState<DamageZone | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -299,10 +297,10 @@ export default function BuffSection({ buffs, zones, buffGroups, skills, skillGro
 
   const saveBuff = (b: Buff, enabledSkillIds?: string[]) => {
     const exists = buffs.find(x => x.id === b.id);
-    onBuffsChange(exists ? buffs.map(x => x.id === b.id ? b : x) : [...buffs, b]);
+    setBuffs(exists ? buffs.map(x => x.id === b.id ? b : x) : [...buffs, b]);
     // Update skills' enabledBuffIds based on which skills should have this buff
     if (enabledSkillIds !== undefined) {
-      onSkillsChange(skills.map(s => {
+      setSkills(skills.map(s => {
         const shouldEnable = enabledSkillIds.includes(s.id);
         const hasIt = s.enabledBuffIds.includes(b.id);
         if (shouldEnable && !hasIt) return { ...s, enabledBuffIds: [...s.enabledBuffIds, b.id] };
@@ -317,8 +315,8 @@ export default function BuffSection({ buffs, zones, buffGroups, skills, skillGro
     const buff = buffs.find(b => b.id === id);
     if (!buff) return;
     const prevBuffs = [...buffs];
-    onBuffsChange(buffs.filter(b => b.id !== id));
-    pushUndo(`已刪除 Buff: ${buff.name}`, () => onBuffsChange(prevBuffs));
+    setBuffs(buffs.filter(b => b.id !== id));
+    pushUndo(`已刪除 Buff: ${buff.name}`, () => setBuffs(prevBuffs));
   };
 
   const copyBuff = (b: Buff) => {
@@ -326,16 +324,16 @@ export default function BuffSection({ buffs, zones, buffGroups, skills, skillGro
     const idx = buffs.findIndex(x => x.id === b.id);
     const next = [...buffs];
     next.splice(idx + 1, 0, copy);
-    onBuffsChange(next);
+    setBuffs(next);
   };
 
   const toggleBuff = (id: string) => {
-    onBuffsChange(buffs.map(b => b.id === id ? { ...b, enabled: !b.enabled } : b));
+    setBuffs(buffs.map(b => b.id === id ? { ...b, enabled: !b.enabled } : b));
   };
 
   const saveZone = (z: DamageZone) => {
     const exists = zones.find(x => x.id === z.id);
-    onZonesChange(exists ? zones.map(x => x.id === z.id ? z : x) : [...zones, z]);
+    setZones(exists ? zones.map(x => x.id === z.id ? z : x) : [...zones, z]);
     setEditingZone(null);
   };
 
@@ -344,13 +342,13 @@ export default function BuffSection({ buffs, zones, buffGroups, skills, skillGro
     if (!zone) return;
     const prevZones = [...zones];
     const prevBuffs = [...buffs];
-    onZonesChange(zones.filter(z => z.id !== id));
-    onBuffsChange(buffs.filter(b => b.zoneId !== id));
-    pushUndo(`已刪除分區: ${zone.displayName}`, () => { onZonesChange(prevZones); onBuffsChange(prevBuffs); });
+    setZones(zones.filter(z => z.id !== id));
+    setBuffs(buffs.filter(b => b.zoneId !== id));
+    pushUndo(`已刪除分區: ${zone.displayName}`, () => { setZones(prevZones); setBuffs(prevBuffs); });
   };
 
   const updateGroup = (g: BuffGroup) => {
-    onBuffGroupsChange(buffGroups.map(x => x.id === g.id ? g : x));
+    setBuffGroups(buffGroups.map(x => x.id === g.id ? g : x));
   };
 
   const cycleGroupColor = (g: BuffGroup) => {
@@ -360,7 +358,7 @@ export default function BuffSection({ buffs, zones, buffGroups, skills, skillGro
   };
 
   const addGroup = () => {
-    onBuffGroupsChange([...buffGroups, { id: uuid(), name: `群組 ${buffGroups.length + 1}`, color: COLORS[buffGroups.length % COLORS.length] }]);
+    setBuffGroups([...buffGroups, { id: uuid(), name: `群組 ${buffGroups.length + 1}`, color: COLORS[buffGroups.length % COLORS.length] }]);
   };
 
   const removeGroup = (id: string) => {
@@ -368,9 +366,9 @@ export default function BuffSection({ buffs, zones, buffGroups, skills, skillGro
     if (!grp) return;
     const prevGroups = [...buffGroups];
     const prevBuffs = [...buffs];
-    onBuffGroupsChange(buffGroups.filter(g => g.id !== id));
-    onBuffsChange(buffs.map(b => b.groupId === id ? { ...b, groupId: '' } : b));
-    pushUndo(`已刪除群組: ${grp.name}`, () => { onBuffGroupsChange(prevGroups); onBuffsChange(prevBuffs); });
+    setBuffGroups(buffGroups.filter(g => g.id !== id));
+    setBuffs(buffs.map(b => b.groupId === id ? { ...b, groupId: '' } : b));
+    pushUndo(`已刪除群組: ${grp.name}`, () => { setBuffGroups(prevGroups); setBuffs(prevBuffs); });
   };
 
   const newBuff = () => {
@@ -405,12 +403,12 @@ export default function BuffSection({ buffs, zones, buffGroups, skills, skillGro
     const groupChanged = sourceGroupId !== targetGroupId;
 
     if (groupChanged) {
-      onBuffsChange(buffs.map(b => b.id === activeBuffId ? { ...b, groupId: targetGroupId } : b));
+      setBuffs(buffs.map(b => b.id === activeBuffId ? { ...b, groupId: targetGroupId } : b));
     } else if (!overId.startsWith('group-drop:') && active.id !== over.id) {
       const oldIdx = buffs.findIndex(b => b.id === activeBuffId);
       const newIdx = buffs.findIndex(b => b.id === overId);
       if (oldIdx !== -1 && newIdx !== -1) {
-        onBuffsChange(arrayMove(buffs, oldIdx, newIdx));
+        setBuffs(arrayMove(buffs, oldIdx, newIdx));
       }
     }
   };

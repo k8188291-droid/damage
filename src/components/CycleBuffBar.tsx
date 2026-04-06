@@ -1,13 +1,18 @@
-import type { Buff, BuffGroup } from '../types';
+import { useShallow } from 'zustand/shallow';
+import { useAppStore } from '../stores/appStore';
 
-interface Props {
-  buffs: Buff[];
-  buffGroups: BuffGroup[];
-  cycleDisabledBuffIds: string[];
-  onToggleBuff: (buffId: string) => void;
-}
+export default function CycleBuffBar() {
+  const { buffs, buffGroups, activeRotationId, rotationGroups, toggleCycleBuff } = useAppStore(useShallow(s => ({
+    buffs: s.buffs,
+    buffGroups: s.buffGroups,
+    activeRotationId: s.activeRotationId,
+    rotationGroups: s.rotationGroups,
+    toggleCycleBuff: s.toggleCycleBuff,
+  })));
 
-export default function CycleBuffBar({ buffs, buffGroups, cycleDisabledBuffIds, onToggleBuff }: Props) {
+  const activeRotation = rotationGroups.find(g => g.id === activeRotationId);
+  const cycleDisabledBuffIds = activeRotation?.disabledBuffIds || [];
+
   // Only show globally enabled buffs, sorted by group order then position within group
   const enabledBuffs = buffs.filter(b => b.enabled);
   const sortedBuffs = [...enabledBuffs].sort((a, b) => {
@@ -33,7 +38,7 @@ export default function CycleBuffBar({ buffs, buffGroups, cycleDisabledBuffIds, 
           return (
             <button
               key={b.id}
-              onClick={() => onToggleBuff(b.id)}
+              onClick={() => toggleCycleBuff(b.id)}
               title={isDisabled ? '已停用，點擊啟用' : '已啟用，點擊停用'}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer border transition-all ${
                 isDisabled

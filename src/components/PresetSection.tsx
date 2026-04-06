@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useShallow } from 'zustand/shallow';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   type DragEndEvent,
@@ -7,20 +8,9 @@ import {
   arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useAppStore } from '../stores/appStore';
 import type { Preset } from '../types';
 import ConfirmDialog from './ConfirmDialog';
-
-interface Props {
-  presets: Preset[];
-  onSavePreset: (name: string) => void;
-  onOverwritePreset: (id: string) => void;
-  onLoadPreset: (preset: Preset) => void;
-  onOpenInNewTab: (preset: Preset) => void;
-  onDuplicatePreset: (id: string) => void;
-  onRenamePreset: (id: string, name: string) => void;
-  onDeletePreset: (id: string) => void;
-  onReorderPresets: (presets: Preset[]) => void;
-}
 
 function formatTime(ts: number) {
   const d = new Date(ts);
@@ -116,7 +106,23 @@ function SortablePresetCard({ preset, editingId, editValue, onEditChange, onStar
 
 type ConfirmAction = { type: 'load'; preset: Preset } | { type: 'delete'; id: string; name: string } | { type: 'overwrite'; id: string; name: string };
 
-export default function PresetSection({ presets, onSavePreset, onOverwritePreset, onLoadPreset, onOpenInNewTab, onDuplicatePreset, onRenamePreset, onDeletePreset, onReorderPresets }: Props) {
+export default function PresetSection() {
+  const {
+    presets, savePreset, overwritePreset, loadPreset,
+    openPresetInNewTab, duplicatePreset, renamePreset,
+    deletePreset, reorderPresets,
+  } = useAppStore(useShallow(s => ({
+    presets: s.presets,
+    savePreset: s.savePreset,
+    overwritePreset: s.overwritePreset,
+    loadPreset: s.loadPreset,
+    openPresetInNewTab: s.openPresetInNewTab,
+    duplicatePreset: s.duplicatePreset,
+    renamePreset: s.renamePreset,
+    deletePreset: s.deletePreset,
+    reorderPresets: s.reorderPresets,
+  })));
+
   const [newName, setNewName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -125,7 +131,7 @@ export default function PresetSection({ presets, onSavePreset, onOverwritePreset
 
   const handleSave = () => {
     const name = newName.trim() || `檔案 ${presets.length + 1}`;
-    onSavePreset(name);
+    savePreset(name);
     setNewName('');
   };
 
@@ -136,7 +142,7 @@ export default function PresetSection({ presets, onSavePreset, onOverwritePreset
 
   const commitRename = () => {
     if (editingId && editValue.trim()) {
-      onRenamePreset(editingId, editValue.trim());
+      renamePreset(editingId, editValue.trim());
     }
     setEditingId(null);
   };
@@ -146,16 +152,16 @@ export default function PresetSection({ presets, onSavePreset, onOverwritePreset
     if (over && active.id !== over.id) {
       const oldIdx = presets.findIndex(p => p.id === active.id);
       const newIdx = presets.findIndex(p => p.id === over.id);
-      onReorderPresets(arrayMove(presets, oldIdx, newIdx));
+      reorderPresets(arrayMove(presets, oldIdx, newIdx));
     }
   };
 
   const handleConfirm = () => {
     if (!confirmAction) return;
     switch (confirmAction.type) {
-      case 'load': onLoadPreset(confirmAction.preset); break;
-      case 'delete': onDeletePreset(confirmAction.id); break;
-      case 'overwrite': onOverwritePreset(confirmAction.id); break;
+      case 'load': loadPreset(confirmAction.preset); break;
+      case 'delete': deletePreset(confirmAction.id); break;
+      case 'overwrite': overwritePreset(confirmAction.id); break;
     }
     setConfirmAction(null);
   };
@@ -207,8 +213,8 @@ export default function PresetSection({ presets, onSavePreset, onOverwritePreset
                 onCommitRename={commitRename}
                 onCancelRename={() => setEditingId(null)}
                 onLoad={() => setConfirmAction({ type: 'load', preset: p })}
-                onOpenInNewTab={() => onOpenInNewTab(p)}
-                onDuplicate={() => onDuplicatePreset(p.id)}
+                onOpenInNewTab={() => openPresetInNewTab(p)}
+                onDuplicate={() => duplicatePreset(p.id)}
                 onOverwrite={() => setConfirmAction({ type: 'overwrite', id: p.id, name: p.name })}
                 onDelete={() => setConfirmAction({ type: 'delete', id: p.id, name: p.name })}
               />

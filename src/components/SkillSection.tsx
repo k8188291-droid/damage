@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { v4 as uuid } from 'uuid';
+import { useShallow } from 'zustand/shallow';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   type DragEndEvent, type DragStartEvent, DragOverlay, useDroppable,
@@ -8,21 +9,11 @@ import {
   arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useAppStore } from '../stores/appStore';
+import { useUndoStore } from '../stores/undoStore';
 import type { Skill, SkillGroup, Buff, BuffGroup, Character, DamageZone } from '../types';
 import Modal from './Modal';
 import { ColorDotPicker, COLORS } from './ui';
-
-interface Props {
-  skills: Skill[];
-  buffs: Buff[];
-  buffGroups: BuffGroup[];
-  characters: Character[];
-  zones: DamageZone[];
-  skillGroups: SkillGroup[];
-  onChange: (skills: Skill[]) => void;
-  onSkillGroupsChange: (groups: SkillGroup[]) => void;
-  pushUndo: (label: string, restore: () => void) => void;
-}
 
 /* ── Skill Modal ── */
 function SkillModal({ skill, buffs, buffGroups, characters, zones, skillGroups, onSave, onClose }: {
@@ -37,14 +28,12 @@ function SkillModal({ skill, buffs, buffGroups, characters, zones, skillGroups, 
     p({ enabledBuffIds: d.enabledBuffIds.includes(id) ? d.enabledBuffIds.filter(x => x !== id) : [...d.enabledBuffIds, id] });
   };
 
-  // Group buffs by zone
   const buffsByZone = new Map<string, Buff[]>();
   for (const b of buffs) {
     if (!buffsByZone.has(b.zoneId)) buffsByZone.set(b.zoneId, []);
     buffsByZone.get(b.zoneId)!.push(b);
   }
 
-  // Group buffs by buff group
   const buffsByGroup = new Map<string, Buff[]>();
   buffsByGroup.set('', []);
   for (const g of buffGroups) buffsByGroup.set(g.id, []);
@@ -172,7 +161,7 @@ function SkillModal({ skill, buffs, buffGroups, characters, zones, skillGroups, 
   );
 }
 
-/* ── Sortable Skill Card (compact single-column) ── */
+/* ── Sortable Skill Card ── */
 function SortableSkillCard({ skill, char, onClick, onCopy, onRemove }: {
   skill: Skill; char: Character | undefined;
   onClick: () => void; onCopy: () => void; onRemove: () => void;
@@ -214,7 +203,7 @@ function SkillCardOverlay({ skill, char }: { skill: Skill; char: Character | und
   );
 }
 
-/* ── Droppable skill group container (single column) ── */
+/* ── Droppable skill group container ── */
 function DroppableSkillArea({ groupId, children, isEmpty }: {
   groupId: string; children: React.ReactNode; isEmpty: boolean;
 }) {
@@ -233,7 +222,15 @@ function DroppableSkillArea({ groupId, children, isEmpty }: {
 }
 
 /* ── Main Section ── */
-export default function SkillSection({ skills, buffs, buffGroups, characters, zones, skillGroups, onChange, onSkillGroupsChange, pushUndo }: Props) {
+export default function SkillSection() {
+  const { skills, buffs, buffGroups, characters, zones, skillGroups } = useAppStore(useShallow(s => ({
+    skills: s.skills, buffs: s.buffs, buffGroups: s.buffGroups,
+    characters: s.characters, zones: s.zones, skillGroups: s.skillGroups,
+  })));
+  const setSkills = useAppStore(s => s.setSkills);
+  const setSkillGroups = useAppStore(s => s.setSkillGroups);
+  const pushUndo = useUndoStore(s => s.pushUndo);
+
   const [editing, setEditing] = useState<Skill | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -241,7 +238,7 @@ export default function SkillSection({ skills, buffs, buffGroups, characters, zo
 
   const save = (s: Skill) => {
     const exists = skills.find(x => x.id === s.id);
-    onChange(exists ? skills.map(x => x.id === s.id ? s : x) : [...skills, s]);
+    setSkills(exists ? skills.map(x => x.id === s.id ? s : x) : [...skills, s]);
     setEditing(null);
   };
 
@@ -249,8 +246,8 @@ export default function SkillSection({ skills, buffs, buffGroups, characters, zo
     const skill = skills.find(s => s.id === id);
     if (!skill) return;
     const prev = [...skills];
-    onChange(skills.filter(s => s.id !== id));
-    pushUndo(`已刪除技能: ${skill.name}`, () => onChange(prev));
+    setSkills(skills.filter(s => s.id !== id));
+    pushUndo(`已刪除技能: ${skill.name}`, () => setSkills(prev));
   };
 
   const copy = (s: Skill) => {
@@ -258,7 +255,7 @@ export default function SkillSection({ skills, buffs, buffGroups, characters, zo
     const idx = skills.findIndex(x => x.id === s.id);
     const next = [...skills];
     next.splice(idx + 1, 0, c);
-    onChange(next);
+    setSkills(next);
   };
 
   const startNew = () => setEditing({
@@ -267,7 +264,7 @@ export default function SkillSection({ skills, buffs, buffGroups, characters, zo
   });
 
   const updateSkillGroup = (g: SkillGroup) => {
-    onSkillGroupsChange(skillGroups.map(x => x.id === g.id ? g : x));
+    setSkillGroups(skillGroups.map(x => x.id === g.id ? g : x));
   };
 
   const cycleSkillGroupColor = (g: SkillGroup) => {
@@ -276,7 +273,7 @@ export default function SkillSection({ skills, buffs, buffGroups, characters, zo
   };
 
   const addSkillGroup = () => {
-    onSkillGroupsChange([...skillGroups, { id: uuid(), name: `群組 ${skillGroups.length + 1}`, color: COLORS[skillGroups.length % COLORS.length] }]);
+    setSkillGroups([...skillGroups, { id: uuid(), name: `群組 ${skillGroups.length + 1}`, color: COLORS[skillGroups.length % COLORS.length] }]);
   };
 
   const removeSkillGroup = (id: string) => {
@@ -284,9 +281,9 @@ export default function SkillSection({ skills, buffs, buffGroups, characters, zo
     if (!grp) return;
     const prevGroups = [...skillGroups];
     const prevSkills = [...skills];
-    onSkillGroupsChange(skillGroups.filter(g => g.id !== id));
-    onChange(skills.map(s => s.groupId === id ? { ...s, groupId: '' } : s));
-    pushUndo(`已刪除技能群組: ${grp.name}`, () => { onSkillGroupsChange(prevGroups); onChange(prevSkills); });
+    setSkillGroups(skillGroups.filter(g => g.id !== id));
+    setSkills(skills.map(s => s.groupId === id ? { ...s, groupId: '' } : s));
+    pushUndo(`已刪除技能群組: ${grp.name}`, () => { setSkillGroups(prevGroups); setSkills(prevSkills); });
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -312,12 +309,12 @@ export default function SkillSection({ skills, buffs, buffGroups, characters, zo
     const groupChanged = sourceGroupId !== targetGroupId;
 
     if (groupChanged) {
-      onChange(skills.map(s => s.id === activeSkillId ? { ...s, groupId: targetGroupId } : s));
+      setSkills(skills.map(s => s.id === activeSkillId ? { ...s, groupId: targetGroupId } : s));
     } else if (!overId.startsWith('skill-group-drop:') && active.id !== over.id) {
       const oldIdx = skills.findIndex(s => s.id === activeSkillId);
       const newIdx = skills.findIndex(s => s.id === overId);
       if (oldIdx !== -1 && newIdx !== -1) {
-        onChange(arrayMove(skills, oldIdx, newIdx));
+        setSkills(arrayMove(skills, oldIdx, newIdx));
       }
     }
   };
