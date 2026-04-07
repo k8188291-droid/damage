@@ -50,12 +50,14 @@ export function migrateV1ToV2(data: V1AppData): AppData {
       value: b.value,
       icon: b.icon,
       enabled: true,
+      condition: 'all' as const,
     })),
     buffGroups: [],
     characters: data.characters,
     skills: data.skills.map(s => ({
       ...s,
       groupId: '',
+      damageType: 'physical' as const,
     })),
     skillGroups: [],
     rotationGroups: data.rotationGroups.map(g => ({

@@ -464,7 +464,7 @@ ${buffGroupList}
           const resolvedGroupId = groupName
             ? resolveGroupName(groupName, buffGroups, newGroupMap)
             : rest.groupId || '';
-          return { ...rest, groupId: resolvedGroupId, id: uuid() };
+          return { ...rest, groupId: resolvedGroupId, id: uuid(), condition: 'all' as import('../types').BuffCondition };
         });
         setBuffs([...buffs, ...newBuffs]);
         messages.push(`${newBuffs.length} 個 Buff`);
@@ -505,7 +505,7 @@ ${buffGroupList}
           const resolvedGroupId = groupName
             ? resolveGroupName(groupName, skillGroups, newGroupMap)
             : rest.groupId || '';
-          return { ...rest, groupId: resolvedGroupId, id: uuid(), order: skills.length + i };
+          return { ...rest, groupId: resolvedGroupId, id: uuid(), order: skills.length + i, damageType: 'physical' as import('../types').DamageType };
         });
         setSkills([...skills, ...newSkills]);
         messages.push(`${newSkills.length} 個技能`);

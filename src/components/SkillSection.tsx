@@ -11,7 +11,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useAppStore } from '../stores/appStore';
 import { useUndoStore } from '../stores/undoStore';
-import type { Skill, SkillGroup, Buff, BuffGroup, Character, DamageZone } from '../types';
+import type { Skill, SkillGroup, Buff, BuffGroup, Character, DamageZone, AutoApplyPreview } from '../types';
+import { DAMAGE_TYPE_META, BUFF_CONDITION_META, type DamageType } from '../types';
 import Modal from './Modal';
 import { ColorDotPicker, COLORS } from './ui';
 
@@ -76,6 +77,23 @@ function SkillModal({ skill, buffs, buffGroups, characters, zones, skillGroups, 
         </div>
 
         <div>
+          <label className="block text-xs text-gray-400 mb-1">傷害類型</label>
+          <div className="flex items-center bg-gray-800 rounded-lg border border-gray-700 overflow-hidden w-fit">
+            {(Object.keys(DAMAGE_TYPE_META) as DamageType[]).map(dt => {
+              const meta = DAMAGE_TYPE_META[dt];
+              const active = d.damageType === dt;
+              return (
+                <button key={dt} onClick={() => p({ damageType: dt })}
+                  className="px-3 py-1.5 text-xs font-medium cursor-pointer transition-colors border-r border-gray-700 last:border-r-0"
+                  style={active ? { backgroundColor: meta.color + '33', color: meta.color } : { color: '#9ca3af' }}>
+                  {meta.icon} {meta.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
               <label className="text-xs text-gray-400 font-medium">啟用的 Buff</label>
@@ -114,7 +132,7 @@ function SkillModal({ skill, buffs, buffGroups, characters, zones, skillGroups, 
                             <button key={b.id} onClick={() => toggleBuff(b.id)}
                               className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all ${on ? 'text-white border-opacity-60' : 'border-gray-700 text-gray-500 opacity-40 hover:opacity-70'}`}
                               style={on ? { backgroundColor: chipColor + '30', borderColor: chipColor } : undefined}>
-                              {b.icon} {b.name} ({b.value}%)
+                              {b.icon} {b.name} ({b.value}%){b.condition && b.condition !== 'all' ? ` · ${BUFF_CONDITION_META[b.condition]?.label}` : ''}
                             </button>
                           );
                         })}
@@ -142,7 +160,7 @@ function SkillModal({ skill, buffs, buffGroups, characters, zones, skillGroups, 
                             <button key={b.id} onClick={() => toggleBuff(b.id)}
                               className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all ${on ? 'text-white border-opacity-60' : 'border-gray-700 text-gray-500 opacity-40 hover:opacity-70'}`}
                               style={on ? { backgroundColor: chipColor + '30', borderColor: chipColor } : undefined}>
-                              {b.icon} {b.name} ({b.value}%)
+                              {b.icon} {b.name} ({b.value}%){b.condition && b.condition !== 'all' ? ` · ${BUFF_CONDITION_META[b.condition]?.label}` : ''}
                             </button>
                           );
                         })}
@@ -180,8 +198,16 @@ function SortableSkillCard({ skill, char, onClick, onCopy, onRemove }: {
             <span className="text-sm font-medium text-gray-200 truncate">{skill.name}</span>
             <span className="text-xs text-indigo-400 font-mono shrink-0 ml-2">{skill.skillMultiplier}%</span>
           </div>
-          <div className="text-[10px] text-gray-500 mt-0.5">
-            {char ? char.name : '未指定'}
+          <div className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+            <span>{char ? char.name : '未指定'}</span>
+            {(() => {
+              const m = DAMAGE_TYPE_META[skill.damageType ?? 'physical'];
+              return m ? (
+                <span className="px-1 py-0.5 rounded text-[10px] font-medium" style={{ backgroundColor: m.color + '22', color: m.color }}>
+                  {m.icon} {m.label}
+                </span>
+              ) : null;
+            })()}
           </div>
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
@@ -229,10 +255,13 @@ export default function SkillSection() {
   })));
   const setSkills = useAppStore(s => s.setSkills);
   const setSkillGroups = useAppStore(s => s.setSkillGroups);
+  const previewAutoApply = useAppStore(s => s.previewAutoApply);
+  const applyAutoApplyPreview = useAppStore(s => s.applyAutoApplyPreview);
   const pushUndo = useUndoStore(s => s.pushUndo);
 
   const [editing, setEditing] = useState<Skill | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [autoApplyPreview, setAutoApplyPreview] = useState<AutoApplyPreview[] | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -261,6 +290,7 @@ export default function SkillSection() {
   const startNew = () => setEditing({
     id: uuid(), name: `技能 ${skills.length + 1}`, characterId: characters[0]?.id || '',
     skillMultiplier: 100, enabledBuffIds: [], order: skills.length, groupId: '',
+    damageType: 'physical',
   });
 
   const updateSkillGroup = (g: SkillGroup) => {
@@ -341,6 +371,21 @@ export default function SkillSection() {
           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer transition-colors">
           + 技能
         </button>
+        {skills.length > 0 && buffs.length > 0 && (
+          <button
+            onClick={() => {
+              const preview = previewAutoApply();
+              if (preview.length === 0) {
+                alert('所有技能的 Buff 已符合條件，無需更新。');
+              } else {
+                setAutoApplyPreview(preview);
+              }
+            }}
+            title="依傷害類型條件，自動設定每個技能的啟用 Buff"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-gray-800 hover:bg-emerald-700 border border-gray-700 hover:border-emerald-600 text-gray-300 hover:text-white cursor-pointer transition-colors">
+            ⚡ 自動套用
+          </button>
+        )}
       </div>
 
       {skills.length === 0 && skillGroups.length === 0 ? (
@@ -411,6 +456,64 @@ export default function SkillSection() {
       {editing && (
         <SkillModal skill={editing} buffs={buffs} buffGroups={buffGroups} characters={characters} zones={zones} skillGroups={skillGroups}
           onSave={save} onClose={() => setEditing(null)} />
+      )}
+
+      {autoApplyPreview && (
+        <Modal open title="⚡ 自動套用預覽" onClose={() => setAutoApplyPreview(null)} width="max-w-lg">
+          <div className="space-y-4">
+            <p className="text-xs text-gray-400">以下技能的 Buff 將依傷害類型條件更新：</p>
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {autoApplyPreview.map(p => {
+                const dtMeta = DAMAGE_TYPE_META[p.damageType];
+                return (
+                  <div key={p.skillId} className="bg-gray-800/60 border border-gray-700 rounded-xl px-3 py-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-sm font-medium text-gray-200">{p.skillName}</span>
+                      {dtMeta && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium" style={{ backgroundColor: dtMeta.color + '22', color: dtMeta.color }}>
+                          {dtMeta.icon} {dtMeta.label}
+                        </span>
+                      )}
+                    </div>
+                    {p.added.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-1">
+                        {p.added.map(b => (
+                          <span key={b.id} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                            + {b.icon} {b.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {p.removed.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {p.removed.map(b => (
+                          <span key={b.id} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] bg-red-500/15 text-red-400 border border-red-500/30 line-through">
+                            − {b.icon} {b.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setAutoApplyPreview(null)}
+                className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition-colors cursor-pointer">
+                取消
+              </button>
+              <button onClick={() => {
+                const prev = skills.map(s => ({ ...s, enabledBuffIds: [...s.enabledBuffIds] }));
+                applyAutoApplyPreview(autoApplyPreview);
+                pushUndo('自動套用 Buff', () => setSkills(prev));
+                setAutoApplyPreview(null);
+              }}
+                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium transition-colors cursor-pointer">
+                確認套用
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </section>
   );

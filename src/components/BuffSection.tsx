@@ -12,6 +12,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useAppStore } from '../stores/appStore';
 import { useUndoStore } from '../stores/undoStore';
 import type { Buff, BuffGroup, DamageZone, Skill, SkillGroup } from '../types';
+import { BUFF_CONDITION_META, DAMAGE_TYPE_META, type BuffCondition } from '../types';
 import Modal from './Modal';
 import { Tooltip, ColorDotPicker, COLORS } from './ui';
 
@@ -150,6 +151,22 @@ function BuffModal({ buff, zones, buffGroups, skills, skillGroups, onSave, onClo
           </select>
         </div>
         <div>
+          <label className="block text-xs text-gray-400 mb-1">生效條件</label>
+          <div className="flex items-center bg-gray-800 rounded-lg border border-gray-700 overflow-hidden w-fit">
+            {(Object.keys(BUFF_CONDITION_META) as BuffCondition[]).map(c => {
+              const meta = BUFF_CONDITION_META[c];
+              const active = d.condition === c;
+              return (
+                <button key={c} onClick={() => p({ condition: c })}
+                  className={`px-3 py-1.5 text-xs font-medium cursor-pointer transition-colors border-r border-gray-700 last:border-r-0`}
+                  style={active ? { backgroundColor: meta.color + '33', color: meta.color } : { color: '#9ca3af' }}>
+                  {meta.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div>
           <label className="block text-xs text-gray-400 mb-2">圖示</label>
           <div className="flex gap-1.5 flex-wrap">
             {ICONS.map(e => (
@@ -190,7 +207,7 @@ function BuffModal({ buff, zones, buffGroups, skills, skillGroups, onSave, onClo
                           <button key={s.id} onClick={() => toggleSkill(s.id)}
                             className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all ${on ? 'text-white border-opacity-60' : 'border-gray-700 text-gray-500 opacity-40 hover:opacity-70'}`}
                             style={on ? { backgroundColor: chipColor + '30', borderColor: chipColor } : undefined}>
-                            ⚔️ {s.name} ({s.skillMultiplier}%)
+                            {DAMAGE_TYPE_META[s.damageType ?? 'physical']?.icon ?? '⚔️'} {s.name} ({s.skillMultiplier}%)
                           </button>
                         );
                       })}
@@ -233,6 +250,14 @@ function SortableBuffChip({ buff, zone, onClick, onToggle, onCopy, onRemove }: {
         <div className="text-xs text-gray-500 flex items-center gap-1.5">
           {zone && <span style={{ color: zone.color }}>★ {zone.displayName}</span>}
           <span className="text-gray-400 font-mono">{buff.value}%</span>
+          {buff.condition && buff.condition !== 'all' && (() => {
+            const m = BUFF_CONDITION_META[buff.condition];
+            return (
+              <span className="px-1 py-0.5 rounded text-[10px] font-medium" style={{ backgroundColor: m.color + '22', color: m.color }}>
+                {m.label}
+              </span>
+            );
+          })()}
         </div>
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
@@ -373,7 +398,7 @@ export default function BuffSection() {
 
   const newBuff = () => {
     const defaultZone = zones.find(z => z.id !== 'zone-skill') || zones[0];
-    setEditingBuff({ id: uuid(), name: '', zoneId: defaultZone?.id || '', groupId: '', value: 0, icon: '🌟', enabled: true });
+    setEditingBuff({ id: uuid(), name: '', zoneId: defaultZone?.id || '', groupId: '', value: 0, icon: '🌟', enabled: true, condition: 'all' });
   };
 
   const newZone = () => {

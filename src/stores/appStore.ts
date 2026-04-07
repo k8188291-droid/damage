@@ -3,8 +3,35 @@ import { v4 as uuid } from 'uuid';
 import { DEFAULT_ZONES, CURRENT_VERSION } from '../types';
 import type {
   DamageZone, Buff, BuffGroup, Character, Skill, SkillGroup,
-  RotationGroup, CalcRow, AppData, Tab, Preset,
+  RotationGroup, CalcRow, AppData, Tab, Preset, AutoApplyPreview,
 } from '../types';
+
+// ── Migration helper ──
+
+function migrateAppData(data: AppData): AppData {
+  return {
+    ...data,
+    buffs: (data.buffs || []).map(b => ({
+      ...b,
+      enabled: (b as unknown as Record<string, unknown>).enabled !== undefined ? b.enabled : true,
+      groupId: b.groupId ?? '',
+      condition: ((b as unknown as Record<string, unknown>).condition ?? 'all') as import('../types').BuffCondition,
+    })),
+    skills: (data.skills || []).map(s => ({
+      ...s,
+      groupId: s.groupId ?? '',
+      damageType: ((s as unknown as Record<string, unknown>).damageType ?? 'physical') as import('../types').DamageType,
+    })),
+    rotationGroups: (data.rotationGroups || []).map(g => ({
+      ...g,
+      disabledBuffIds: g.disabledBuffIds ?? [],
+      entries: g.entries.map(e => ({
+        ...e,
+        disabledBuffIds: e.disabledBuffIds ?? [],
+      })),
+    })),
+  };
+}
 
 // ── Helpers ──
 
@@ -169,6 +196,10 @@ export interface AppState {
 
   // Migration (called once on mount)
   runMigration: () => void;
+
+  // Auto-apply buffs by damage type condition
+  previewAutoApply: () => AutoApplyPreview[];
+  applyAutoApplyPreview: (preview: AutoApplyPreview[]) => void;
 }
 
 // ── Store ──
@@ -377,7 +408,7 @@ export const useAppStore = create<AppState>()((set, get) => {
     },
 
     loadPreset: (preset) => {
-      const data = JSON.parse(JSON.stringify(preset.data)) as AppData;
+      const data = migrateAppData(JSON.parse(JSON.stringify(preset.data)) as AppData);
       setWorkingData(data);
       // Also sync to active tab
       set(state => ({
@@ -389,7 +420,7 @@ export const useAppStore = create<AppState>()((set, get) => {
 
     openPresetInNewTab: (preset) => {
       const state = get();
-      const data = JSON.parse(JSON.stringify(preset.data)) as AppData;
+      const data = migrateAppData(JSON.parse(JSON.stringify(preset.data)) as AppData);
       const newTab = makeTab(preset.name, data);
       const updatedTabs = state.tabs.map(t =>
         t.id === state.activeTabId ? { ...t, data: getWorkingData() } : t
@@ -427,7 +458,8 @@ export const useAppStore = create<AppState>()((set, get) => {
 
     getData: getWorkingData,
 
-    importData: (data) => {
+    importData: (rawData) => {
+      const data = migrateAppData(rawData);
       setWorkingData(data);
       set(state => ({
         tabs: state.tabs.map(t =>
@@ -448,25 +480,41 @@ export const useAppStore = create<AppState>()((set, get) => {
 
     // ── Migration (v1 → v2 field patches) ──
     runMigration: () => {
-      set(state => ({
-        buffs: state.buffs.map(b => ({
-          ...b,
-          enabled: (b as unknown as Record<string, unknown>).enabled !== undefined ? b.enabled : true,
-          groupId: b.groupId ?? '',
-        })),
-        skills: state.skills.map(s => ({
-          ...s,
-          groupId: s.groupId ?? '',
-        })),
-        rotationGroups: state.rotationGroups.map(g => ({
-          ...g,
-          disabledBuffIds: g.disabledBuffIds ?? [],
-          entries: g.entries.map(e => ({
-            ...e,
-            disabledBuffIds: e.disabledBuffIds ?? [],
-          })),
-        })),
-      }));
+      const migrated = migrateAppData(getWorkingData());
+      setWorkingData(migrated);
+    },
+
+    // ── Auto-apply buffs by damage type condition ──
+    previewAutoApply: () => {
+      const { skills, buffs } = get();
+      return skills.map(skill => {
+        const newIds = buffs
+          .filter(b => b.condition === 'all' || b.condition === skill.damageType)
+          .map(b => b.id);
+        const current = new Set(skill.enabledBuffIds);
+        const next = new Set(newIds);
+        const added = buffs
+          .filter(b => !current.has(b.id) && next.has(b.id))
+          .map(b => ({ id: b.id, name: b.name, icon: b.icon }));
+        const removed = buffs
+          .filter(b => current.has(b.id) && !next.has(b.id))
+          .map(b => ({ id: b.id, name: b.name, icon: b.icon }));
+        return {
+          skillId: skill.id,
+          skillName: skill.name,
+          damageType: (skill.damageType ?? 'physical') as AutoApplyPreview['damageType'],
+          added,
+          removed,
+          newEnabledBuffIds: newIds,
+        };
+      }).filter(p => p.added.length > 0 || p.removed.length > 0);
+    },
+
+    applyAutoApplyPreview: (preview) => {
+      const map = new Map(preview.map(p => [p.skillId, p.newEnabledBuffIds]));
+      updateField('skills', get().skills.map(s =>
+        map.has(s.id) ? { ...s, enabledBuffIds: map.get(s.id)! } : s
+      ));
     },
   };
 });

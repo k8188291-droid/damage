@@ -21,6 +21,7 @@ export interface Buff {
   value: number;
   icon: string;
   enabled: boolean;
+  condition: BuffCondition;
 }
 
 export interface Character {
@@ -45,6 +46,7 @@ export interface Skill {
   enabledBuffIds: string[];
   order: number;
   groupId: string;
+  damageType: DamageType;
 }
 
 export interface RotationEntry {
@@ -91,6 +93,35 @@ export interface Preset {
   name: string;
   timestamp: number;
   data: AppData;
+}
+
+export type DamageType = 'physical' | 'heat' | 'electric' | 'cryo' | 'nature';
+export type BuffCondition = 'all' | DamageType;
+
+export const DAMAGE_TYPE_META: Record<DamageType, { label: string; color: string; icon: string }> = {
+  physical: { label: '物理', color: '#f97316', icon: '⚔️' },
+  heat:     { label: '灼熱', color: '#ef4444', icon: '🔥' },
+  electric: { label: '電磁', color: '#eab308', icon: '⚡' },
+  cryo:     { label: '寒冷', color: '#06b6d4', icon: '❄️' },
+  nature:   { label: '自然', color: '#22c55e', icon: '🍃' },
+};
+
+export const BUFF_CONDITION_META: Record<BuffCondition, { label: string; color: string }> = {
+  all:      { label: '全部', color: '#64748b' },
+  physical: { label: '物理', color: '#f97316' },
+  heat:     { label: '灼熱', color: '#ef4444' },
+  electric: { label: '電磁', color: '#eab308' },
+  cryo:     { label: '寒冷', color: '#06b6d4' },
+  nature:   { label: '自然', color: '#22c55e' },
+};
+
+export interface AutoApplyPreview {
+  skillId: string;
+  skillName: string;
+  damageType: DamageType;
+  added: { id: string; name: string; icon: string }[];
+  removed: { id: string; name: string; icon: string }[];
+  newEnabledBuffIds: string[];
 }
 
 export const CURRENT_VERSION = 2;
