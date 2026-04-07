@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useUIStore } from '../stores/uiStore';
+import SearchModal from './SearchModal';
 
 const SECTIONS = [
   { key: 'presets', icon: '🗄️', label: '檔案庫' },
@@ -10,27 +12,41 @@ const SECTIONS = [
 export default function IconSidebar() {
   const visibleSections = useUIStore(s => s.visibleSections);
   const toggleSection = useUIStore(s => s.toggleSection);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   return (
-    <aside className="w-12 bg-gray-900/80 border-r border-gray-800 flex flex-col items-center py-3 gap-1 shrink-0">
-      {SECTIONS.map(s => {
-        const active = visibleSections[s.key] !== false;
-        return (
-          <button
-            key={s.key}
-            onClick={() => toggleSection(s.key)}
-            className={`w-9 h-9 rounded-lg flex items-center justify-center text-base cursor-pointer transition-colors ${active ? 'bg-indigo-600/20 text-indigo-400' : 'text-gray-600 hover:text-gray-400 hover:bg-gray-800'}`}
-            title={s.label}
-          >
-            {s.icon}
-          </button>
-        );
-      })}
-      <div className="mt-auto">
-        <div className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-600 text-sm">
-          ⚙
+    <>
+      <aside className="w-12 bg-gray-900/80 border-r border-gray-800 flex flex-col items-center py-3 gap-1 shrink-0">
+        {SECTIONS.map(s => {
+          const active = visibleSections[s.key] !== false;
+          return (
+            <button
+              key={s.key}
+              onClick={() => toggleSection(s.key)}
+              className={`w-9 h-9 rounded-lg flex items-center justify-center text-base cursor-pointer transition-colors ${active ? 'bg-indigo-600/20 text-indigo-400' : 'text-gray-600 hover:text-gray-400 hover:bg-gray-800'}`}
+              title={s.label}
+            >
+              {s.icon}
+            </button>
+          );
+        })}
+
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="w-9 h-9 rounded-lg flex items-center justify-center text-base cursor-pointer transition-colors text-gray-600 hover:text-gray-400 hover:bg-gray-800"
+          title="搜尋技能 & Buff"
+        >
+          🔍
+        </button>
+
+        <div className="mt-auto">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-600 text-sm">
+            ⚙
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
+    </>
   );
 }
