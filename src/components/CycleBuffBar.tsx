@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 import { useAppStore } from '../stores/appStore';
 
@@ -9,6 +10,8 @@ export default function CycleBuffBar() {
     rotationGroups: s.rotationGroups,
     toggleCycleBuff: s.toggleCycleBuff,
   })));
+
+  const [expanded, setExpanded] = useState(false);
 
   const activeRotation = rotationGroups.find(g => g.id === activeRotationId);
   const cycleDisabledBuffIds = activeRotation?.disabledBuffIds || [];
@@ -23,14 +26,22 @@ export default function CycleBuffBar() {
   });
   const disabledSet = new Set(cycleDisabledBuffIds);
 
+  // When collapsed, filter out disabled buffs
+  const visibleBuffs = expanded
+    ? sortedBuffs
+    : sortedBuffs.filter(b => !disabledSet.has(b.id));
+
   return (
-    <div className="px-5 py-3 border-b border-gray-800 shrink-0">
+    <div className="relative px-5 py-3 border-b border-gray-800 shrink-0">
       <div className="flex items-center gap-2 mb-2.5">
         <span className="text-gray-500 text-sm">⚙</span>
         <span className="text-xs font-semibold text-gray-400 tracking-wide">當前循環 BUFF 生效開關</span>
       </div>
-      <div className="flex flex-wrap gap-2">
-        {sortedBuffs.map(b => {
+      <div
+        className={`flex flex-wrap gap-2 transition-all duration-200 overflow-y-auto`}
+        style={{ maxHeight: !expanded ? 70 : 'calc(100vh - 120px)' }}
+      >
+        {visibleBuffs.map(b => {
           const group = buffGroups.find(g => g.id === b.groupId);
           const isDisabled = disabledSet.has(b.id);
           const color = group?.color || '#64748b';
@@ -59,6 +70,15 @@ export default function CycleBuffBar() {
           <span className="text-xs text-gray-600">尚未設定任何 Buff</span>
         )}
       </div>
+      <button
+        onClick={() => setExpanded(e => !e)}
+        className="z-10 absolute cursor-pointer bottom-[-20px] left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full bg-gray-800 border border-gray-700 text-gray-500 flex items-center justify-center hover:text-white transition-colors shadow-lg"
+        title={expanded ? '收合' : '展開'}
+      >
+        <span className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
+          ▾
+        </span>
+      </button>
     </div>
   );
 }
