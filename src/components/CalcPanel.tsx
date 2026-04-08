@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { v4 as uuid } from 'uuid';
+import { Calculator } from 'lucide-react';
 import { useAppStore } from '../stores/appStore';
 import { useUndoStore } from '../stores/undoStore';
 import type { CalcRow } from '../types';
@@ -36,15 +37,15 @@ function CalcRowItem({ row, onUpdate, onRemove }: {
   }, [row.formula]);
 
   return (
-    <tr className="border-b border-gray-800 last:border-0">
+    <tr className="border-b border-ef-line last:border-0">
       <td className="py-1.5 pr-2">
         <input value={row.name} onChange={e => onUpdate({ name: e.target.value })}
-          className="w-full bg-transparent text-gray-200 text-xs focus:outline-none placeholder-gray-600"
+          className="w-full bg-transparent text-ef-ink text-xs focus:outline-none placeholder-ef-ink-4"
           placeholder="名稱" />
       </td>
       <td className="py-1.5 pr-2">
         <input value={row.formula} onChange={e => onUpdate({ formula: e.target.value })}
-          className="w-full bg-transparent text-gray-200 text-xs font-mono focus:outline-none placeholder-gray-600"
+          className="w-full bg-transparent text-ef-ink text-xs font-mono focus:outline-none placeholder-ef-ink-4"
           placeholder="例: (1+0.5)*(1+0.3)" />
       </td>
       <td className="py-1.5 pr-1 text-right">
@@ -55,7 +56,7 @@ function CalcRowItem({ row, onUpdate, onRemove }: {
         )}
       </td>
       <td className="py-1.5 pl-1 w-6">
-        <button onClick={onRemove} className="text-gray-600 hover:text-red-400 text-xs cursor-pointer">✕</button>
+        <button onClick={onRemove} className="text-ef-ink-4 hover:text-red-400 text-xs cursor-pointer">✕</button>
       </td>
     </tr>
   );
@@ -88,26 +89,28 @@ export default function CalcPanel() {
       {/* Toggle button */}
       <button
         onClick={() => setOpen(v => !v)}
-        className={`fixed bottom-4 right-4 z-[90] w-10 h-10 rounded-full shadow-lg flex items-center justify-center cursor-pointer transition-colors text-lg ${open ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-gray-800 hover:bg-gray-700 border border-gray-700'}`}
+        className={`fixed bottom-4 right-4 z-[90] w-10 h-10 rounded-full shadow-lg flex items-center justify-center cursor-pointer transition-colors ${open ? 'bg-ef-gold hover:bg-ef-gold-2 text-white' : 'bg-ef-card hover:bg-ef-card-hover border border-ef-line text-ef-ink-3'}`}
         title="計算機"
       >
-        🧮
+        <Calculator size={18} />
       </button>
 
       {/* Panel */}
       {open && (
-        <div className="fixed bottom-16 right-4 z-[90] w-[420px] max-h-[50vh] bg-gray-900 border border-gray-700 rounded-xl shadow-2xl flex flex-col">
-          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-800 shrink-0">
-            <span className="text-sm font-semibold text-gray-200">🧮 計算機</span>
-            <button onClick={addRow} className="text-xs text-indigo-400 hover:text-indigo-300 cursor-pointer">+ 新增列</button>
+        <div className="fixed bottom-16 right-4 z-[90] w-[420px] max-h-[50vh] bg-ef-card border border-ef-line rounded-xl shadow-2xl flex flex-col">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-ef-line shrink-0">
+            <span className="text-sm font-semibold text-ef-ink flex items-center gap-2">
+              <Calculator size={14} className="text-ef-ink-3" /> 計算機
+            </span>
+            <button onClick={addRow} className="text-xs text-ef-gold hover:text-ef-gold/80 cursor-pointer">+ 新增列</button>
           </div>
           <div className="overflow-y-auto flex-1 px-3 py-2">
             {calcRows.length === 0 ? (
-              <p className="text-gray-600 text-xs text-center py-4">點擊「+ 新增列」開始計算</p>
+              <p className="text-ef-ink-4 text-xs text-center py-4">點擊「+ 新增列」開始計算</p>
             ) : (
               <table className="w-full">
                 <thead>
-                  <tr className="text-[10px] text-gray-500 border-b border-gray-800">
+                  <tr className="text-[10px] text-ef-ink-3 border-b border-ef-line">
                     <th className="text-left font-normal pb-1 w-24">名稱</th>
                     <th className="text-left font-normal pb-1">公式</th>
                     <th className="text-right font-normal pb-1 w-24">結果</th>

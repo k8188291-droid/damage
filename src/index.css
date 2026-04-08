@@ -1,13 +1,39 @@
 @import "tailwindcss";
 
+/* Class-based dark mode — .dark on <html> switches all themes */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Backgrounds */
+  --color-ef-base:       #ddd9d3;
+  --color-ef-panel:      #eae7e2;
+  --color-ef-card:       #f5f3f0;
+  --color-ef-card-hover: #efece8;
+  --color-ef-input:      #ffffff;
+
+  /* Borders */
+  --color-ef-line:   #c8c3bb;
+  --color-ef-line-2: #d8d4cd;
+
+  /* Text */
+  --color-ef-ink:   #1a1a1a;
+  --color-ef-ink-2: #4a4a4a;
+  --color-ef-ink-3: #8a8580;
+  --color-ef-ink-4: #b0aaa2;
+
+  /* Accent */
+  --color-ef-gold:   #d4a017;
+  --color-ef-gold-2: #c49415;
+}
+
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
   margin: 0;
-  background: #0f1117;
-  color: #e2e8f0;
+  background: var(--color-ef-base);
+  color: var(--color-ef-ink);
   font-family: system-ui, -apple-system, sans-serif;
 }
 
@@ -16,21 +42,34 @@ body {
   overflow: hidden;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Dark mode variable overrides */
+.dark {
+  color-scheme: dark;
+  --color-ef-base:       #0f1117;
+  --color-ef-panel:      #161920;
+  --color-ef-card:       #1e2230;
+  --color-ef-card-hover: #232840;
+  --color-ef-input:      #1a1e2a;
+  --color-ef-line:       #2a3040;
+  --color-ef-line-2:     #242a38;
+  --color-ef-ink:        #e2e8f0;
+  --color-ef-ink-2:      #c8d4e0;
+  --color-ef-ink-3:      #8090a0;
+  --color-ef-ink-4:      #506070;
+  --color-ef-gold:       #e8b82a;
+  --color-ef-gold-2:     #d4a824;
 }
-::-webkit-scrollbar-track {
-  background: #1a1b23;
-}
-::-webkit-scrollbar-thumb {
-  background: #3b3d4a;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #4b4d5a;
-}
+
+/* Scrollbars — light mode */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #e0dcd6; }
+::-webkit-scrollbar-thumb { background: #c0b8ae; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #a8a098; }
+
+/* Scrollbars — dark mode */
+.dark ::-webkit-scrollbar-track { background: #1a1b23; }
+.dark ::-webkit-scrollbar-thumb { background: #3b3d4a; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #4b4d5a; }
 
 /* Undo toast slide-up animation */
 @keyframes slide-up {

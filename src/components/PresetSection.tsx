@@ -47,10 +47,10 @@ function SortablePresetCard({ preset, editingId, editValue, onEditChange, onStar
 
   return (
     <div ref={setNodeRef} style={style}>
-      <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-2.5 py-2 group">
+      <div className="bg-ef-card border border-ef-line rounded-lg px-2.5 py-2 group">
         <div className="flex items-center gap-1.5 mb-0.5">
           <span {...attributes} {...listeners}
-            className="text-gray-600 cursor-grab active:cursor-grabbing text-xs shrink-0"
+            className="text-ef-ink-4 cursor-grab active:cursor-grabbing text-xs shrink-0"
             onClick={e => e.stopPropagation()}>⠿</span>
           {isEditing ? (
             <input
@@ -59,11 +59,11 @@ function SortablePresetCard({ preset, editingId, editValue, onEditChange, onStar
               onChange={e => onEditChange(e.target.value)}
               onBlur={onCommitRename}
               onKeyDown={e => { if (e.key === 'Enter') onCommitRename(); if (e.key === 'Escape') onCancelRename(); }}
-              className="bg-transparent border-b border-indigo-500 text-xs text-gray-200 focus:outline-none min-w-0 flex-1"
+              className="bg-transparent border-b border-ef-gold text-xs text-ef-ink focus:outline-none min-w-0 flex-1"
             />
           ) : (
             <span
-              className="text-xs text-gray-200 truncate flex-1 min-w-0 cursor-text"
+              className="text-xs text-ef-ink truncate flex-1 min-w-0 cursor-text"
               onClick={() => onStartRename(preset)}
               title="點擊重新命名"
             >
@@ -72,31 +72,31 @@ function SortablePresetCard({ preset, editingId, editValue, onEditChange, onStar
           )}
           <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
             <button onClick={onDuplicate}
-              className="text-gray-600 hover:text-indigo-400 cursor-pointer"
+              className="text-ef-ink-4 hover:text-ef-gold cursor-pointer"
               style={{ fontSize: 12 }}
               title="複製">
               ⧉
             </button>
             <button onClick={onDelete}
-              className="text-gray-600 hover:text-red-400 cursor-pointer"
+              className="text-ef-ink-4 hover:text-red-400 cursor-pointer"
               style={{ fontSize: 12 }}
               title="刪除">
               ✕
             </button>
           </div>
         </div>
-        <div className="text-[10px] text-gray-600 mb-1.5 ml-[14px]">{formatTime(preset.timestamp)}</div>
+        <div className="text-[10px] text-ef-ink-4 mb-1.5 ml-[14px]">{formatTime(preset.timestamp)}</div>
         <div className="flex gap-1.5 ml-[14px]">
           <button onClick={onLoad}
-            className="px-2 py-0.5 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 cursor-pointer transition-colors">
+            className="px-2 py-0.5 bg-ef-card hover:bg-ef-card-hover border border-ef-line rounded text-xs text-ef-ink-2 cursor-pointer transition-colors">
             載入
           </button>
           <button onClick={onOpenInNewTab}
-            className="px-2 py-0.5 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 cursor-pointer transition-colors">
+            className="px-2 py-0.5 bg-ef-card hover:bg-ef-card-hover border border-ef-line rounded text-xs text-ef-ink-2 cursor-pointer transition-colors">
             開新頁籤
           </button>
           <button onClick={onOverwrite}
-            className="px-2 py-0.5 bg-gray-700 hover:bg-amber-600/40 rounded text-xs text-amber-400 cursor-pointer transition-colors"
+            className="px-2 py-0.5 bg-ef-card hover:bg-amber-600/40 border border-ef-line rounded text-xs text-amber-500 cursor-pointer transition-colors"
             title="以目前設定覆蓋此預設">
             覆蓋
           </button>
@@ -112,21 +112,21 @@ function SystemPresetCard({ preset, onLoad, onOpenInNewTab }: {
   onOpenInNewTab: () => void;
 }) {
   return (
-    <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-2.5 py-2">
+    <div className="bg-ef-card border border-ef-line rounded-lg px-2.5 py-2">
       <div className="flex items-center gap-1.5 mb-0.5">
-        <span className="text-xs text-gray-200 truncate flex-1 min-w-0">{preset.name}</span>
-        <span className="text-xs text-indigo-400 shrink-0">系統</span>
+        <span className="text-xs text-ef-ink truncate flex-1 min-w-0">{preset.name}</span>
+        <span className="text-xs text-ef-gold shrink-0">系統</span>
       </div>
       {preset.description && (
-        <div className="text-xs text-gray-500 mb-2 mt-1.5">{preset.description}</div>
+        <div className="text-xs text-ef-ink-3 mb-2 mt-1.5">{preset.description}</div>
       )}
       <div className="flex gap-1.5">
         <button onClick={onLoad}
-          className="px-2 py-0.5 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 cursor-pointer transition-colors">
+          className="px-2 py-0.5 bg-ef-card hover:bg-ef-card-hover border border-ef-line rounded text-xs text-ef-ink-2 cursor-pointer transition-colors">
           載入
         </button>
         <button onClick={onOpenInNewTab}
-          className="px-2 py-0.5 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 cursor-pointer transition-colors">
+          className="px-2 py-0.5 bg-ef-card hover:bg-ef-card-hover border border-ef-line rounded text-xs text-ef-ink-2 cursor-pointer transition-colors">
           開新頁籤
         </button>
       </div>
@@ -227,13 +227,13 @@ export default function PresetSection() {
   return (
     <div className="space-y-2">
       {/* Tab bar */}
-      <div className="flex border-b border-gray-700">
+      <div className="flex border-b border-ef-line">
         <button
           onClick={() => setActiveTab('mine')}
           className={`px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
             activeTab === 'mine'
-              ? 'text-indigo-400 border-b-2 border-indigo-400 -mb-px'
-              : 'text-gray-500 hover:text-gray-300'
+              ? 'text-ef-gold border-b-2 border-ef-gold -mb-px'
+              : 'text-ef-ink-3 hover:text-ef-ink'
           }`}
         >
           我的檔案
@@ -242,8 +242,8 @@ export default function PresetSection() {
           onClick={() => setActiveTab('system')}
           className={`px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
             activeTab === 'system'
-              ? 'text-indigo-400 border-b-2 border-indigo-400 -mb-px'
-              : 'text-gray-500 hover:text-gray-300'
+              ? 'text-ef-gold border-b-2 border-ef-gold -mb-px'
+              : 'text-ef-ink-3 hover:text-ef-ink'
           }`}
         >
           系統檔案
@@ -260,11 +260,11 @@ export default function PresetSection() {
               onChange={e => setNewName(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleSave(); }}
               placeholder="檔案名稱..."
-              className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-indigo-500 min-w-0"
+              className="flex-1 bg-ef-input border border-ef-line rounded-lg px-2 py-1 text-xs text-ef-ink focus:outline-none focus:border-ef-gold min-w-0"
             />
             <button
               onClick={handleSave}
-              className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-medium transition-colors cursor-pointer shrink-0"
+              className="px-2.5 py-1 bg-ef-gold hover:bg-ef-gold-2 rounded-lg text-xs font-medium transition-colors cursor-pointer shrink-0 text-white"
             >
               儲存
             </button>
@@ -273,10 +273,10 @@ export default function PresetSection() {
           {/* Empty state */}
           {presets.length === 0 && (
             <div className="py-4 flex flex-col items-center gap-2">
-              <p className="text-xs text-gray-600 text-center">尚無檔案</p>
+              <p className="text-xs text-ef-ink-4 text-center">尚無檔案</p>
               <button
                 onClick={() => setActiveTab('system')}
-                className="px-3 py-1.5 bg-gray-700 hover:bg-amber-600/40 rounded-lg text-xs text-amber-400 transition-colors cursor-pointer"
+                className="px-3 py-1.5 bg-ef-card hover:bg-amber-600/40 border border-ef-line rounded-lg text-xs text-amber-500 transition-colors cursor-pointer"
               >
                 瀏覽系統檔案
               </button>

@@ -33,21 +33,21 @@ function ZoneModal({ zone, buffs, onSave, onClose, readOnly }: {
         {!readOnly && (
           <>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">分區名稱</label>
+              <label className="block text-xs text-ef-ink-3 mb-1">分區名稱</label>
               <input value={d.displayName} onChange={e => p({ displayName: e.target.value, name: e.target.value })}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" />
+                className="w-full bg-ef-input border border-ef-line rounded-lg px-3 py-2 text-ef-ink focus:outline-none focus:border-ef-gold" />
             </div>
             <div>
               <label className="block text-xs text-gray-400 mb-2">圖示</label>
               <div className="flex gap-1.5 flex-wrap">
                 {ICONS.map(e => (
                   <button key={e} onClick={() => p({ icon: e })}
-                    className={`text-lg p-1 rounded cursor-pointer ${d.icon === e ? 'bg-gray-600 ring-1 ring-indigo-500' : 'hover:bg-gray-700'}`}>{e}</button>
+                    className={`text-lg p-1 rounded cursor-pointer ${d.icon === e ? 'bg-ef-line ring-1 ring-ef-gold' : 'hover:bg-ef-card-hover'}`}>{e}</button>
                 ))}
               </div>
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-2">顏色</label>
+              <label className="block text-xs text-ef-ink-3 mb-2">顏色</label>
               <div className="flex gap-2 flex-wrap">
                 {COLORS.map(c => (
                   <button key={c} onClick={() => p({ color: c })}
@@ -61,16 +61,16 @@ function ZoneModal({ zone, buffs, onSave, onClose, readOnly }: {
 
         {/* Buffs belonging to this zone */}
         <div>
-          <label className="block text-xs text-gray-400 mb-2">此分區的 Buff ({zoneBuffs.length})</label>
+          <label className="block text-xs text-ef-ink-3 mb-2">此分區的 Buff ({zoneBuffs.length})</label>
           {zoneBuffs.length === 0 ? (
-            <p className="text-xs text-gray-600 text-center py-2">尚無 Buff 屬於此分區</p>
+            <p className="text-xs text-ef-ink-4 text-center py-2">尚無 Buff 屬於此分區</p>
           ) : (
             <div className="space-y-1">
               {zoneBuffs.map(b => (
-                <div key={b.id} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800/60 border ${b.enabled ? 'border-gray-700' : 'border-gray-800 opacity-50'}`}>
+                <div key={b.id} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-ef-card border ${b.enabled ? 'border-ef-line' : 'border-ef-line-2 opacity-50'}`}>
                   <span className="text-base shrink-0">{b.icon}</span>
-                  <span className={`text-sm flex-1 truncate ${b.enabled ? 'text-gray-200' : 'text-gray-500 line-through'}`}>{b.name}</span>
-                  <span className="text-xs text-gray-400 font-mono shrink-0">{b.value}%</span>
+                  <span className={`text-sm flex-1 truncate ${b.enabled ? 'text-ef-ink' : 'text-ef-ink-3 line-through'}`}>{b.name}</span>
+                  <span className="text-xs text-ef-ink-3 font-mono shrink-0">{b.value}%</span>
                 </div>
               ))}
             </div>
@@ -78,7 +78,7 @@ function ZoneModal({ zone, buffs, onSave, onClose, readOnly }: {
         </div>
 
         {!readOnly && (
-          <button onClick={() => onSave(d)} className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-medium transition-colors cursor-pointer">儲存</button>
+          <button onClick={() => onSave(d)} className="w-full py-2 bg-ef-gold hover:bg-ef-gold-2 rounded-lg font-medium transition-colors cursor-pointer text-white">儲存</button>
         )}
       </div>
     </Modal>
@@ -116,33 +116,33 @@ function BuffModal({ buff, zones, buffGroups, skills, skillGroups, onSave, onClo
     <Modal open title={buff.name ? '編輯 Buff' : '新增 Buff'} onClose={onClose} width="max-w-xl">
       <div className="space-y-4">
         <div>
-          <label className="block text-xs text-gray-400 mb-1">名稱</label>
+          <label className="block text-xs text-ef-ink-3 mb-1">名稱</label>
           <input value={d.name} onChange={e => p({ name: e.target.value })}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-indigo-500" />
+            className="w-full bg-ef-input border border-ef-line rounded-lg px-3 py-2 text-sm text-ef-ink focus:outline-none focus:border-ef-gold" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">分區</label>
+            <label className="block text-xs text-ef-ink-3 mb-1">分區</label>
             <div className="flex gap-2">
               <select value={d.zoneId} onChange={e => p({ zoneId: e.target.value })}
-                className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-2 py-2 text-sm text-gray-100 focus:outline-none focus:border-indigo-500">
+                className="flex-1 bg-ef-input border border-ef-line rounded-lg px-2 py-2 text-sm text-ef-ink focus:outline-none focus:border-ef-gold">
                 {zones.filter(z => z.id !== 'zone-skill').map(z => (
                   <option key={z.id} value={z.id}>{z.icon} {z.displayName}</option>
                 ))}
               </select>
-              <button onClick={onAddZone} className="px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs cursor-pointer whitespace-nowrap" title="新增分區">+</button>
+              <button onClick={onAddZone} className="px-2 py-1 bg-ef-card hover:bg-ef-card-hover border border-ef-line rounded-lg text-xs cursor-pointer whitespace-nowrap text-ef-ink-2" title="新增分區">+</button>
             </div>
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">數值 (%)</label>
+            <label className="block text-xs text-ef-ink-3 mb-1">數值 (%)</label>
             <input type="number" value={d.value || ''} onChange={e => p({ value: Number(e.target.value) || 0 })}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="0" />
+              className="w-full bg-ef-input border border-ef-line rounded-lg px-3 py-2 text-sm text-ef-ink focus:outline-none focus:border-ef-gold" placeholder="0" />
           </div>
         </div>
         <div>
-          <label className="block text-xs text-gray-400 mb-1">群組</label>
+          <label className="block text-xs text-ef-ink-3 mb-1">群組</label>
           <select value={d.groupId} onChange={e => p({ groupId: e.target.value })}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-2 text-sm text-gray-100 focus:outline-none focus:border-indigo-500">
+            className="w-full bg-ef-input border border-ef-line rounded-lg px-2 py-2 text-sm text-ef-ink focus:outline-none focus:border-ef-gold">
             <option value="">未分組</option>
             {buffGroups.map(g => (
               <option key={g.id} value={g.id}>{g.name}</option>
@@ -150,11 +150,11 @@ function BuffModal({ buff, zones, buffGroups, skills, skillGroups, onSave, onClo
           </select>
         </div>
         <div>
-          <label className="block text-xs text-gray-400 mb-2">圖示</label>
+          <label className="block text-xs text-ef-ink-3 mb-2">圖示</label>
           <div className="flex gap-1.5 flex-wrap">
             {ICONS.map(e => (
               <button key={e} onClick={() => p({ icon: e })}
-                className={`text-lg p-1 rounded cursor-pointer ${d.icon === e ? 'bg-gray-600 ring-1 ring-indigo-500' : 'hover:bg-gray-700'}`}>{e}</button>
+                className={`text-lg p-1 rounded cursor-pointer ${d.icon === e ? 'bg-ef-line ring-1 ring-ef-gold' : 'hover:bg-ef-card-hover'}`}>{e}</button>
             ))}
           </div>
         </div>
@@ -163,10 +163,10 @@ function BuffModal({ buff, zones, buffGroups, skills, skillGroups, onSave, onClo
         {skills.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs text-gray-400 font-medium">啟用此 Buff 的技能</label>
+              <label className="text-xs text-ef-ink-3 font-medium">啟用此 Buff 的技能</label>
               <div className="flex gap-3">
-                <button onClick={() => setEnabledSkillIds(skills.map(s => s.id))} className="text-xs text-indigo-400 hover:text-indigo-300 cursor-pointer">全選</button>
-                <button onClick={() => setEnabledSkillIds([])} className="text-xs text-gray-500 hover:text-gray-300 cursor-pointer">全不選</button>
+                <button onClick={() => setEnabledSkillIds(skills.map(s => s.id))} className="text-xs text-ef-gold hover:text-ef-gold/80 cursor-pointer">全選</button>
+                <button onClick={() => setEnabledSkillIds([])} className="text-xs text-ef-ink-3 hover:text-ef-ink cursor-pointer">全不選</button>
               </div>
             </div>
             <div className="space-y-2">
@@ -188,7 +188,7 @@ function BuffModal({ buff, zones, buffGroups, skills, skillGroups, onSave, onClo
                         const chipColor = sg?.color || '#64748b';
                         return (
                           <button key={s.id} onClick={() => toggleSkill(s.id)}
-                            className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all ${on ? 'text-white border-opacity-60' : 'border-gray-700 text-gray-500 opacity-40 hover:opacity-70'}`}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all ${on ? 'text-white border-opacity-60' : 'border-ef-line text-ef-ink-3 opacity-40 hover:opacity-70'}`}
                             style={on ? { backgroundColor: chipColor + '30', borderColor: chipColor } : undefined}>
                             ⚔️ {s.name} ({s.skillMultiplier}%)
                           </button>
@@ -202,7 +202,7 @@ function BuffModal({ buff, zones, buffGroups, skills, skillGroups, onSave, onClo
           </div>
         )}
 
-        <button onClick={() => onSave(d, enabledSkillIds)} className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-medium transition-colors cursor-pointer">儲存</button>
+        <button onClick={() => onSave(d, enabledSkillIds)} className="w-full py-2 bg-ef-gold hover:bg-ef-gold-2 rounded-lg font-medium transition-colors cursor-pointer text-white">儲存</button>
       </div>
     </Modal>
   );
@@ -218,26 +218,26 @@ function SortableBuffChip({ buff, zone, onClick, onToggle, onCopy, onRemove }: {
 
   return (
     <div ref={setNodeRef} style={style}
-      className={`bg-gray-800/60 border rounded-xl px-3 py-2 flex items-center gap-2 cursor-pointer hover:border-indigo-500/50 transition-colors group ${buff.enabled ? 'border-gray-700' : 'border-gray-800 opacity-50'}`}
+      className={`bg-ef-card border rounded-xl px-3 py-2 flex items-center gap-2 cursor-pointer hover:border-ef-gold/50 transition-colors group ${buff.enabled ? 'border-ef-line' : 'border-ef-line-2 opacity-50'}`}
       onClick={onClick}>
-      <span {...attributes} {...listeners} className="text-gray-600 cursor-grab active:cursor-grabbing text-xs" onClick={e => e.stopPropagation()}>⠿</span>
+      <span {...attributes} {...listeners} className="text-ef-ink-4 cursor-grab active:cursor-grabbing text-xs" onClick={e => e.stopPropagation()}>⠿</span>
       <Tooltip label={buff.enabled ? '已啟用，點擊停用' : '已停用，點擊啟用'}>
         <button
           onClick={e => { e.stopPropagation(); onToggle(); }}
-          className={`w-4 h-4 rounded-full border-2 cursor-pointer shrink-0 transition-colors ${buff.enabled ? 'border-green-500 bg-green-500/30' : 'border-gray-600 bg-transparent'}`}
+          className={`w-4 h-4 rounded-full border-2 cursor-pointer shrink-0 transition-colors ${buff.enabled ? 'border-green-500 bg-green-500/30' : 'border-ef-ink-4 bg-transparent'}`}
         />
       </Tooltip>
       <span className="text-base shrink-0">{buff.icon}</span>
       <div className="min-w-0 flex-1">
-        <div className={`text-sm font-medium truncate ${buff.enabled ? 'text-gray-200' : 'text-gray-500 line-through'}`}>{buff.name}</div>
-        <div className="text-xs text-gray-500 flex items-center gap-1.5">
+        <div className={`text-sm font-medium truncate ${buff.enabled ? 'text-ef-ink' : 'text-ef-ink-3 line-through'}`}>{buff.name}</div>
+        <div className="text-xs text-ef-ink-3 flex items-center gap-1.5">
           {zone && <span style={{ color: zone.color }}>★ {zone.displayName}</span>}
-          <span className="text-gray-400 font-mono">{buff.value}%</span>
+          <span className="text-ef-ink-3 font-mono">{buff.value}%</span>
         </div>
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-        <button onClick={e => { e.stopPropagation(); onCopy(); }} className="text-gray-600 hover:text-indigo-400 cursor-pointer text-xs" title="複製">⧉</button>
-        <button onClick={e => { e.stopPropagation(); onRemove(); }} className="text-gray-600 hover:text-red-400 cursor-pointer text-xs" title="刪除">✕</button>
+        <button onClick={e => { e.stopPropagation(); onCopy(); }} className="text-ef-ink-4 hover:text-ef-gold cursor-pointer text-xs" title="複製">⧉</button>
+        <button onClick={e => { e.stopPropagation(); onRemove(); }} className="text-ef-ink-4 hover:text-red-400 cursor-pointer text-xs" title="刪除">✕</button>
       </div>
     </div>
   );
@@ -246,13 +246,13 @@ function SortableBuffChip({ buff, zone, onClick, onToggle, onCopy, onRemove }: {
 /* ── Overlay chip for dragging ── */
 function BuffChipOverlay({ buff, zone }: { buff: Buff; zone: DamageZone | undefined }) {
   return (
-    <div className="bg-gray-800 border border-indigo-500 rounded-xl px-3 py-2 flex items-center gap-2 shadow-xl shadow-indigo-500/20 cursor-grabbing">
+    <div className="bg-ef-card border border-ef-gold rounded-xl px-3 py-2 flex items-center gap-2 shadow-xl shadow-ef-gold/20 cursor-grabbing">
       <span className="text-base">{buff.icon}</span>
       <div className="min-w-0">
-        <div className="text-sm font-medium text-gray-200 truncate">{buff.name}</div>
-        <div className="text-xs text-gray-500 flex items-center gap-1.5">
+        <div className="text-sm font-medium text-ef-ink truncate">{buff.name}</div>
+        <div className="text-xs text-ef-ink-3 flex items-center gap-1.5">
           {zone && <span style={{ color: zone.color }}>★ {zone.displayName}</span>}
-          <span className="text-gray-400 font-mono">{buff.value}%</span>
+          <span className="text-ef-ink-3 font-mono">{buff.value}%</span>
         </div>
       </div>
     </div>
@@ -266,10 +266,10 @@ function DroppableGroupArea({ groupId, children, isEmpty }: {
   const { setNodeRef, isOver } = useDroppable({ id: `group-drop:${groupId}` });
   return (
     <div ref={setNodeRef}
-      className={`space-y-1.5 p-1.5 min-h-[40px] rounded-lg transition-colors ${isOver ? 'bg-indigo-500/10 ring-1 ring-inset ring-indigo-500/30' : ''}`}>
+      className={`space-y-1.5 p-1.5 min-h-[40px] rounded-lg transition-colors ${isOver ? 'bg-ef-gold/10 ring-1 ring-inset ring-ef-gold/30' : ''}`}>
       {children}
       {isEmpty && (
-        <div className="text-xs text-gray-600 text-center py-2">
+        <div className="text-xs text-ef-ink-4 text-center py-2">
           {isOver ? '放開以移入此群組' : '拖曳 Buff 到此群組'}
         </div>
       )}
@@ -445,21 +445,21 @@ export default function BuffSection() {
       {/* Action buttons (req 1: pill button style) */}
       <div className="flex gap-2 mb-3 flex-wrap">
         <button onClick={newZone}
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 cursor-pointer transition-colors">
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-ef-card hover:bg-ef-card-hover border border-ef-line text-ef-ink-2 cursor-pointer transition-colors">
           + 分區
         </button>
         <button onClick={addGroup}
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 cursor-pointer transition-colors">
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-ef-card hover:bg-ef-card-hover border border-ef-line text-ef-ink-2 cursor-pointer transition-colors">
           + 群組
         </button>
         <button onClick={newBuff}
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer transition-colors">
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-ef-gold hover:bg-ef-gold-2 text-white cursor-pointer transition-colors">
           + Buff
         </button>
       </div>
 
       {buffs.length === 0 && buffGroups.length === 0 ? (
-        <p className="text-gray-600 text-xs text-center py-3">尚未新增 Buff</p>
+        <p className="text-ef-ink-4 text-xs text-center py-3">尚未新增 Buff</p>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter}
           onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -467,7 +467,7 @@ export default function BuffSection() {
           {/* Ungrouped */}
           {(ungroupedBuffs.length > 0 || buffGroups.length > 0) && (
             <div className="mb-2">
-              {buffGroups.length > 0 && <div className="text-[10px] text-gray-600 mb-1">未分組</div>}
+              {buffGroups.length > 0 && <div className="text-[10px] text-ef-ink-4 mb-1">未分組</div>}
               <SortableContext items={ungroupedBuffs.map(b => b.id)} strategy={verticalListSortingStrategy}>
                 <DroppableGroupArea groupId="" isEmpty={ungroupedBuffs.length === 0}>
                   {ungroupedBuffs.map(b => (
@@ -487,8 +487,8 @@ export default function BuffSection() {
           {buffGroups.map(g => {
             const groupBuffs = groupedMap.get(g.id) || [];
             return (
-              <div key={g.id} className="mb-2 border border-gray-700/50 rounded-xl overflow-hidden">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800/40" style={{ borderLeft: `3px solid ${g.color}` }}>
+              <div key={g.id} className="mb-2 border border-ef-line rounded-xl overflow-hidden">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-black/5" style={{ borderLeft: `3px solid ${g.color}` }}>
                   <ColorDotPicker
                     color={g.color}
                     onCycle={() => cycleGroupColor(g)}
@@ -497,9 +497,9 @@ export default function BuffSection() {
                   <input
                     value={g.name}
                     onChange={e => updateGroup({ ...g, name: e.target.value })}
-                    className="bg-transparent text-xs font-medium text-gray-200 flex-1 focus:outline-none focus:border-b focus:border-indigo-500 min-w-0"
+                    className="bg-transparent text-xs font-medium text-ef-ink flex-1 focus:outline-none focus:border-b focus:border-ef-gold min-w-0"
                   />
-                  <button onClick={() => removeGroup(g.id)} className="text-gray-500 hover:text-red-400 text-xs cursor-pointer shrink-0">✕</button>
+                  <button onClick={() => removeGroup(g.id)} className="text-ef-ink-3 hover:text-red-400 text-xs cursor-pointer shrink-0">✕</button>
                 </div>
                 <SortableContext items={groupBuffs.map(b => b.id)} strategy={verticalListSortingStrategy}>
                   <DroppableGroupArea groupId={g.id} isEmpty={groupBuffs.length === 0}>

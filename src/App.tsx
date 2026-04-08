@@ -40,7 +40,7 @@ function App() {
   // ── UI store ──
   const {
     rightPanelOpen, visibleSections, collapsedSections,
-    leftPanelWidth, rightPanelWidth, isNarrow,
+    leftPanelWidth, rightPanelWidth, isNarrow, isDark,
     setRightPanelOpen, toggleCollapse,
     closeOverlays, setIsNarrow, collapseForNarrow, startResize,
   } = useUIStore(useShallow(s => ({
@@ -50,6 +50,7 @@ function App() {
     leftPanelWidth: s.leftPanelWidth,
     rightPanelWidth: s.rightPanelWidth,
     isNarrow: s.isNarrow,
+    isDark: s.isDark,
     setRightPanelOpen: s.setRightPanelOpen,
     toggleCollapse: s.toggleCollapse,
     closeOverlays: s.closeOverlays,
@@ -57,6 +58,12 @@ function App() {
     collapseForNarrow: s.collapseForNarrow,
     startResize: s.startResize,
   })));
+
+  // ── Dark mode sync ──
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark);
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
 
   // ── One-time migration ──
   useEffect(() => { runMigration(); }, [activeTabId, runMigration]);
@@ -89,7 +96,7 @@ function App() {
   const hasLeftPanel = Object.values(visibleSections).some(v => v !== false);
 
   return (
-    <div className="h-screen flex flex-col bg-[#0f1117] text-gray-200 overflow-hidden">
+    <div className="h-screen flex flex-col bg-ef-base text-ef-ink overflow-hidden">
       <TabBar />
 
       <div className="flex-1 flex overflow-hidden relative">
@@ -103,7 +110,7 @@ function App() {
         {/* Left Panel */}
         {hasLeftPanel && (
           <aside
-            className={`bg-gray-900/95 border-r border-gray-800 flex flex-col ${
+            className={`bg-ef-panel border-r border-ef-line flex flex-col ${
               isNarrow
                 ? 'absolute top-0 bottom-0 left-12 z-30 shadow-2xl'
                 : 'relative shrink-0'
@@ -111,9 +118,9 @@ function App() {
             style={{ width: leftPanelWidth }}
           >
             {/* Header area with import/export */}
-            <div className="px-4 py-2.5 border-b border-gray-800 flex items-center justify-between shrink-0 overflow-auto whitespace-nowrap">
+            <div className="px-4 py-2.5 border-b border-ef-line flex items-center justify-between shrink-0 overflow-auto whitespace-nowrap">
               <div className='flex items-center'>
-                <span className="text-xs text-gray-500 font-medium">設定面板</span>
+                <span className="text-xs text-ef-ink-3 font-medium">設定面板</span>
               </div>
               <div className="flex items-center gap-2">
                 <ImportExport />
@@ -123,11 +130,11 @@ function App() {
             <div className="flex-1 overflow-y-auto">
               {/* 檔案庫 */}
               {visibleSections.presets !== false && (
-                <div className="border-b border-gray-800">
+                <div className="border-b border-ef-line">
                   <button onClick={() => toggleCollapse('presets')}
-                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-800/30 cursor-pointer transition-colors">
-                    <span className="text-sm font-semibold text-indigo-400 flex items-center gap-2">
-                      <span className={`text-[10px] text-gray-500 transition-transform ${collapsedSections.presets ? '' : 'rotate-90'}`}>▶</span>
+                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-black/5 cursor-pointer transition-colors">
+                    <span className="text-sm font-semibold text-ef-gold flex items-center gap-2 border-l-2 border-ef-gold pl-2">
+                      <span className={`text-[10px] text-ef-ink-4 transition-transform ${collapsedSections.presets ? '' : 'rotate-90'}`}>▶</span>
                       檔案庫
                     </span>
                   </button>
@@ -141,11 +148,11 @@ function App() {
 
               {/* Characters */}
               {visibleSections.characters !== false && (
-                <div className="border-b border-gray-800">
+                <div className="border-b border-ef-line">
                   <button onClick={() => toggleCollapse('characters')}
-                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-800/30 cursor-pointer transition-colors">
-                    <span className="text-sm font-semibold text-indigo-400 flex items-center gap-2">
-                      <span className={`text-[10px] text-gray-500 transition-transform ${collapsedSections.characters ? '' : 'rotate-90'}`}>▶</span>
+                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-black/5 cursor-pointer transition-colors">
+                    <span className="text-sm font-semibold text-ef-gold flex items-center gap-2 border-l-2 border-ef-gold pl-2">
+                      <span className={`text-[10px] text-ef-ink-4 transition-transform ${collapsedSections.characters ? '' : 'rotate-90'}`}>▶</span>
                       角色
                     </span>
                   </button>
@@ -159,11 +166,11 @@ function App() {
 
               {/* Buffs */}
               {visibleSections.buffs !== false && (
-                <div className="border-b border-gray-800">
+                <div className="border-b border-ef-line">
                   <button onClick={() => toggleCollapse('buffs')}
-                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-800/30 cursor-pointer transition-colors">
-                    <span className="text-sm font-semibold text-indigo-400 flex items-center gap-2">
-                      <span className={`text-[10px] text-gray-500 transition-transform ${collapsedSections.buffs ? '' : 'rotate-90'}`}>▶</span>
+                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-black/5 cursor-pointer transition-colors">
+                    <span className="text-sm font-semibold text-ef-gold flex items-center gap-2 border-l-2 border-ef-gold pl-2">
+                      <span className={`text-[10px] text-ef-ink-4 transition-transform ${collapsedSections.buffs ? '' : 'rotate-90'}`}>▶</span>
                       BUFF / 分區
                     </span>
                   </button>
@@ -177,11 +184,11 @@ function App() {
 
               {/* Skills */}
               {visibleSections.skills !== false && (
-                <div className="border-b border-gray-800">
+                <div className="border-b border-ef-line">
                   <button onClick={() => toggleCollapse('skills')}
-                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-800/30 cursor-pointer transition-colors">
-                    <span className="text-sm font-semibold text-indigo-400 flex items-center gap-2">
-                      <span className={`text-[10px] text-gray-500 transition-transform ${collapsedSections.skills ? '' : 'rotate-90'}`}>▶</span>
+                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-black/5 cursor-pointer transition-colors">
+                    <span className="text-sm font-semibold text-ef-gold flex items-center gap-2 border-l-2 border-ef-gold pl-2">
+                      <span className={`text-[10px] text-ef-ink-4 transition-transform ${collapsedSections.skills ? '' : 'rotate-90'}`}>▶</span>
                       技能庫
                     </span>
                   </button>
@@ -195,7 +202,7 @@ function App() {
             </div>
 
             <div
-              className="absolute -right-1.5 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-indigo-500/40 transition-colors z-10"
+              className="absolute -right-1.5 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-ef-gold/40 transition-colors z-10"
               onMouseDown={e => startResize(e, 'left')}
             />
           </aside>
@@ -210,9 +217,9 @@ function App() {
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-gray-600 text-sm mb-3">尚未建立技能循環</p>
+                <p className="text-ef-ink-4 text-sm mb-3">尚未建立技能循環</p>
                 <button onClick={addRotationGroup}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium transition-colors cursor-pointer">
+                  className="px-4 py-2 bg-ef-gold hover:bg-ef-gold-2 rounded-lg text-sm font-medium text-white transition-colors cursor-pointer">
                   + 新增循環
                 </button>
               </div>
@@ -224,7 +231,7 @@ function App() {
         {rotationGroups.length > 0 && (
           <button
             onClick={() => setRightPanelOpen(v => !v)}
-            className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-12 bg-gray-800 border border-gray-700 border-r-0 rounded-l-lg flex items-center justify-center text-gray-500 hover:text-gray-300 cursor-pointer transition-colors text-xs z-10"
+            className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-12 bg-ef-card border border-ef-line border-r-0 rounded-l-lg flex items-center justify-center text-ef-ink-3 hover:text-ef-ink cursor-pointer transition-colors text-xs z-10"
             style={{ right: rightPanelOpen ? rightPanelWidth : 0 }}
           >
             {rightPanelOpen ? '›' : '‹'}
@@ -234,7 +241,7 @@ function App() {
         {/* Right Panel */}
         {rightPanelOpen && rotationGroups.length > 0 && (
           <aside
-            className={`bg-gray-900/95 border-l border-gray-800 flex flex-col ${
+            className={`bg-ef-panel border-l border-ef-line flex flex-col ${
               isNarrow
                 ? 'absolute top-0 bottom-0 right-0 z-30 shadow-2xl'
                 : 'relative shrink-0'
@@ -242,7 +249,7 @@ function App() {
             style={{ width: rightPanelWidth }}
           >
             <div
-              className="absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-indigo-500/40 transition-colors z-10"
+              className="absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-ef-gold/40 transition-colors z-10"
               onMouseDown={e => startResize(e, 'right')}
             />
             <AnalysisPanel groupResults={groupResults} />

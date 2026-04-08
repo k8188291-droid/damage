@@ -27,14 +27,14 @@ function DamageDetailModal({ result, onClose }: { result: RotationGroupResult; o
     <Modal open title={`${result.group.name} — 傷害詳情`} onClose={onClose} width="max-w-2xl">
       <div className="space-y-4">
         <div className="text-center">
-          <div className="text-xs text-gray-400">總傷害</div>
+          <div className="text-xs text-ef-ink-3">總傷害</div>
           <div className="text-3xl font-bold text-amber-400">{fmt(result.totalDamage)}</div>
         </div>
         {result.skillResults.map(({ result: sr, count, subtotal }, i) => (
           <SkillDetailCard key={i} sr={sr} count={count} subtotal={subtotal} />
         ))}
         {result.skillResults.length === 0 && (
-          <p className="text-gray-600 text-sm text-center py-4">此循環尚無技能</p>
+          <p className="text-ef-ink-4 text-sm text-center py-4">此循環尚無技能</p>
         )}
       </div>
     </Modal>
@@ -43,39 +43,39 @@ function DamageDetailModal({ result, onClose }: { result: RotationGroupResult; o
 
 function SkillDetailCard({ sr, count, subtotal }: { sr: ReturnType<typeof calculateSkillDamage>; count: number; subtotal: number }) {
   return (
-    <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 space-y-2">
+    <div className="bg-ef-card border border-ef-line rounded-xl p-4 space-y-2">
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-sm font-semibold text-gray-100">{sr.skill.name}</span>
-          {sr.character && <span className="text-xs text-gray-500 ml-2">({sr.character.name})</span>}
-          {count > 1 && <span className="text-xs text-gray-400 ml-2">×{count}</span>}
+          <span className="text-sm font-semibold text-ef-ink">{sr.skill.name}</span>
+          {sr.character && <span className="text-xs text-ef-ink-3 ml-2">({sr.character.name})</span>}
+          {count > 1 && <span className="text-xs text-ef-ink-3 ml-2">×{count}</span>}
         </div>
         <span className="text-base font-bold text-amber-400">{fmt(subtotal)}</span>
       </div>
-      <div className="text-xs text-gray-500">
-        攻擊力: <span className="text-indigo-400">{fmt(sr.attackPower)}</span>
-        {count > 1 && <> · 單次: <span className="text-gray-300">{fmt(sr.finalDamage)}</span></>}
+      <div className="text-xs text-ef-ink-3">
+        攻擊力: <span className="text-ef-gold">{fmt(sr.attackPower)}</span>
+        {count > 1 && <> · 單次: <span className="text-ef-ink-2">{fmt(sr.finalDamage)}</span></>}
       </div>
       <div className="space-y-1.5">
         {sr.zones.map(zb => (
           <div key={zb.zone.id}>
             <div className="flex items-center justify-between text-xs">
               <span style={{ color: zb.zone.color }}>{zb.zone.icon} {zb.zone.displayName}</span>
-              <span className="text-gray-300 font-mono">×{zb.multiplier.toFixed(4)}</span>
+              <span className="text-ef-ink-2 font-mono">×{zb.multiplier.toFixed(4)}</span>
             </div>
-            <div className="ml-4 text-xs text-gray-600 space-y-0.5">
+            <div className="ml-4 text-xs text-ef-ink-4 space-y-0.5">
               {zb.sources.map((s, j) => (
                 <div key={j} className="flex justify-between"><span>{s.buffName}</span><span>{s.value}%</span></div>
               ))}
               {zb.sources.length > 1 && (
-                <div className="flex justify-between text-gray-500 border-t border-gray-800 pt-0.5"><span>合計</span><span>{zb.total}%</span></div>
+                <div className="flex justify-between text-ef-ink-4 border-t border-ef-line pt-0.5"><span>合計</span><span>{zb.total}%</span></div>
               )}
             </div>
           </div>
         ))}
       </div>
-      <div className="text-xs text-gray-600 border-t border-gray-800 pt-1.5 break-all">
-        <span className="text-gray-500">公式: </span>{fmt(sr.attackPower)}
+      <div className="text-xs text-ef-ink-4 border-t border-ef-line pt-1.5 break-all">
+        <span className="text-ef-ink-3">公式: </span>{fmt(sr.attackPower)}
         {sr.zones.map(zb => (
           <span key={zb.zone.id}>{' × '}<span style={{ color: zb.zone.color }}>{zb.multiplier.toFixed(4)}</span></span>
         ))}
@@ -124,9 +124,9 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
   // Build formula: attackPower × skillZone × otherZones...
   const formulaParts: React.ReactNode[] = [];
   if (sr) {
-    formulaParts.push(<span key="atk" className="text-gray-300">{fmt(sr.attackPower)}</span>);
+    formulaParts.push(<span key="atk" className="text-ef-ink-2">{fmt(sr.attackPower)}</span>);
     sr.zones.forEach((zb, i) => {
-      formulaParts.push(<span key={`sep${i}`} className="text-gray-600"> × </span>);
+      formulaParts.push(<span key={`sep${i}`} className="text-ef-ink-4"> × </span>);
       formulaParts.push(
         <Tooltip key={`z${i}`} label={`${zb.zone.icon} ${zb.zone.displayName}`}>
           <span style={{ color: zb.zone.color }}>
@@ -135,8 +135,8 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
         </Tooltip>
       );
     });
-    formulaParts.push(<span key="eq" className="text-gray-600"> = </span>);
-    formulaParts.push(<span key="res" className="text-gray-200">{sr.finalDamage.toFixed(1)}</span>);
+    formulaParts.push(<span key="eq" className="text-ef-ink-4"> = </span>);
+    formulaParts.push(<span key="res" className="text-ef-ink">{sr.finalDamage.toFixed(1)}</span>);
   }
 
   const toggleBuffForEntry = (buffId: string) => {
@@ -147,24 +147,24 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
 
   return (
     <div ref={setNodeRef} style={style}>
-      <div className="bg-gray-900/80 border border-gray-700 rounded-xl p-4">
+      <div className="bg-ef-card border border-ef-line rounded-xl p-4">
         <div className="flex items-start gap-3">
           {/* Drag handle + index */}
           <div className="flex items-center gap-2 shrink-0 pt-0.5">
-            <span {...attributes} {...listeners} className="text-gray-600 cursor-grab active:cursor-grabbing text-xs" onClick={e => e.stopPropagation()}>⠿</span>
-            <span className="text-xs font-mono text-gray-500 bg-gray-800 px-1.5 py-0.5 rounded">{String(index + 1).padStart(2, '0')}</span>
+            <span {...attributes} {...listeners} className="text-ef-ink-4 cursor-grab active:cursor-grabbing text-xs" onClick={e => e.stopPropagation()}>⠿</span>
+            <span className="text-xs font-mono text-ef-ink-3 bg-ef-panel px-1.5 py-0.5 rounded">{String(index + 1).padStart(2, '0')}</span>
           </div>
 
           {/* Main content */}
           <div className="flex-1 min-w-0">
             {/* Skill name or selector */}
             {skill ? (
-              <div className="text-sm font-semibold text-gray-100 mb-1">{skill.name}</div>
+              <div className="text-sm font-semibold text-ef-ink mb-1">{skill.name}</div>
             ) : (
               <select value={entry.skillId} onChange={e => onUpdate(entry.id, { skillId: e.target.value })}
-                className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-sm text-gray-200 focus:outline-none focus:border-indigo-500 mb-1 w-full">
-                <option value="" className="bg-gray-900">選擇技能</option>
-                {skills.map(s => <option key={s.id} value={s.id} className="bg-gray-900">{s.name}</option>)}
+                className="bg-ef-input border border-ef-line rounded-lg px-2 py-1 text-sm text-ef-ink focus:outline-none focus:border-ef-gold mb-1 w-full">
+                <option value="">選擇技能</option>
+                {skills.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             )}
 
@@ -185,7 +185,7 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
                     <Tooltip key={b.id} label={tooltipLabel}>
                       <button onClick={() => toggleBuffForEntry(b.id)}
                         className={`px-1.5 py-0.5 rounded text-xs cursor-pointer border transition-all ${
-                          off ? 'border-gray-700 text-gray-600 opacity-40 line-through' : 'text-white'
+                          off ? 'border-ef-line text-ef-ink-4 opacity-40 line-through' : 'text-white'
                         }`}
                         style={off ? undefined : { backgroundColor: color + '25', borderColor: color + '60', color }}>
                         {b.icon} {b.name}
@@ -199,14 +199,14 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
 
           {/* Quantity */}
           <div className="shrink-0 text-right">
-            <div className="text-xs text-gray-500 mb-0.5 tracking-wider">施放次數</div>
+            <div className="text-xs text-ef-ink-3 mb-0.5 tracking-wider">施放次數</div>
             <input type="number" min={1} value={entry.count}
               onChange={e => onUpdate(entry.id, { count: Math.max(1, Number(e.target.value) || 1) })}
-              className="w-20 bg-gray-800 border border-gray-700 rounded-lg text-lg font-bold text-gray-100 text-center focus:outline-none focus:border-indigo-500 font-mono py-0.5 px-2" />
+              className="w-20 bg-ef-input border border-ef-line rounded-lg text-lg font-bold text-ef-ink text-center focus:outline-none focus:border-ef-gold font-mono py-0.5 px-2" />
           </div>
 
           {/* Delete */}
-          <button onClick={() => onRemove(entry.id)} className="text-gray-600 hover:text-red-400 cursor-pointer shrink-0 pt-0.5 text-sm" title="刪除">
+          <button onClick={() => onRemove(entry.id)} className="text-ef-ink-4 hover:text-red-400 cursor-pointer shrink-0 pt-0.5 text-sm" title="刪除">
             ✕
           </button>
         </div>
@@ -264,17 +264,17 @@ export default function CycleEditor({ groupResult }: Props) {
               <input
                 value={group.name}
                 onChange={e => updateRotationGroup({ ...group, name: e.target.value })}
-                className="bg-transparent text-xl font-bold text-gray-100 focus:outline-none border-b border-transparent focus:border-indigo-500"
+                className="bg-transparent text-xl font-bold text-ef-ink focus:outline-none border-b border-transparent focus:border-ef-gold"
               />
             </div>
-            <p className="text-xs text-gray-500">新增技能到循環中計算傷害，設定個別技能的 Buff 生效狀態，或切換整體循環 Buff 生效狀態。</p>
+            <p className="text-xs text-ef-ink-3">新增技能到循環中計算傷害，設定個別技能的 Buff 生效狀態，或切換整體循環 Buff 生效狀態。</p>
           </div>
           <div className="text-right shrink-0 ml-4">
             <div className="text-4xl font-bold text-amber-400 cursor-pointer hover:text-amber-300 transition-colors"
               onClick={() => setDetailResult(groupResult)}>
               {fmt(groupResult.totalDamage)}
             </div>
-            <div className="text-xs text-gray-500 tracking-wider">TOTAL DMG OUTPUT</div>
+            <div className="text-xs text-ef-ink-3 tracking-wider">TOTAL DMG OUTPUT</div>
           </div>
         </div>
 
@@ -295,32 +295,32 @@ export default function CycleEditor({ groupResult }: Props) {
         {/* Add Next Skill */}
         <div className="mt-4">
           {showSkillPalette ? (
-            <div className="border-2 border-dashed border-gray-700 rounded-xl p-4 space-y-3">
-              <div className="text-xs text-gray-400 mb-2">選擇技能</div>
+            <div className="border-2 border-dashed border-ef-line rounded-xl p-4 space-y-3">
+              <div className="text-xs text-ef-ink-3 mb-2">選擇技能</div>
               <div className="flex gap-2 flex-wrap">
                 {skills.map(s => (
                   <button key={s.id} onClick={() => addSkill(s.id)}
-                    className="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-300 hover:border-indigo-500/50 cursor-pointer transition-colors">
+                    className="px-3 py-1.5 bg-ef-card border border-ef-line rounded-lg text-xs text-ef-ink-2 hover:border-ef-gold/50 cursor-pointer transition-colors">
                     + {s.name}
                   </button>
                 ))}
               </div>
               <button onClick={() => setShowSkillPalette(false)}
-                className="text-xs text-gray-600 hover:text-gray-400 cursor-pointer">取消</button>
+                className="text-xs text-ef-ink-4 hover:text-ef-ink-2 cursor-pointer">取消</button>
             </div>
           ) : (
             <button
               onClick={() => setShowSkillPalette(true)}
-              className="w-full border-2 border-dashed border-gray-700 hover:border-gray-600 rounded-xl py-5 flex flex-col items-center gap-1 cursor-pointer transition-colors group"
+              className="w-full border-2 border-dashed border-ef-line hover:border-ef-gold/40 rounded-xl py-5 flex flex-col items-center gap-1 cursor-pointer transition-colors group"
             >
-              <span className="text-lg text-gray-600 group-hover:text-gray-400">+</span>
-              <span className="text-xs text-gray-600 group-hover:text-gray-400 tracking-wider font-medium">新增技能</span>
+              <span className="text-lg text-ef-ink-4 group-hover:text-ef-ink-2">+</span>
+              <span className="text-xs text-ef-ink-4 group-hover:text-ef-ink-2 tracking-wider font-medium">新增技能</span>
             </button>
           )}
         </div>
 
         {group.entries.length === 0 && !showSkillPalette && (
-          <p className="text-gray-600 text-xs text-center py-4 mt-2">點擊上方按鈕加入技能</p>
+          <p className="text-ef-ink-4 text-xs text-center py-4 mt-2">點擊上方按鈕加入技能</p>
         )}
       </div>
 

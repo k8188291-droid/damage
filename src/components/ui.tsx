@@ -25,14 +25,14 @@ export function Tooltip({ children, label }: { children: React.ReactNode; label:
         <div
           className="fixed z-[300] pointer-events-none"
           style={{ top: pos.top, left: pos.left, transform: 'translate(-50%, -100%)' }}>
-          <div className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 whitespace-nowrap shadow-lg mb-1.5">
+          <div className="bg-[#2a2725] border border-[#3a3530] rounded px-2 py-1 text-xs text-[#e8e4de] whitespace-nowrap shadow-lg mb-1.5">
             {label}
           </div>
           <div style={{
             width: 0, height: 0, margin: '0 auto',
             borderLeft: '4px solid transparent',
             borderRight: '4px solid transparent',
-            borderTop: '4px solid #374151',
+            borderTop: '4px solid #3a3530',
           }} />
         </div>,
         document.body
@@ -81,11 +81,11 @@ export function ColorDotPicker({ color, onChange, onCycle }: {
       />
       {dropPos && createPortal(
         <div
-          className="fixed z-[300] bg-gray-900 border border-gray-700 rounded-lg p-2.5 shadow-2xl"
+          className="fixed z-[300] bg-ef-card border border-ef-line rounded-lg p-2.5 shadow-2xl"
           style={{ top: dropPos.top, left: dropPos.left }}
           onMouseEnter={cancelClose}
           onMouseLeave={schedulClose}>
-          <div className="text-[10px] text-gray-500 mb-2">選擇顏色 <span className="text-gray-600">（點擊色點輪換）</span></div>
+          <div className="text-[10px] text-ef-ink-3 mb-2">選擇顏色 <span className="text-ef-ink-4">（點擊色點輪換）</span></div>
           <div className="grid grid-cols-6 gap-1.5">
             {COLORS.map((c, i) => {
               const isCurrent = c === color;
@@ -96,7 +96,7 @@ export function ColorDotPicker({ color, onChange, onCycle }: {
                   onClick={() => { onChange(c); setDropPos(null); }}
                   className="relative cursor-pointer transition-transform hover:scale-110 focus:outline-none"
                   style={{ width: 20, height: 20 }}>
-                  <span className={`block w-full h-full rounded-full border-2 ${isCurrent ? 'border-white scale-110' : 'border-transparent'}`}
+                  <span className={`block w-full h-full rounded-full border-2 ${isCurrent ? 'border-ef-ink scale-110' : 'border-transparent'}`}
                     style={{ backgroundColor: c, display: 'block' }} />
                   {/* "next" indicator arrow */}
                   {isNext && !isCurrent && (
@@ -106,12 +106,12 @@ export function ColorDotPicker({ color, onChange, onCycle }: {
               );
             })}
           </div>
-          <div className="mt-2 pt-2 border-t border-gray-800 flex items-center gap-1.5">
+          <div className="mt-2 pt-2 border-t border-ef-line-2 flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: color }} />
-            <span className="text-[10px] text-gray-400">目前</span>
-            <span className="mx-1 text-gray-700">→</span>
+            <span className="text-[10px] text-ef-ink-3">目前</span>
+            <span className="mx-1 text-ef-ink-4">→</span>
             <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: nextColor }} />
-            <span className="text-[10px] text-gray-400">下一個</span>
+            <span className="text-[10px] text-ef-ink-3">下一個</span>
           </div>
         </div>,
         document.body

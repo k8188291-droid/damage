@@ -7,6 +7,7 @@ import {
   arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { BarChart3 } from 'lucide-react';
 import { useAppStore } from '../stores/appStore';
 import type { RotationGroup } from '../types';
 import type { RotationGroupResult } from '../utils/damage';
@@ -44,32 +45,32 @@ function SortableCycleCard({ group, result, isActive, maxDamage, diff, excluded,
           excluded ? 'opacity-50' : ''
         } ${
           isActive
-            ? 'bg-indigo-600/20 border border-indigo-500/40'
-            : 'bg-gray-800/60 border border-gray-700 hover:border-gray-600'
+            ? 'bg-ef-gold/12 border border-ef-gold/40'
+            : 'bg-ef-card border border-ef-line hover:border-ef-line-2'
         }`}
       >
         {/* Name + damage */}
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5 min-w-0">
             <span {...attributes} {...listeners}
-              className="text-gray-600 cursor-grab active:cursor-grabbing text-xs shrink-0"
+              className="text-ef-ink-4 cursor-grab active:cursor-grabbing text-xs shrink-0"
               onClick={e => e.stopPropagation()}>⠿</span>
-            <span className={`text-sm truncate min-w-0 ${excluded ? 'text-gray-500 line-through' : 'text-gray-200'}`}>{group.name}</span>
+            <span className={`text-sm truncate min-w-0 ${excluded ? 'text-ef-ink-3 line-through' : 'text-ef-ink'}`}>{group.name}</span>
           </div>
           <div className="flex items-center gap-2 shrink-0 ml-2">
             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button onClick={e => { e.stopPropagation(); onCopy(); }}
-                className="text-gray-500 hover:text-indigo-400 text-xs cursor-pointer" title="複製">⧉</button>
+                className="text-ef-ink-3 hover:text-ef-gold text-xs cursor-pointer" title="複製">⧉</button>
               <button onClick={e => { e.stopPropagation(); onRemove(); }}
-                className="text-gray-500 hover:text-red-400 text-xs cursor-pointer" title="刪除">✕</button>
+                className="text-ef-ink-3 hover:text-red-400 text-xs cursor-pointer" title="刪除">✕</button>
             </div>
           </div>
         </div>
 
         {/* Progress bar vs max damage */}
-        <div className="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden mb-1">
+        <div className="w-full h-1.5 bg-ef-line rounded-full overflow-hidden mb-1">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${isActive ? 'bg-indigo-500' : excluded ? 'bg-gray-600' : 'bg-gray-500'}`}
+            className={`h-full rounded-full transition-all duration-500 ${isActive ? 'bg-ef-gold' : excluded ? 'bg-ef-line-2' : 'bg-ef-ink-4'}`}
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -77,10 +78,10 @@ function SortableCycleCard({ group, result, isActive, maxDamage, diff, excluded,
           <Tooltip label={excluded ? '點擊加入分析' : '點擊排除分析'}>
             <button
               onClick={e => { e.stopPropagation(); onToggleExclude(); }}
-              className={`w-3 h-3 rounded-full border-2 cursor-pointer shrink-0 transition-colors ${excluded ? 'border-gray-600 bg-transparent' : 'border-green-500 bg-green-500/30'}`}
+              className={`w-3 h-3 rounded-full border-2 cursor-pointer shrink-0 transition-colors ${excluded ? 'border-ef-ink-4 bg-transparent' : 'border-green-500 bg-green-500/30'}`}
             />
           </Tooltip>
-          <span className="text-sm font-bold text-gray-100">{fmt(result.totalDamage)}</span>
+          <span className="text-sm font-bold text-ef-ink">{fmt(result.totalDamage)}</span>
           {/* Diff vs active */}
           {diff && !excluded && (
             <div className={`text-xs font-mono ${Number(diff) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -133,31 +134,31 @@ export default function AnalysisPanel({ groupResults }: Props) {
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-800 shrink-0">
+      <div className="px-4 py-3 border-b border-ef-line shrink-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm">📊</span>
-          <span className="text-sm font-semibold text-gray-200 flex-1">數據分析對比</span>
+          <BarChart3 size={16} className="text-ef-ink-3" />
+          <span className="text-sm font-semibold text-ef-ink flex-1">數據分析對比</span>
         </div>
       </div>
 
       {/* Notes block */}
-      <div className="px-4 py-3 border-b border-gray-800 shrink-0">
-        <div className="text-xs text-gray-500 tracking-wider font-semibold mb-2">NOTES</div>
+      <div className="px-4 py-3 border-b border-ef-line shrink-0">
+        <div className="text-xs text-ef-ink-3 tracking-wider font-semibold mb-2">NOTES</div>
         <textarea
           value={notes}
           onChange={e => setNotes(e.target.value)}
           placeholder="輸入此設定的說明..."
-          className="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-300 resize-none focus:outline-none focus:border-indigo-500"
+          className="w-full bg-ef-card border border-ef-line rounded-lg px-3 py-2 text-xs text-ef-ink-2 resize-none focus:outline-none focus:border-ef-gold"
           rows={5}
         />
       </div>
 
       {/* Saved Cycles */}
-      <div className="px-4 py-3 border-b border-gray-800">
+      <div className="px-4 py-3 border-b border-ef-line">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-gray-500 tracking-wider font-semibold">SAVED CYCLES</span>
+          <span className="text-xs text-ef-ink-3 tracking-wider font-semibold">SAVED CYCLES</span>
           <button onClick={addRotationGroup}
-            className="text-xs text-indigo-400 hover:text-indigo-300 cursor-pointer">+ 新增</button>
+            className="text-xs text-ef-gold hover:text-ef-gold/80 cursor-pointer">+ 新增</button>
         </div>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={rotationGroups.map(g => g.id)} strategy={verticalListSortingStrategy}>
@@ -194,7 +195,7 @@ export default function AnalysisPanel({ groupResults }: Props) {
       {activeResult && activeResult.skillResults.length > 0 && (
         <div className="px-4 py-3 flex-1">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-gray-500 tracking-wider font-semibold">DAMAGE BREAKDOWN</span>
+            <span className="text-xs text-ef-ink-3 tracking-wider font-semibold">DAMAGE BREAKDOWN</span>
           </div>
           <div className="space-y-3">
             {activeResult.skillResults.map(({ result: sr, subtotal }, i) => {
@@ -204,10 +205,10 @@ export default function AnalysisPanel({ groupResults }: Props) {
               return (
                 <div key={i}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-gray-300">{sr.skill.name}</span>
-                    <span className="text-xs text-gray-400 font-mono">{pct.toFixed(1)}%</span>
+                    <span className="text-xs text-ef-ink-2">{sr.skill.name}</span>
+                    <span className="text-xs text-ef-ink-3 font-mono">{pct.toFixed(1)}%</span>
                   </div>
-                  <div className="h-2.5 bg-gray-800 rounded-full overflow-hidden">
+                  <div className="h-2.5 bg-ef-line rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-500"
                       style={{ width: `${pct}%`, backgroundColor: color }}

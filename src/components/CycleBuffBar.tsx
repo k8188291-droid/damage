@@ -34,10 +34,10 @@ export default function CycleBuffBar() {
     : sortedBuffs.filter(b => !disabledSet.has(b.id));
 
   return (
-    <div className="relative px-5 py-3 border-b border-gray-800 shrink-0">
+    <div className="relative px-5 py-3 border-b border-ef-line shrink-0">
       <div className="flex items-center gap-2 mb-2.5">
-        <span className="text-gray-500 text-sm">⚙</span>
-        <span className="text-xs font-semibold text-gray-400 tracking-wide">當前循環 BUFF 生效開關</span>
+        <span className="text-ef-ink-3 text-sm">⚙</span>
+        <span className="text-xs font-semibold text-ef-ink-3 tracking-wide">當前循環 BUFF 生效開關</span>
       </div>
       <div
         className={`flex flex-wrap gap-2 transition-all duration-200 overflow-y-auto`}
@@ -57,7 +57,7 @@ export default function CycleBuffBar() {
                 onClick={() => toggleCycleBuff(b.id)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer border transition-all ${
                   isDisabled
-                    ? 'border-gray-700 text-gray-500 opacity-40 line-through'
+                    ? 'border-ef-line text-ef-ink-4 opacity-40 line-through'
                     : 'text-white'
                 }`}
                 style={
@@ -72,12 +72,12 @@ export default function CycleBuffBar() {
           );
         })}
         {sortedBuffs.length === 0 && (
-          <span className="text-xs text-gray-600">尚未設定任何 Buff</span>
+          <span className="text-xs text-ef-ink-4">尚未設定任何 Buff</span>
         )}
       </div>
       <button
         onClick={() => setExpanded(e => !e)}
-        className="z-10 absolute cursor-pointer bottom-[-20px] left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full bg-gray-800 border border-gray-700 text-gray-500 flex items-center justify-center hover:text-white transition-colors shadow-lg"
+        className="z-10 absolute cursor-pointer bottom-[-20px] left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full bg-ef-card border border-ef-line text-ef-ink-3 flex items-center justify-center hover:text-ef-ink transition-colors shadow-lg"
         title={expanded ? '收合' : '展開'}
       >
         <span className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>

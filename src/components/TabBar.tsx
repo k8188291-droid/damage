@@ -51,7 +51,7 @@ export default function TabBar() {
   const closingTab = closingTabId ? tabs.find(t => t.id === closingTabId) : null;
 
   return (
-    <div className="h-9 bg-gray-900/60 border-b border-gray-800 flex items-end px-1 shrink-0 relative">
+    <div className="h-9 bg-ef-panel border-b border-ef-line flex items-end px-1 shrink-0 relative">
 
       <div className="flex items-end gap-0.5 overflow-x-auto min-w-0 flex-1 scrollbar-none">
         {tabs.map(tab => {
@@ -66,8 +66,8 @@ export default function TabBar() {
               onContextMenu={e => { e.preventDefault(); setContextMenu({ tabId: tab.id, x: e.clientX, y: e.clientY }); }}
               className={`group relative flex items-center gap-1.5 px-3 py-1.5 text-xs cursor-pointer transition-colors rounded-t-lg min-w-0 max-w-[160px] shrink-0 ${
                 isActive
-                  ? 'bg-[#0f1117] text-gray-200 border-t border-x border-gray-700'
-                  : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/40'
+                  ? 'bg-ef-base text-ef-ink border-t border-x border-ef-line'
+                  : 'text-ef-ink-3 hover:text-ef-ink hover:bg-black/5'
               }`}
             >
               {isEditing ? (
@@ -77,7 +77,7 @@ export default function TabBar() {
                   onChange={e => setEditValue(e.target.value)}
                   onBlur={commitRename}
                   onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') setEditingId(null); }}
-                  className="bg-transparent border-b border-indigo-500 text-xs text-gray-200 focus:outline-none w-full min-w-[40px]"
+                  className="bg-transparent border-b border-ef-gold text-xs text-ef-ink focus:outline-none w-full min-w-[40px]"
                   onClick={e => e.stopPropagation()}
                 />
               ) : (
@@ -87,7 +87,7 @@ export default function TabBar() {
                 <div className="flex gap-1.5 shrink-0">
                   <button
                     onClick={e => { e.stopPropagation(); duplicateTab(tab.id); }}
-                    className="text-gray-600 hover:text-indigo-400 text-xs cursor-pointer"
+                    className="text-ef-ink-4 hover:text-ef-gold text-xs cursor-pointer"
                     title="複製頁籤"
                   >
                     ⧉
@@ -95,7 +95,7 @@ export default function TabBar() {
                   {tabs.length > 1 && (
                     <button
                       onClick={e => { e.stopPropagation(); setClosingTabId(tab.id); }}
-                      className="text-gray-600 hover:text-red-400 text-xs cursor-pointer"
+                      className="text-ef-ink-4 hover:text-red-400 text-xs cursor-pointer"
                       title="關閉頁籤"
                     >
                       ✕
@@ -109,7 +109,7 @@ export default function TabBar() {
         {/* Add tab button */}
         <button
           onClick={addTab}
-          className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-gray-300 hover:bg-gray-800/40 rounded-lg cursor-pointer transition-colors shrink-0 mb-0.5 mr-1 text-sm"
+          className="w-7 h-7 flex items-center justify-center text-ef-ink-4 hover:text-ef-ink hover:bg-black/5 rounded-lg cursor-pointer transition-colors shrink-0 mb-0.5 mr-1 text-sm"
           title="新增頁籤"
         >
           +
@@ -119,25 +119,25 @@ export default function TabBar() {
       {/* Context menu */}
       {contextMenu && (
         <div
-          className="fixed z-50 bg-gray-800 border border-gray-700 rounded-lg shadow-xl py-1 min-w-[120px]"
+          className="fixed z-50 bg-ef-card border border-ef-line rounded-lg shadow-xl py-1 min-w-[120px]"
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
           <button
             onClick={() => { startRename(tabs.find(t => t.id === contextMenu.tabId)!); setContextMenu(null); }}
-            className="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700 cursor-pointer"
+            className="w-full text-left px-3 py-1.5 text-xs text-ef-ink-2 hover:bg-black/5 cursor-pointer"
           >
             重新命名
           </button>
           <button
             onClick={() => { duplicateTab(contextMenu.tabId); setContextMenu(null); }}
-            className="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700 cursor-pointer"
+            className="w-full text-left px-3 py-1.5 text-xs text-ef-ink-2 hover:bg-black/5 cursor-pointer"
           >
             複製頁籤
           </button>
           {tabs.length > 1 && (
             <button
               onClick={() => { setClosingTabId(contextMenu.tabId); setContextMenu(null); }}
-              className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-gray-700 cursor-pointer"
+              className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-black/5 cursor-pointer"
             >
               關閉頁籤
             </button>

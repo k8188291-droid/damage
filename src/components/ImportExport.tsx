@@ -81,19 +81,19 @@ export default function ImportExport() {
     <>
       <div className="flex gap-2">
         <button onClick={handleExport}
-          className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs font-medium transition-colors cursor-pointer">
+          className="px-3 py-1 bg-ef-card hover:bg-ef-card-hover border border-ef-line rounded-lg text-xs font-medium text-ef-ink-2 transition-colors cursor-pointer">
           匯出
         </button>
         <button onClick={handleCopyToClipboard}
-          className={`px-3 py-1 ${copyDone ? 'bg-green-700' : 'bg-gray-700 hover:bg-gray-600'} rounded-lg text-xs font-medium transition-colors cursor-pointer`}>
+          className={`px-3 py-1 ${copyDone ? 'bg-green-700 text-white' : 'bg-ef-card hover:bg-ef-card-hover border border-ef-line text-ef-ink-2'} rounded-lg text-xs font-medium transition-colors cursor-pointer`}>
           {copyDone ? '已複製 ✓' : '複製'}
         </button>
         <button onClick={() => setShowModal(true)}
-          className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs font-medium transition-colors cursor-pointer">
+          className="px-3 py-1 bg-ef-card hover:bg-ef-card-hover border border-ef-line rounded-lg text-xs font-medium text-ef-ink-2 transition-colors cursor-pointer">
           匯入
         </button>
         <button onClick={() => setShowClearDialog(true)}
-          className="px-2 py-0.5 text-xs text-gray-600 hover:text-red-400 transition-colors cursor-pointer">
+          className="px-2 py-0.5 text-xs text-ef-ink-4 hover:text-red-400 transition-colors cursor-pointer">
           清除
         </button>
       </div>
@@ -103,32 +103,32 @@ export default function ImportExport() {
           <div className="space-y-4">
             <div className='text-yellow-500 text-sm mb-2'>{"🛈 可以從[檔案庫 > 系統檔案]載入範例資料"}</div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">從檔案匯入</label>
+              <label className="block text-xs text-ef-ink-3 mb-1">從檔案匯入</label>
               <input ref={fileRef} type="file" accept=".json" onChange={handleImportFromFile}
-                className="block w-full text-sm text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-indigo-600 file:text-white file:cursor-pointer hover:file:bg-indigo-500" />
+                className="block w-full text-sm text-ef-ink-3 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-ef-gold file:text-white file:cursor-pointer hover:file:bg-ef-gold-2" />
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="flex-1 border-t border-gray-700" />
-              <span className="text-xs text-gray-500">或</span>
-              <div className="flex-1 border-t border-gray-700" />
+              <div className="flex-1 border-t border-ef-line" />
+              <span className="text-xs text-ef-ink-4">或</span>
+              <div className="flex-1 border-t border-ef-line" />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-400 mb-1">貼上 JSON</label>
+              <label className="block text-xs text-ef-ink-3 mb-1">貼上 JSON</label>
               <textarea value={importText} onChange={e => setImportText(e.target.value)}
                 rows={8} placeholder='{"zones":...}'
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 font-mono focus:outline-none focus:border-indigo-500 resize-none" />
+                className="w-full bg-ef-input border border-ef-line rounded-lg px-3 py-2 text-sm text-ef-ink font-mono focus:outline-none focus:border-ef-gold resize-none" />
             </div>
 
             {error && <div className="text-red-400 text-xs">{error}</div>}
 
             <button onClick={handleImportFromText} disabled={!importText.trim()}
-              className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg font-medium transition-colors cursor-pointer">
+              className="w-full py-2 bg-ef-gold hover:bg-ef-gold-2 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg text-white font-medium transition-colors cursor-pointer">
               匯入
             </button>
 
-            <p className="text-xs text-gray-600">注意：匯入會覆蓋目前所有設定</p>
+            <p className="text-xs text-ef-ink-4">注意：匯入會覆蓋目前所有設定</p>
           </div>
         </Modal>
       )}

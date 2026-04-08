@@ -14,6 +14,9 @@ interface UIState {
   // Responsive
   isNarrow: boolean;
 
+  // Dark mode
+  isDark: boolean;
+
   // Actions
   setRightPanelOpen: (v: boolean | ((prev: boolean) => boolean)) => void;
   toggleSection: (key: string) => void;
@@ -21,6 +24,7 @@ interface UIState {
   closeOverlays: () => void;
   setIsNarrow: (v: boolean) => void;
   collapseForNarrow: () => void;
+  toggleDarkMode: () => void;
 
   // Resize
   startResize: (e: ReactMouseEvent, side: 'left' | 'right') => void;
@@ -35,6 +39,11 @@ export const useUIStore = create<UIState>()((set, get) => ({
   leftPanelWidth: 360,
   rightPanelWidth: 280,
   isNarrow: false,
+  isDark: (() => {
+    const stored = localStorage.getItem('theme');
+    if (stored) return stored === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  })(),
 
   setRightPanelOpen: (v) => set(state => ({
     rightPanelOpen: typeof v === 'function' ? v(state.rightPanelOpen) : v,
@@ -58,6 +67,8 @@ export const useUIStore = create<UIState>()((set, get) => ({
   },
 
   setIsNarrow: (v) => set({ isNarrow: v }),
+
+  toggleDarkMode: () => set(state => ({ isDark: !state.isDark })),
 
   collapseForNarrow: () => {
     set({

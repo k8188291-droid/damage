@@ -559,8 +559,8 @@ ${buffGroupList}
         className="fixed top-3 right-4 z-[100] group cursor-pointer"
       >
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl blur-md opacity-60 group-hover:opacity-90 transition-opacity animate-pulse" />
-          <div className="relative flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-xl text-white font-semibold text-[14px] shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-violet-500/25">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-xl blur-md opacity-60 group-hover:opacity-90 transition-opacity animate-pulse" />
+          <div className="relative flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 rounded-xl text-white font-semibold text-[14px] shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-amber-500/25">
             AI
           </div>
         </div>
@@ -573,32 +573,32 @@ ${buffGroupList}
           className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
           onClick={e => { if (e.target === backdropRef.current) close(); }}
         >
-          <div className="w-full max-w-xl bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
+          <div className="w-full max-w-xl bg-ef-card border border-ef-line rounded-2xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
             {/* Header */}
-            <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between shrink-0">
+            <div className="px-5 py-4 border-b border-ef-line flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-white text-[13px] font-bold">AI</div>
-                <h3 className="text-[15px] font-semibold text-gray-100">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center text-white text-[13px] font-bold">AI</div>
+                <h3 className="text-[15px] font-semibold text-ef-ink">
                   {step === 'select' ? 'AI 資源建立' : `新增${config?.label}`}
                 </h3>
               </div>
-              <button onClick={close} className="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer text-xl leading-none">&times;</button>
+              <button onClick={close} className="text-ef-ink-4 hover:text-ef-ink transition-colors cursor-pointer text-xl leading-none">&times;</button>
             </div>
 
             {/* Body */}
             <div className="flex-1 overflow-y-auto">
               {step === 'select' ? (
                 <div className="p-5">
-                  <p className="text-[14px] text-gray-400 mb-4">選擇要建立的資源類型，複製提示詞後向 AI 描述你的需求，將產生的 JSON 貼回即可建立。</p>
+                  <p className="text-[14px] text-ef-ink-3 mb-4">選擇要建立的資源類型，複製提示詞後向 AI 描述你的需求，將產生的 JSON 貼回即可建立。</p>
                   <div className="grid grid-cols-2 gap-3">
                     {(Object.entries(resourceConfigs) as [ResourceType, ResourceConfig][]).map(([key, cfg]) => (
                       <button
                         key={key}
                         onClick={() => selectResource(key)}
-                        className="flex items-center gap-3 p-4 bg-gray-800/50 hover:bg-gray-800 border border-gray-700/50 hover:border-indigo-500/50 rounded-xl transition-all duration-150 cursor-pointer group text-left"
+                        className="flex items-center gap-3 p-4 bg-ef-card hover:bg-ef-card-hover border border-ef-line hover:border-ef-gold/50 rounded-xl transition-all duration-150 cursor-pointer group text-left"
                       >
                         <span className="text-2xl group-hover:scale-110 transition-transform">{cfg.icon}</span>
-                        <div className="text-[14px] font-medium text-gray-200 group-hover:text-indigo-300 transition-colors">新增{cfg.label}</div>
+                        <div className="text-[14px] font-medium text-ef-ink-2 group-hover:text-ef-gold transition-colors">新增{cfg.label}</div>
                       </button>
                     ))}
                   </div>
@@ -606,21 +606,21 @@ ${buffGroupList}
               ) : config && (
                 <div className="p-5 space-y-4">
                   {/* Back + title */}
-                  <div className="flex items-center gap-2 text-[14px] text-gray-500">
-                    <button onClick={() => { setStep('select'); setError(''); setSuccess(''); }} className="hover:text-gray-300 cursor-pointer transition-colors">
+                  <div className="flex items-center gap-2 text-[14px] text-ef-ink-3">
+                    <button onClick={() => { setStep('select'); setError(''); setSuccess(''); }} className="hover:text-ef-ink cursor-pointer transition-colors">
                       &larr; 返回
                     </button>
-                    <span className="text-gray-700">|</span>
+                    <span className="text-ef-line-2">|</span>
                     <span>{config.icon} 新增{config.label}</span>
                   </div>
 
                   {/* Step 1: Copy Prompt */}
                   <div className="space-y-2.5">
                     <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-[12px] flex items-center justify-center font-bold shrink-0">1</span>
-                      <span className="text-[14px] font-medium text-gray-300">複製提示詞，發給任意 AI 聊天工具</span>
+                      <span className="w-6 h-6 rounded-full bg-ef-gold text-white text-[12px] flex items-center justify-center font-bold shrink-0">1</span>
+                      <span className="text-[14px] font-medium text-ef-ink-2">複製提示詞，發給任意 AI 聊天工具</span>
                     </div>
-                    <div className="bg-gray-800/60 rounded-lg p-3 text-[13px] text-gray-400 font-mono whitespace-pre-wrap max-h-40 overflow-y-auto border border-gray-700/30 leading-relaxed">
+                    <div className="bg-ef-input border border-ef-line rounded-lg p-3 text-[13px] text-ef-ink-3 font-mono whitespace-pre-wrap max-h-40 overflow-y-auto leading-relaxed">
                       {config.prompt}
                     </div>
                     <button
@@ -628,7 +628,7 @@ ${buffGroupList}
                       className={`w-full py-2.5 rounded-lg text-[14px] font-medium transition-all duration-200 cursor-pointer ${
                         copied
                           ? 'bg-emerald-600 text-white'
-                          : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                          : 'bg-ef-gold hover:bg-ef-gold-2 text-white'
                       }`}
                     >
                       {copied ? '已複製提示詞！' : '複製提示詞'}
@@ -639,19 +639,19 @@ ${buffGroupList}
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-[12px] flex items-center justify-center font-bold shrink-0">2</span>
-                        <span className="text-[14px] font-medium text-gray-300">將 AI 產生的 JSON 貼到下方</span>
+                        <span className="w-6 h-6 rounded-full bg-ef-gold text-white text-[12px] flex items-center justify-center font-bold shrink-0">2</span>
+                        <span className="text-[14px] font-medium text-ef-ink-2">將 AI 產生的 JSON 貼到下方</span>
                       </div>
                       <button
                         onClick={() => setShowExample(!showExample)}
-                        className="text-[13px] text-indigo-400 hover:text-indigo-300 cursor-pointer transition-colors"
+                        className="text-[13px] text-ef-gold hover:text-ef-gold/80 cursor-pointer transition-colors"
                       >
                         {showExample ? '隱藏範例' : '查看範例'}
                       </button>
                     </div>
 
                     {showExample && (
-                      <div className="bg-gray-800/40 rounded-lg p-3 text-[13px] text-emerald-400 font-mono whitespace-pre-wrap border border-gray-700/30 leading-relaxed">
+                      <div className="bg-ef-input border border-ef-line rounded-lg p-3 text-[13px] text-emerald-600 font-mono whitespace-pre-wrap leading-relaxed">
                         {config.example}
                       </div>
                     )}
@@ -661,17 +661,17 @@ ${buffGroupList}
                       value={jsonText}
                       onChange={e => { setJsonText(e.target.value); setError(''); setSuccess(''); }}
                       placeholder='在此貼上 JSON...'
-                      className="w-full h-40 bg-gray-800/60 border border-gray-700/50 rounded-lg p-3 text-[14px] font-mono text-gray-300 placeholder-gray-600 resize-none focus:outline-none focus:border-indigo-500/50 transition-colors leading-relaxed"
+                      className="w-full h-40 bg-ef-input border border-ef-line rounded-lg p-3 text-[14px] font-mono text-ef-ink placeholder-ef-ink-4 resize-none focus:outline-none focus:border-ef-gold transition-colors leading-relaxed"
                     />
 
                     {error && (
-                      <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-3 text-[13px] text-red-400 whitespace-pre-wrap">
+                      <div className="bg-red-500/10 border border-red-400/30 rounded-lg p-3 text-[13px] text-red-500 whitespace-pre-wrap">
                         {error}
                       </div>
                     )}
 
                     {success && (
-                      <div className="bg-emerald-900/30 border border-emerald-700/50 rounded-lg p-3 text-[14px] text-emerald-400 font-medium">
+                      <div className="bg-emerald-500/10 border border-emerald-400/30 rounded-lg p-3 text-[14px] text-emerald-600 font-medium">
                         {success}
                       </div>
                     )}
@@ -679,7 +679,7 @@ ${buffGroupList}
                     <button
                       onClick={handleSubmit}
                       disabled={!jsonText.trim()}
-                      className="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 rounded-lg text-[14px] font-semibold text-white transition-all duration-200 cursor-pointer disabled:cursor-not-allowed"
+                      className="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:from-ef-line disabled:to-ef-line disabled:text-ef-ink-4 rounded-lg text-[14px] font-semibold text-white transition-all duration-200 cursor-pointer disabled:cursor-not-allowed"
                     >
                       驗證並建立
                     </button>
