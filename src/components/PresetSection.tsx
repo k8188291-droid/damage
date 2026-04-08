@@ -116,10 +116,10 @@ function SystemPresetCard({ preset, onLoad, onOpenInNewTab }: {
     <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-2.5 py-2">
       <div className="flex items-center gap-1.5 mb-0.5">
         <span className="text-xs text-gray-200 truncate flex-1 min-w-0">{preset.name}</span>
-        <span className="text-[10px] text-indigo-400 shrink-0">系統</span>
+        <span className="text-xs text-indigo-400 shrink-0">系統</span>
       </div>
       {preset.description && (
-        <div className="text-[10px] text-gray-500 mb-1.5">{preset.description}</div>
+        <div className="text-xs text-gray-500 mb-2 mt-1.5">{preset.description}</div>
       )}
       <div className="flex gap-1.5">
         <button onClick={onLoad}
@@ -196,7 +196,7 @@ export default function PresetSection() {
       case 'delete': deletePreset(confirmAction.id); break;
       case 'overwrite': overwritePreset(confirmAction.id); break;
       case 'load-system': {
-        const data = migrateToLatest(JSON.parse(confirmAction.preset.dataJson));
+        const data = JSON.parse(confirmAction.preset.dataJson);
         importData(data);
         break;
       }
@@ -205,7 +205,7 @@ export default function PresetSection() {
   };
 
   const openSystemInNewTab = (sp: SystemPreset) => {
-    const data = migrateToLatest(JSON.parse(sp.dataJson));
+    const data =JSON.parse(sp.dataJson);
     openPresetInNewTab({ id: sp.id, name: sp.name, timestamp: Date.now(), data });
   };
 
@@ -277,7 +277,7 @@ export default function PresetSection() {
               <p className="text-xs text-gray-600 text-center">尚無檔案</p>
               <button
                 onClick={() => setActiveTab('system')}
-                className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs text-gray-400 hover:text-gray-200 transition-colors cursor-pointer"
+                className="px-3 py-1.5 bg-gray-700 hover:bg-amber-600/40 rounded-lg text-xs text-amber-400 transition-colors cursor-pointer"
               >
                 瀏覽系統檔案
               </button>

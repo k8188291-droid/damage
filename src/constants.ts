@@ -1540,18 +1540,1124 @@ export const exampleData = JSON.stringify({
   "notes": "狼之緋要疊層，多算一個8折的版本"
 })
 
+const estellaExampleData = JSON.stringify({
+  "version": 2,
+  "zones": [
+    {
+      "id": "zone-skill",
+      "name": "技能倍率",
+      "displayName": "技能倍率",
+      "icon": "⚔️",
+      "color": "#ef4444",
+      "isDefault": true
+    },
+    {
+      "id": "zone-dmg-bonus",
+      "name": "增傷",
+      "displayName": "增傷",
+      "icon": "🔥",
+      "color": "#f97316",
+      "isDefault": true
+    },
+    {
+      "id": "zone-vuln",
+      "name": "易傷",
+      "displayName": "易傷",
+      "icon": "💀",
+      "color": "#eab308",
+      "isDefault": true
+    },
+    {
+      "id": "zone-crit",
+      "name": "暴擊",
+      "displayName": "暴擊",
+      "icon": "💥",
+      "color": "#22c55e",
+      "isDefault": true
+    },
+    {
+      "id": "zone-stagger",
+      "name": "失衡",
+      "displayName": "失衡",
+      "icon": "🌀",
+      "color": "#06b6d4",
+      "isDefault": true
+    },
+    {
+      "id": "zone-resist",
+      "name": "抗性",
+      "displayName": "抗性",
+      "icon": "🛡️",
+      "color": "#3b82f6",
+      "isDefault": true
+    },
+    {
+      "id": "zone-fragile",
+      "name": "脆弱",
+      "displayName": "脆弱",
+      "icon": "🔮",
+      "color": "#8b5cf6",
+      "isDefault": true
+    },
+    {
+      "id": "zone-amp",
+      "name": "增幅",
+      "displayName": "增幅",
+      "icon": "⚡",
+      "color": "#ec4899",
+      "isDefault": true
+    },
+    {
+      "id": "acdfee0b-c8e3-4688-9355-4cb7c4f96a1d",
+      "name": "能力值",
+      "displayName": "能力值",
+      "icon": "🌟",
+      "color": "#14b8a6",
+      "isDefault": false
+    },
+    {
+      "id": "77d8e6f4-5c8f-4595-b55e-a95cfcdeb8c2",
+      "name": "攻擊力",
+      "displayName": "攻擊力",
+      "icon": "🗡️",
+      "color": "#ef4444",
+      "isDefault": false
+    },
+    {
+      "id": "2fdc97e3-5ac6-45cc-9d46-d22d314419e1",
+      "name": "基礎攻擊力",
+      "displayName": "基礎攻擊力",
+      "icon": "🎯",
+      "color": "#a855f7",
+      "isDefault": false
+    }
+  ],
+  "buffs": [
+    {
+      "id": "d6056f45-7f2a-4b89-aaa4-9392b4671625",
+      "name": "意志 221",
+      "zoneId": "acdfee0b-c8e3-4688-9355-4cb7c4f96a1d",
+      "groupId": "fa3af6ba-0091-4e16-861c-8a7e8b613835",
+      "value": 110.5,
+      "icon": "🌟",
+      "enabled": true
+    },
+    {
+      "id": "c15a3cce-d204-47e6-9a4f-aa20bac4fbdb",
+      "name": "力量 114",
+      "zoneId": "acdfee0b-c8e3-4688-9355-4cb7c4f96a1d",
+      "groupId": "4fb6674f-ea23-4f57-a300-513afb401a6b",
+      "value": 22.8,
+      "icon": "⭐",
+      "enabled": true
+    },
+    {
+      "id": "94450b82-98fc-408e-95d9-adfab6f9ac05",
+      "name": "裝備 意志 198",
+      "zoneId": "acdfee0b-c8e3-4688-9355-4cb7c4f96a1d",
+      "groupId": "fa3af6ba-0091-4e16-861c-8a7e8b613835",
+      "value": 99,
+      "icon": "🛡️",
+      "enabled": true
+    },
+    {
+      "id": "d474111c-9fb5-4d19-87b3-6e325f50c644",
+      "name": "裝備 力量 238",
+      "zoneId": "acdfee0b-c8e3-4688-9355-4cb7c4f96a1d",
+      "groupId": "4fb6674f-ea23-4f57-a300-513afb401a6b",
+      "value": 47.6,
+      "icon": "🛡️",
+      "enabled": true
+    },
+    {
+      "id": "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+      "name": "OBJ 124",
+      "zoneId": "acdfee0b-c8e3-4688-9355-4cb7c4f96a1d",
+      "groupId": "fa3af6ba-0091-4e16-861c-8a7e8b613835",
+      "value": 62,
+      "icon": "🗡️",
+      "enabled": true
+    },
+    {
+      "id": "0ae5abec-7c2a-41c3-85a1-3a706433d079",
+      "name": "OBJ 主能力板",
+      "zoneId": "acdfee0b-c8e3-4688-9355-4cb7c4f96a1d",
+      "groupId": "fa3af6ba-0091-4e16-861c-8a7e8b613835",
+      "value": 73,
+      "icon": "🛡️",
+      "enabled": true
+    },
+    {
+      "id": "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+      "name": "驍勇 主能力板",
+      "zoneId": "acdfee0b-c8e3-4688-9355-4cb7c4f96a1d",
+      "groupId": "fa3af6ba-0091-4e16-861c-8a7e8b613835",
+      "value": 56.3555,
+      "icon": "🛡️",
+      "enabled": true
+    },
+    {
+      "id": "3af92a72-1977-4a03-8fae-4458f1d343da",
+      "name": "JET 132",
+      "zoneId": "acdfee0b-c8e3-4688-9355-4cb7c4f96a1d",
+      "groupId": "fa3af6ba-0091-4e16-861c-8a7e8b613835",
+      "value": 66,
+      "icon": "🗡️",
+      "enabled": true
+    },
+    {
+      "id": "7adb9c12-9c9a-4967-b93b-62533e7d0ec8",
+      "name": "JET 主能力板",
+      "zoneId": "acdfee0b-c8e3-4688-9355-4cb7c4f96a1d",
+      "groupId": "fa3af6ba-0091-4e16-861c-8a7e8b613835",
+      "value": 74.1095,
+      "icon": "🛡️",
+      "enabled": true
+    },
+    {
+      "id": "2e442de0-b7f2-429b-8b03-dc5b41056a0f",
+      "name": "物理傷害 中",
+      "zoneId": "zone-dmg-bonus",
+      "groupId": "6d584522-5300-49be-adbd-7c3f6af3d770",
+      "value": 34.7,
+      "icon": "🗡️",
+      "enabled": true
+    },
+    {
+      "id": "73de9726-ec52-42f1-8a2e-08f506762767",
+      "name": "物理傷害 大",
+      "zoneId": "zone-dmg-bonus",
+      "groupId": "8a2a05c7-eba7-40d9-b786-fb7b30389c36",
+      "value": 43.3,
+      "icon": "🗡️",
+      "enabled": true
+    },
+    {
+      "id": "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+      "name": "巧技",
+      "zoneId": "77d8e6f4-5c8f-4595-b55e-a95cfcdeb8c2",
+      "groupId": "8a2a05c7-eba7-40d9-b786-fb7b30389c36",
+      "value": 28,
+      "icon": "🗡️",
+      "enabled": true
+    },
+    {
+      "id": "c0b48a6e-9428-4406-8959-ecd48fc94ab0",
+      "name": "JET 攻擊力 大",
+      "zoneId": "77d8e6f4-5c8f-4595-b55e-a95cfcdeb8c2",
+      "groupId": "e32e09a0-4bfe-4baf-98ab-bd9f8d022dc1",
+      "value": 39,
+      "icon": "🗡️",
+      "enabled": true
+    },
+    {
+      "id": "6675b224-5f7e-478b-8e97-21e347013b85",
+      "name": "JET 法傷",
+      "zoneId": "zone-dmg-bonus",
+      "groupId": "e32e09a0-4bfe-4baf-98ab-bd9f8d022dc1",
+      "value": 67.2,
+      "icon": "🗡️",
+      "enabled": true
+    },
+    {
+      "id": "cd16672a-51a4-4209-be2c-1854c6fbbe7c",
+      "name": "消耗凍結",
+      "zoneId": "77d8e6f4-5c8f-4595-b55e-a95cfcdeb8c2",
+      "groupId": "6d584522-5300-49be-adbd-7c3f6af3d770",
+      "value": 33.6,
+      "icon": "🗡️",
+      "enabled": true
+    },
+    {
+      "id": "c166c6c1-0b17-4f12-affe-f9e786827469",
+      "name": "-",
+      "zoneId": "2fdc97e3-5ac6-45cc-9d46-d22d314419e1",
+      "groupId": "a754f76b-85ec-4c9f-a2d4-f41238635405",
+      "value": -100,
+      "icon": "🌟",
+      "enabled": true
+    },
+    {
+      "id": "1eb1feec-a51b-41d6-8ff6-3442d68197c8",
+      "name": "埃特拉",
+      "zoneId": "2fdc97e3-5ac6-45cc-9d46-d22d314419e1",
+      "groupId": "a754f76b-85ec-4c9f-a2d4-f41238635405",
+      "value": 31200,
+      "icon": "🌟",
+      "enabled": true
+    },
+    {
+      "id": "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+      "name": "OBJ",
+      "zoneId": "2fdc97e3-5ac6-45cc-9d46-d22d314419e1",
+      "groupId": "a754f76b-85ec-4c9f-a2d4-f41238635405",
+      "value": 41100,
+      "icon": "🌟",
+      "enabled": true
+    },
+    {
+      "id": "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+      "name": "驍勇",
+      "zoneId": "2fdc97e3-5ac6-45cc-9d46-d22d314419e1",
+      "groupId": "a754f76b-85ec-4c9f-a2d4-f41238635405",
+      "value": 49500,
+      "icon": "🌟",
+      "enabled": true
+    },
+    {
+      "id": "4884ee67-a9c8-4266-ba76-97799a4eb746",
+      "name": "JET",
+      "zoneId": "2fdc97e3-5ac6-45cc-9d46-d22d314419e1",
+      "groupId": "a754f76b-85ec-4c9f-a2d4-f41238635405",
+      "value": 50000,
+      "icon": "🌟",
+      "enabled": true
+    },
+    {
+      "id": "2928f129-4613-47e8-9050-aff35da47da5",
+      "name": "物理傷害加成",
+      "zoneId": "zone-dmg-bonus",
+      "groupId": "",
+      "value": 54.8,
+      "icon": "🛡️",
+      "enabled": true
+    },
+    {
+      "id": "d6541675-f6ce-4031-bc05-a98b54a4261f",
+      "name": "物理脆弱",
+      "zoneId": "zone-fragile",
+      "groupId": "",
+      "value": 15,
+      "icon": "🔮",
+      "enabled": true
+    }
+  ],
+  "buffGroups": [
+    {
+      "id": "fa3af6ba-0091-4e16-861c-8a7e8b613835",
+      "name": "意志",
+      "color": "#14b8a6"
+    },
+    {
+      "id": "4fb6674f-ea23-4f57-a300-513afb401a6b",
+      "name": "力量",
+      "color": "#22c55e"
+    },
+    {
+      "id": "6d584522-5300-49be-adbd-7c3f6af3d770",
+      "name": "OBJ",
+      "color": "#eab308"
+    },
+    {
+      "id": "8a2a05c7-eba7-40d9-b786-fb7b30389c36",
+      "name": "驍勇",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "e32e09a0-4bfe-4baf-98ab-bd9f8d022dc1",
+      "name": "JET",
+      "color": "#f97316"
+    },
+    {
+      "id": "a754f76b-85ec-4c9f-a2d4-f41238635405",
+      "name": "基礎攻擊力",
+      "color": "#a855f7"
+    }
+  ],
+  "characters": [
+    {
+      "id": "0ac1f5a5-8d47-4db4-b3ca-0f2c3d6fb071",
+      "name": "埃特拉",
+      "baseAttack": 1,
+      "weaponAttack": 0,
+      "attackPercentBonus": 0
+    }
+  ],
+  "skills": [
+    {
+      "id": "55021cc5-f4d0-4d1b-9820-6a6d378c7d1a",
+      "name": "戰技 專1",
+      "characterId": "0ac1f5a5-8d47-4db4-b3ca-0f2c3d6fb071",
+      "skillMultiplier": 300,
+      "enabledBuffIds": [
+        "d6056f45-7f2a-4b89-aaa4-9392b4671625",
+        "c15a3cce-d204-47e6-9a4f-aa20bac4fbdb",
+        "94450b82-98fc-408e-95d9-adfab6f9ac05",
+        "d474111c-9fb5-4d19-87b3-6e325f50c644",
+        "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+        "0ae5abec-7c2a-41c3-85a1-3a706433d079",
+        "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+        "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+        "4884ee67-a9c8-4266-ba76-97799a4eb746",
+        "3af92a72-1977-4a03-8fae-4458f1d343da",
+        "7adb9c12-9c9a-4967-b93b-62533e7d0ec8",
+        "1eb1feec-a51b-41d6-8ff6-3442d68197c8",
+        "c166c6c1-0b17-4f12-affe-f9e786827469",
+        "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+        "c0b48a6e-9428-4406-8959-ecd48fc94ab0",
+        "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+        "6675b224-5f7e-478b-8e97-21e347013b85"
+      ],
+      "order": 7,
+      "groupId": "797a93fd-d30f-475a-b2d5-61849a21c18b"
+    },
+    {
+      "id": "646cf99a-82be-40ca-887b-adb65df10093",
+      "name": "連攜 專1",
+      "characterId": "0ac1f5a5-8d47-4db4-b3ca-0f2c3d6fb071",
+      "skillMultiplier": 539,
+      "enabledBuffIds": [
+        "d6056f45-7f2a-4b89-aaa4-9392b4671625",
+        "c15a3cce-d204-47e6-9a4f-aa20bac4fbdb",
+        "94450b82-98fc-408e-95d9-adfab6f9ac05",
+        "d474111c-9fb5-4d19-87b3-6e325f50c644",
+        "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+        "0ae5abec-7c2a-41c3-85a1-3a706433d079",
+        "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+        "2e442de0-b7f2-429b-8b03-dc5b41056a0f",
+        "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+        "cd16672a-51a4-4209-be2c-1854c6fbbe7c",
+        "c166c6c1-0b17-4f12-affe-f9e786827469",
+        "1eb1feec-a51b-41d6-8ff6-3442d68197c8",
+        "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+        "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+        "4884ee67-a9c8-4266-ba76-97799a4eb746",
+        "c0b48a6e-9428-4406-8959-ecd48fc94ab0",
+        "3af92a72-1977-4a03-8fae-4458f1d343da",
+        "7adb9c12-9c9a-4967-b93b-62533e7d0ec8",
+        "2928f129-4613-47e8-9050-aff35da47da5",
+        "d6541675-f6ce-4031-bc05-a98b54a4261f",
+        "73de9726-ec52-42f1-8a2e-08f506762767"
+      ],
+      "order": 8,
+      "groupId": "797a93fd-d30f-475a-b2d5-61849a21c18b"
+    },
+    {
+      "id": "0118550c-2956-408c-883c-79a1ffedc995",
+      "name": "終結技 專1",
+      "characterId": "0ac1f5a5-8d47-4db4-b3ca-0f2c3d6fb071",
+      "skillMultiplier": 941,
+      "enabledBuffIds": [
+        "d6056f45-7f2a-4b89-aaa4-9392b4671625",
+        "c15a3cce-d204-47e6-9a4f-aa20bac4fbdb",
+        "94450b82-98fc-408e-95d9-adfab6f9ac05",
+        "d474111c-9fb5-4d19-87b3-6e325f50c644",
+        "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+        "0ae5abec-7c2a-41c3-85a1-3a706433d079",
+        "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+        "2e442de0-b7f2-429b-8b03-dc5b41056a0f",
+        "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+        "cd16672a-51a4-4209-be2c-1854c6fbbe7c",
+        "c166c6c1-0b17-4f12-affe-f9e786827469",
+        "1eb1feec-a51b-41d6-8ff6-3442d68197c8",
+        "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+        "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+        "4884ee67-a9c8-4266-ba76-97799a4eb746",
+        "c0b48a6e-9428-4406-8959-ecd48fc94ab0",
+        "3af92a72-1977-4a03-8fae-4458f1d343da",
+        "7adb9c12-9c9a-4967-b93b-62533e7d0ec8",
+        "2928f129-4613-47e8-9050-aff35da47da5",
+        "d6541675-f6ce-4031-bc05-a98b54a4261f",
+        "73de9726-ec52-42f1-8a2e-08f506762767"
+      ],
+      "order": 3,
+      "groupId": "797a93fd-d30f-475a-b2d5-61849a21c18b"
+    },
+    {
+      "id": "01533394-2fd8-4f70-ae2f-3e110bc4163d",
+      "name": "戰技 專3",
+      "characterId": "0ac1f5a5-8d47-4db4-b3ca-0f2c3d6fb071",
+      "skillMultiplier": 350,
+      "enabledBuffIds": [
+        "d6056f45-7f2a-4b89-aaa4-9392b4671625",
+        "c15a3cce-d204-47e6-9a4f-aa20bac4fbdb",
+        "94450b82-98fc-408e-95d9-adfab6f9ac05",
+        "d474111c-9fb5-4d19-87b3-6e325f50c644",
+        "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+        "0ae5abec-7c2a-41c3-85a1-3a706433d079",
+        "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+        "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+        "c166c6c1-0b17-4f12-affe-f9e786827469",
+        "1eb1feec-a51b-41d6-8ff6-3442d68197c8",
+        "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+        "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+        "4884ee67-a9c8-4266-ba76-97799a4eb746",
+        "c0b48a6e-9428-4406-8959-ecd48fc94ab0",
+        "3af92a72-1977-4a03-8fae-4458f1d343da",
+        "7adb9c12-9c9a-4967-b93b-62533e7d0ec8",
+        "6675b224-5f7e-478b-8e97-21e347013b85"
+      ],
+      "order": 8,
+      "groupId": "797a93fd-d30f-475a-b2d5-61849a21c18b"
+    },
+    {
+      "id": "3068ee2a-3bb4-4181-bdc8-c460be1d544c",
+      "name": "連攜 專3",
+      "characterId": "0ac1f5a5-8d47-4db4-b3ca-0f2c3d6fb071",
+      "skillMultiplier": 630,
+      "enabledBuffIds": [
+        "d6056f45-7f2a-4b89-aaa4-9392b4671625",
+        "c15a3cce-d204-47e6-9a4f-aa20bac4fbdb",
+        "94450b82-98fc-408e-95d9-adfab6f9ac05",
+        "d474111c-9fb5-4d19-87b3-6e325f50c644",
+        "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+        "0ae5abec-7c2a-41c3-85a1-3a706433d079",
+        "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+        "2e442de0-b7f2-429b-8b03-dc5b41056a0f",
+        "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+        "cd16672a-51a4-4209-be2c-1854c6fbbe7c",
+        "c166c6c1-0b17-4f12-affe-f9e786827469",
+        "1eb1feec-a51b-41d6-8ff6-3442d68197c8",
+        "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+        "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+        "4884ee67-a9c8-4266-ba76-97799a4eb746",
+        "c0b48a6e-9428-4406-8959-ecd48fc94ab0",
+        "3af92a72-1977-4a03-8fae-4458f1d343da",
+        "7adb9c12-9c9a-4967-b93b-62533e7d0ec8",
+        "2928f129-4613-47e8-9050-aff35da47da5",
+        "d6541675-f6ce-4031-bc05-a98b54a4261f",
+        "73de9726-ec52-42f1-8a2e-08f506762767"
+      ],
+      "order": 1,
+      "groupId": "797a93fd-d30f-475a-b2d5-61849a21c18b"
+    },
+    {
+      "id": "67006af8-dad6-4f13-a6f2-53d6c261b3ea",
+      "name": "終結技 專3",
+      "characterId": "0ac1f5a5-8d47-4db4-b3ca-0f2c3d6fb071",
+      "skillMultiplier": 1100,
+      "enabledBuffIds": [
+        "d6056f45-7f2a-4b89-aaa4-9392b4671625",
+        "c15a3cce-d204-47e6-9a4f-aa20bac4fbdb",
+        "94450b82-98fc-408e-95d9-adfab6f9ac05",
+        "d474111c-9fb5-4d19-87b3-6e325f50c644",
+        "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+        "0ae5abec-7c2a-41c3-85a1-3a706433d079",
+        "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+        "2e442de0-b7f2-429b-8b03-dc5b41056a0f",
+        "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+        "cd16672a-51a4-4209-be2c-1854c6fbbe7c",
+        "c166c6c1-0b17-4f12-affe-f9e786827469",
+        "1eb1feec-a51b-41d6-8ff6-3442d68197c8",
+        "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+        "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+        "4884ee67-a9c8-4266-ba76-97799a4eb746",
+        "c0b48a6e-9428-4406-8959-ecd48fc94ab0",
+        "3af92a72-1977-4a03-8fae-4458f1d343da",
+        "7adb9c12-9c9a-4967-b93b-62533e7d0ec8",
+        "2928f129-4613-47e8-9050-aff35da47da5",
+        "d6541675-f6ce-4031-bc05-a98b54a4261f",
+        "73de9726-ec52-42f1-8a2e-08f506762767"
+      ],
+      "order": 4,
+      "groupId": "797a93fd-d30f-475a-b2d5-61849a21c18b"
+    },
+    {
+      "id": "a07098db-5929-401d-8611-ebfd1e61dd22",
+      "name": "面板攻擊力",
+      "characterId": "0ac1f5a5-8d47-4db4-b3ca-0f2c3d6fb071",
+      "skillMultiplier": 100,
+      "enabledBuffIds": [
+        "d6056f45-7f2a-4b89-aaa4-9392b4671625",
+        "c15a3cce-d204-47e6-9a4f-aa20bac4fbdb",
+        "94450b82-98fc-408e-95d9-adfab6f9ac05",
+        "d474111c-9fb5-4d19-87b3-6e325f50c644",
+        "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+        "0ae5abec-7c2a-41c3-85a1-3a706433d079",
+        "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+        "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+        "c166c6c1-0b17-4f12-affe-f9e786827469",
+        "1eb1feec-a51b-41d6-8ff6-3442d68197c8",
+        "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+        "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+        "4884ee67-a9c8-4266-ba76-97799a4eb746",
+        "c0b48a6e-9428-4406-8959-ecd48fc94ab0",
+        "3af92a72-1977-4a03-8fae-4458f1d343da",
+        "7adb9c12-9c9a-4967-b93b-62533e7d0ec8"
+      ],
+      "order": 5,
+      "groupId": ""
+    },
+    {
+      "id": "f0b7a0c7-026f-488a-a1da-c9321cb33bd3",
+      "name": "驍勇",
+      "characterId": "0ac1f5a5-8d47-4db4-b3ca-0f2c3d6fb071",
+      "skillMultiplier": 336,
+      "enabledBuffIds": [
+        "d6056f45-7f2a-4b89-aaa4-9392b4671625",
+        "94450b82-98fc-408e-95d9-adfab6f9ac05",
+        "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+        "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+        "0ae5abec-7c2a-41c3-85a1-3a706433d079",
+        "d474111c-9fb5-4d19-87b3-6e325f50c644",
+        "c15a3cce-d204-47e6-9a4f-aa20bac4fbdb",
+        "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+        "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+        "1eb1feec-a51b-41d6-8ff6-3442d68197c8",
+        "c166c6c1-0b17-4f12-affe-f9e786827469",
+        "cd16672a-51a4-4209-be2c-1854c6fbbe7c",
+        "2e442de0-b7f2-429b-8b03-dc5b41056a0f",
+        "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+        "4884ee67-a9c8-4266-ba76-97799a4eb746",
+        "c0b48a6e-9428-4406-8959-ecd48fc94ab0",
+        "3af92a72-1977-4a03-8fae-4458f1d343da",
+        "7adb9c12-9c9a-4967-b93b-62533e7d0ec8",
+        "2928f129-4613-47e8-9050-aff35da47da5",
+        "d6541675-f6ce-4031-bc05-a98b54a4261f",
+        "73de9726-ec52-42f1-8a2e-08f506762767"
+      ],
+      "order": 6,
+      "groupId": "d92fdd5e-6d32-4c4d-b441-1a190cd478f7"
+    },
+    {
+      "id": "ca3c18a7-af3b-4fa4-aa3e-b600f16895f7",
+      "name": "點劍套",
+      "characterId": "0ac1f5a5-8d47-4db4-b3ca-0f2c3d6fb071",
+      "skillMultiplier": 250,
+      "enabledBuffIds": [
+        "d6056f45-7f2a-4b89-aaa4-9392b4671625",
+        "94450b82-98fc-408e-95d9-adfab6f9ac05",
+        "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+        "c15a3cce-d204-47e6-9a4f-aa20bac4fbdb",
+        "d474111c-9fb5-4d19-87b3-6e325f50c644",
+        "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+        "0ae5abec-7c2a-41c3-85a1-3a706433d079",
+        "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+        "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+        "1eb1feec-a51b-41d6-8ff6-3442d68197c8",
+        "c166c6c1-0b17-4f12-affe-f9e786827469",
+        "cd16672a-51a4-4209-be2c-1854c6fbbe7c",
+        "2e442de0-b7f2-429b-8b03-dc5b41056a0f",
+        "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+        "4884ee67-a9c8-4266-ba76-97799a4eb746",
+        "c0b48a6e-9428-4406-8959-ecd48fc94ab0",
+        "3af92a72-1977-4a03-8fae-4458f1d343da",
+        "7adb9c12-9c9a-4967-b93b-62533e7d0ec8",
+        "2928f129-4613-47e8-9050-aff35da47da5",
+        "d6541675-f6ce-4031-bc05-a98b54a4261f",
+        "73de9726-ec52-42f1-8a2e-08f506762767"
+      ],
+      "order": 7,
+      "groupId": "d92fdd5e-6d32-4c4d-b441-1a190cd478f7"
+    },
+    {
+      "id": "9c36bc33-46b4-4b31-a448-815564a29ebf",
+      "name": "碎冰",
+      "characterId": "0ac1f5a5-8d47-4db4-b3ca-0f2c3d6fb071",
+      "skillMultiplier": 348.96,
+      "enabledBuffIds": [
+        "d6056f45-7f2a-4b89-aaa4-9392b4671625",
+        "c15a3cce-d204-47e6-9a4f-aa20bac4fbdb",
+        "94450b82-98fc-408e-95d9-adfab6f9ac05",
+        "d474111c-9fb5-4d19-87b3-6e325f50c644",
+        "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+        "0ae5abec-7c2a-41c3-85a1-3a706433d079",
+        "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+        "3af92a72-1977-4a03-8fae-4458f1d343da",
+        "7adb9c12-9c9a-4967-b93b-62533e7d0ec8",
+        "2e442de0-b7f2-429b-8b03-dc5b41056a0f",
+        "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+        "c0b48a6e-9428-4406-8959-ecd48fc94ab0",
+        "cd16672a-51a4-4209-be2c-1854c6fbbe7c",
+        "c166c6c1-0b17-4f12-affe-f9e786827469",
+        "1eb1feec-a51b-41d6-8ff6-3442d68197c8",
+        "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+        "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+        "4884ee67-a9c8-4266-ba76-97799a4eb746",
+        "2928f129-4613-47e8-9050-aff35da47da5",
+        "d6541675-f6ce-4031-bc05-a98b54a4261f",
+        "73de9726-ec52-42f1-8a2e-08f506762767"
+      ],
+      "order": 9,
+      "groupId": "d92fdd5e-6d32-4c4d-b441-1a190cd478f7"
+    },
+    {
+      "id": "d74ddae8-5220-437b-bb05-5f945feac56e",
+      "name": "擊飛",
+      "characterId": "0ac1f5a5-8d47-4db4-b3ca-0f2c3d6fb071",
+      "skillMultiplier": 147.245,
+      "enabledBuffIds": [
+        "d6056f45-7f2a-4b89-aaa4-9392b4671625",
+        "c15a3cce-d204-47e6-9a4f-aa20bac4fbdb",
+        "94450b82-98fc-408e-95d9-adfab6f9ac05",
+        "d474111c-9fb5-4d19-87b3-6e325f50c644",
+        "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+        "0ae5abec-7c2a-41c3-85a1-3a706433d079",
+        "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+        "3af92a72-1977-4a03-8fae-4458f1d343da",
+        "7adb9c12-9c9a-4967-b93b-62533e7d0ec8",
+        "2e442de0-b7f2-429b-8b03-dc5b41056a0f",
+        "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+        "c0b48a6e-9428-4406-8959-ecd48fc94ab0",
+        "cd16672a-51a4-4209-be2c-1854c6fbbe7c",
+        "c166c6c1-0b17-4f12-affe-f9e786827469",
+        "1eb1feec-a51b-41d6-8ff6-3442d68197c8",
+        "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+        "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+        "4884ee67-a9c8-4266-ba76-97799a4eb746",
+        "2928f129-4613-47e8-9050-aff35da47da5",
+        "d6541675-f6ce-4031-bc05-a98b54a4261f",
+        "73de9726-ec52-42f1-8a2e-08f506762767"
+      ],
+      "order": 10,
+      "groupId": "d92fdd5e-6d32-4c4d-b441-1a190cd478f7"
+    }
+  ],
+  "skillGroups": [
+    {
+      "id": "d92fdd5e-6d32-4c4d-b441-1a190cd478f7",
+      "name": "額外傷害",
+      "color": "#ef4444"
+    },
+    {
+      "id": "797a93fd-d30f-475a-b2d5-61849a21c18b",
+      "name": "埃特拉",
+      "color": "#f97316"
+    }
+  ],
+  "rotationGroups": [
+    {
+      "id": "d661c491-242f-42e4-a31b-81740f10c9a5",
+      "name": "OBJ面板",
+      "entries": [
+        {
+          "id": "e7600ee2-7003-4788-a21f-0037620482d1",
+          "skillId": "a07098db-5929-401d-8611-ebfd1e61dd22",
+          "count": 1,
+          "disabledBuffIds": []
+        }
+      ],
+      "disabledBuffIds": [
+        "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+        "3af92a72-1977-4a03-8fae-4458f1d343da",
+        "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+        "7adb9c12-9c9a-4967-b93b-62533e7d0ec8",
+        "4884ee67-a9c8-4266-ba76-97799a4eb746",
+        "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+        "c0b48a6e-9428-4406-8959-ecd48fc94ab0"
+      ]
+    },
+    {
+      "id": "2fb4cca8-d2b6-4ac5-a6a0-c802a125c2fb",
+      "name": "驍勇面板",
+      "entries": [
+        {
+          "id": "9d823099-8e5c-4ff2-bb4d-07f7390c3ee2",
+          "skillId": "a07098db-5929-401d-8611-ebfd1e61dd22",
+          "count": 1,
+          "disabledBuffIds": []
+        }
+      ],
+      "disabledBuffIds": [
+        "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+        "2e442de0-b7f2-429b-8b03-dc5b41056a0f",
+        "cd16672a-51a4-4209-be2c-1854c6fbbe7c",
+        "4884ee67-a9c8-4266-ba76-97799a4eb746",
+        "c0b48a6e-9428-4406-8959-ecd48fc94ab0",
+        "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+        "0ae5abec-7c2a-41c3-85a1-3a706433d079",
+        "3af92a72-1977-4a03-8fae-4458f1d343da",
+        "7adb9c12-9c9a-4967-b93b-62533e7d0ec8"
+      ]
+    },
+    {
+      "id": "43467f5a-ccb4-4b4b-a890-ac9dc1641eb4",
+      "name": "JET面板",
+      "entries": [
+        {
+          "id": "ef9df8a5-561f-468c-a64a-541e2b6fabbf",
+          "skillId": "a07098db-5929-401d-8611-ebfd1e61dd22",
+          "count": 1,
+          "disabledBuffIds": []
+        }
+      ],
+      "disabledBuffIds": [
+        "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+        "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+        "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+        "2e442de0-b7f2-429b-8b03-dc5b41056a0f",
+        "cd16672a-51a4-4209-be2c-1854c6fbbe7c",
+        "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+        "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+        "0ae5abec-7c2a-41c3-85a1-3a706433d079"
+      ]
+    },
+    {
+      "id": "bb5bfd6a-a249-4a37-9ae2-2d69801f581f",
+      "name": "OBJ 技能專3",
+      "entries": [
+        {
+          "id": "85c2ad49-c8bd-4753-b504-42c9d0a63601",
+          "skillId": "01533394-2fd8-4f70-ae2f-3e110bc4163d",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "df771a92-ebb0-4212-8f73-74df86d0ff3c",
+          "skillId": "3068ee2a-3bb4-4181-bdc8-c460be1d544c",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "22bb2dfb-e4d0-4616-b2b2-38f745424afa",
+          "skillId": "67006af8-dad6-4f13-a6f2-53d6c261b3ea",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "b2c6446b-c911-4c69-bcc5-297360a566f0",
+          "skillId": "ca3c18a7-af3b-4fa4-aa3e-b600f16895f7",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "26efb15e-3836-4af3-8ef0-565663025f20",
+          "skillId": "9c36bc33-46b4-4b31-a448-815564a29ebf",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "9b9929b7-cc84-4538-8db7-7d1e0ab4b232",
+          "skillId": "d74ddae8-5220-437b-bb05-5f945feac56e",
+          "count": 2,
+          "disabledBuffIds": []
+        }
+      ],
+      "disabledBuffIds": [
+        "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+        "3af92a72-1977-4a03-8fae-4458f1d343da",
+        "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+        "7adb9c12-9c9a-4967-b93b-62533e7d0ec8",
+        "4884ee67-a9c8-4266-ba76-97799a4eb746",
+        "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+        "c0b48a6e-9428-4406-8959-ecd48fc94ab0",
+        "73de9726-ec52-42f1-8a2e-08f506762767",
+        "6675b224-5f7e-478b-8e97-21e347013b85"
+      ]
+    },
+    {
+      "id": "67d459cd-29bb-4dd2-9f4b-1a9ee18f5b9d",
+      "name": "驍勇 技能專3",
+      "entries": [
+        {
+          "id": "5fe51503-f252-4774-8bd2-a4e6f0f9761f",
+          "skillId": "01533394-2fd8-4f70-ae2f-3e110bc4163d",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "cfef6240-88d4-40b6-ad46-ec77516a325f",
+          "skillId": "3068ee2a-3bb4-4181-bdc8-c460be1d544c",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "6db73954-5b93-47dd-95b6-1cb31bd1ad15",
+          "skillId": "67006af8-dad6-4f13-a6f2-53d6c261b3ea",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "2441842b-4b61-4c25-918a-8398a49ccc58",
+          "skillId": "ca3c18a7-af3b-4fa4-aa3e-b600f16895f7",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "3f39dc0d-d710-45af-b5d1-f9895d083f91",
+          "skillId": "f0b7a0c7-026f-488a-a1da-c9321cb33bd3",
+          "count": 2,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "7c5b4674-ad0b-4a80-ab91-10d76c6431d4",
+          "skillId": "9c36bc33-46b4-4b31-a448-815564a29ebf",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "f57be868-4b1a-42d2-b010-abd95e4f40e5",
+          "skillId": "d74ddae8-5220-437b-bb05-5f945feac56e",
+          "count": 2,
+          "disabledBuffIds": []
+        }
+      ],
+      "disabledBuffIds": [
+        "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+        "2e442de0-b7f2-429b-8b03-dc5b41056a0f",
+        "cd16672a-51a4-4209-be2c-1854c6fbbe7c",
+        "4884ee67-a9c8-4266-ba76-97799a4eb746",
+        "c0b48a6e-9428-4406-8959-ecd48fc94ab0",
+        "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+        "0ae5abec-7c2a-41c3-85a1-3a706433d079",
+        "3af92a72-1977-4a03-8fae-4458f1d343da",
+        "7adb9c12-9c9a-4967-b93b-62533e7d0ec8",
+        "6675b224-5f7e-478b-8e97-21e347013b85"
+      ]
+    },
+    {
+      "id": "ec773759-2619-4e5a-bac3-5029f80694f5",
+      "name": "JET 技能專3",
+      "entries": [
+        {
+          "id": "fe17096d-d4d4-46e4-888f-2c4310d0f24d",
+          "skillId": "01533394-2fd8-4f70-ae2f-3e110bc4163d",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "337cc167-145e-4053-961a-4bbdeaf7958b",
+          "skillId": "3068ee2a-3bb4-4181-bdc8-c460be1d544c",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "eb047a07-a312-4696-b991-8ce3e6b2006e",
+          "skillId": "67006af8-dad6-4f13-a6f2-53d6c261b3ea",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "73d930b4-5fed-4d67-926f-307908892ca4",
+          "skillId": "ca3c18a7-af3b-4fa4-aa3e-b600f16895f7",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "a28b90ae-1488-4b4e-90e6-a295e582af29",
+          "skillId": "9c36bc33-46b4-4b31-a448-815564a29ebf",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "f2b92499-d494-49c1-bde4-2520c4dea1db",
+          "skillId": "d74ddae8-5220-437b-bb05-5f945feac56e",
+          "count": 2,
+          "disabledBuffIds": []
+        }
+      ],
+      "disabledBuffIds": [
+        "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+        "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+        "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+        "2e442de0-b7f2-429b-8b03-dc5b41056a0f",
+        "cd16672a-51a4-4209-be2c-1854c6fbbe7c",
+        "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+        "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+        "0ae5abec-7c2a-41c3-85a1-3a706433d079",
+        "73de9726-ec52-42f1-8a2e-08f506762767"
+      ]
+    },
+    {
+      "id": "8967c32d-6de7-44f1-809a-e5d70342d3b4",
+      "name": "OBJ 技能專1",
+      "entries": [
+        {
+          "id": "326196cc-6dd5-46ec-a78a-13205cf93421",
+          "skillId": "55021cc5-f4d0-4d1b-9820-6a6d378c7d1a",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "cb9609db-ea3b-4b6e-ab64-e212bc4f86dd",
+          "skillId": "ca3c18a7-af3b-4fa4-aa3e-b600f16895f7",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "bbe89737-93f4-4642-9aa8-909a93ea2154",
+          "skillId": "646cf99a-82be-40ca-887b-adb65df10093",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "9ef112a9-cfb9-4b32-8696-df5ddee133a4",
+          "skillId": "0118550c-2956-408c-883c-79a1ffedc995",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "4e299063-b96a-47bb-a13b-0052b741b26a",
+          "skillId": "9c36bc33-46b4-4b31-a448-815564a29ebf",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "4e9b2280-2ba6-4606-ad5b-6f25e081452d",
+          "skillId": "d74ddae8-5220-437b-bb05-5f945feac56e",
+          "count": 2,
+          "disabledBuffIds": []
+        }
+      ],
+      "disabledBuffIds": [
+        "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+        "3af92a72-1977-4a03-8fae-4458f1d343da",
+        "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+        "7adb9c12-9c9a-4967-b93b-62533e7d0ec8",
+        "4884ee67-a9c8-4266-ba76-97799a4eb746",
+        "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+        "c0b48a6e-9428-4406-8959-ecd48fc94ab0",
+        "73de9726-ec52-42f1-8a2e-08f506762767",
+        "6675b224-5f7e-478b-8e97-21e347013b85"
+      ]
+    },
+    {
+      "id": "7ed2f855-310d-431d-be5d-b58fca3d77ea",
+      "name": "驍勇 技能專1",
+      "entries": [
+        {
+          "id": "5f112a1c-2a59-48e6-8f35-37942a83da02",
+          "skillId": "55021cc5-f4d0-4d1b-9820-6a6d378c7d1a",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "ceff6e1c-8a8e-44b0-bb99-9d3d543fe47f",
+          "skillId": "ca3c18a7-af3b-4fa4-aa3e-b600f16895f7",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "e1a447a2-25c3-48e8-8170-e43342ac5036",
+          "skillId": "f0b7a0c7-026f-488a-a1da-c9321cb33bd3",
+          "count": 2,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "575206d0-ed80-4352-b3a0-a888a5a6e19a",
+          "skillId": "646cf99a-82be-40ca-887b-adb65df10093",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "3f83a0c2-5043-4cec-8dbe-05f85d15a3e8",
+          "skillId": "0118550c-2956-408c-883c-79a1ffedc995",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "6fa6e3ff-5ecd-443d-802d-08f3f2b28e5a",
+          "skillId": "9c36bc33-46b4-4b31-a448-815564a29ebf",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "9cd5a1c7-ea91-4c0c-b0e2-bc2eae376f0c",
+          "skillId": "d74ddae8-5220-437b-bb05-5f945feac56e",
+          "count": 2,
+          "disabledBuffIds": []
+        }
+      ],
+      "disabledBuffIds": [
+        "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+        "2e442de0-b7f2-429b-8b03-dc5b41056a0f",
+        "cd16672a-51a4-4209-be2c-1854c6fbbe7c",
+        "4884ee67-a9c8-4266-ba76-97799a4eb746",
+        "c0b48a6e-9428-4406-8959-ecd48fc94ab0",
+        "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+        "0ae5abec-7c2a-41c3-85a1-3a706433d079",
+        "3af92a72-1977-4a03-8fae-4458f1d343da",
+        "7adb9c12-9c9a-4967-b93b-62533e7d0ec8",
+        "6675b224-5f7e-478b-8e97-21e347013b85"
+      ]
+    },
+    {
+      "id": "325faf0f-869a-41ae-8c41-35c22be6ac23",
+      "name": "JET 技能專1",
+      "entries": [
+        {
+          "id": "4cbe4d50-9c6a-41f8-aad5-929ac928f6bb",
+          "skillId": "55021cc5-f4d0-4d1b-9820-6a6d378c7d1a",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "0be5cd0c-940a-423f-a340-90e619d1af6f",
+          "skillId": "ca3c18a7-af3b-4fa4-aa3e-b600f16895f7",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "35c25f4a-7867-4fee-905c-f779ced25327",
+          "skillId": "646cf99a-82be-40ca-887b-adb65df10093",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "8125cd97-dd0d-49cb-851a-83fec045617f",
+          "skillId": "0118550c-2956-408c-883c-79a1ffedc995",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "6ca2dd25-c774-45ea-a723-bda9bf03733d",
+          "skillId": "9c36bc33-46b4-4b31-a448-815564a29ebf",
+          "count": 1,
+          "disabledBuffIds": []
+        },
+        {
+          "id": "84a36f8b-e5b5-42bb-bd5d-da2df707f10b",
+          "skillId": "d74ddae8-5220-437b-bb05-5f945feac56e",
+          "count": 2,
+          "disabledBuffIds": []
+        }
+      ],
+      "disabledBuffIds": [
+        "0fb8928f-d91d-4389-bd7c-8ac78d951565",
+        "01dfb9c9-4e7c-4572-b450-7c46a8712bc8",
+        "b7d703ae-5765-48e5-88ac-7c9efb60578c",
+        "2e442de0-b7f2-429b-8b03-dc5b41056a0f",
+        "cd16672a-51a4-4209-be2c-1854c6fbbe7c",
+        "c2aafcc5-8be1-40c3-905b-ac95d7d07b6e",
+        "fd005337-b097-4026-ad7b-e3ee43b54fc9",
+        "0ae5abec-7c2a-41c3-85a1-3a706433d079",
+        "73de9726-ec52-42f1-8a2e-08f506762767"
+      ]
+    }
+  ],
+  "calcRows": [
+    {
+      "id": "d8b03003-c87b-44be-84aa-4fb86dd3295a",
+      "name": "OBJ主能力板",
+      "formula": "(221+198+124)*0.269/2"
+    },
+    {
+      "id": "faf73f0b-db11-4200-b4e1-7ca3a59df88d",
+      "name": "驍勇主能力板",
+      "formula": "(221+198)*0.269/2"
+    },
+    {
+      "id": "385509b7-5779-4b9a-b51b-e38619ab2ea5",
+      "name": "JET主能力板",
+      "formula": "(221+198+132)*0.269/2"
+    },
+    {
+      "id": "067c3405-961c-479d-840d-f7268f6d80e1",
+      "name": "",
+      "formula": "15959/2"
+    }
+  ],
+  "notes": "點劍套鍛滿 濾芯+主能力板"
+});
+
 export interface SystemPreset {
   id: string;
   name: string;
   description: string;
   dataJson: string;
-}
+};
 
 export const SYSTEM_PRESETS: SystemPreset[] = [
   {
     id: 'system-example',
-    name: '範例資料',
-    description: '內建範例：多角色技能與輪轉配置',
+    name: '洛西武器分析',
+    description: '內建範例：多武器橫向對比',
     dataJson: exampleData,
+  },
+  {
+    id: 'estella-example',
+    name: '埃特拉武器分析',
+    description: '內建範例：多武器橫向對比',
+    dataJson: estellaExampleData,
   },
 ];

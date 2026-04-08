@@ -101,6 +101,7 @@ export default function ImportExport() {
       {showModal && (
         <Modal open title="匯入設定" onClose={() => { setShowModal(false); setError(''); }}>
           <div className="space-y-4">
+            <div className='text-yellow-500 text-sm mb-2'>{"🛈 可以從[檔案庫 > 系統檔案]載入範例資料"}</div>
             <div>
               <label className="block text-xs text-gray-400 mb-1">從檔案匯入</label>
               <input ref={fileRef} type="file" accept=".json" onChange={handleImportFromFile}
