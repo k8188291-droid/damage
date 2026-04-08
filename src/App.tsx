@@ -16,7 +16,6 @@ import TabBar from './components/TabBar';
 import PresetSection from './components/PresetSection';
 import UndoToast from './components/UndoToast';
 import AIResourceModal from './components/AIResourceModal';
-import { Tooltip } from './components/ui';
 
 function App() {
   // ── App store ──
@@ -115,9 +114,6 @@ function App() {
             <div className="px-4 py-2.5 border-b border-gray-800 flex items-center justify-between shrink-0 overflow-auto whitespace-nowrap">
               <div className='flex items-center'>
                 <span className="text-xs text-gray-500 font-medium">設定面板</span>
-                <Tooltip label='點擊匯入按鈕可匯入範例資料'>
-                  <span className="text-yellow-500 hover:text-yellow-400 text-md cursor-pointer px-2">🛈</span>
-                </Tooltip>
               </div>
               <div className="flex items-center gap-2">
                 <ImportExport />
