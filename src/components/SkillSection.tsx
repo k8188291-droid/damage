@@ -13,7 +13,7 @@ import { useAppStore } from '../stores/appStore';
 import { useUndoStore } from '../stores/undoStore';
 import type { Skill, SkillGroup, Buff, BuffGroup, Character, DamageZone } from '../types';
 import Modal from './Modal';
-import { ColorDotPicker, COLORS } from './ui';
+import { ColorDotPicker, COLORS, Tooltip } from './ui';
 
 /* ── Skill Modal ── */
 function SkillModal({ skill, buffs, buffGroups, characters, zones, skillGroups, onSave, onClose }: {
@@ -110,12 +110,15 @@ function SkillModal({ skill, buffs, buffGroups, characters, zones, skillGroups, 
                           const on = d.enabledBuffIds.includes(b.id);
                           const group = buffGroups.find(g => g.id === b.groupId);
                           const chipColor = group?.color || '#64748b';
+                          const groupLabel = group ? `群組：${group.name}` : '群組：未分組';
                           return (
-                            <button key={b.id} onClick={() => toggleBuff(b.id)}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all ${on ? 'text-white border-opacity-60' : 'border-gray-700 text-gray-500 opacity-40 hover:opacity-70'}`}
-                              style={on ? { backgroundColor: chipColor + '30', borderColor: chipColor } : undefined}>
-                              {b.icon} {b.name} ({b.value}%)
-                            </button>
+                            <Tooltip key={b.id} label={groupLabel}>
+                              <button onClick={() => toggleBuff(b.id)}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all ${on ? 'text-white border-opacity-60' : 'border-gray-700 text-gray-500 opacity-40 hover:opacity-70'}`}
+                                style={on ? { backgroundColor: chipColor + '30', borderColor: chipColor } : undefined}>
+                                {b.icon} {b.name} ({b.value}%)
+                              </button>
+                            </Tooltip>
                           );
                         })}
                       </div>
@@ -138,12 +141,15 @@ function SkillModal({ skill, buffs, buffGroups, characters, zones, skillGroups, 
                           const on = d.enabledBuffIds.includes(b.id);
                           const zone = zones.find(z => z.id === b.zoneId);
                           const chipColor = zone?.color || '#64748b';
+                          const zoneLabel = zone ? `${zone.icon} ${zone.displayName}` : '未設定分區';
                           return (
-                            <button key={b.id} onClick={() => toggleBuff(b.id)}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all ${on ? 'text-white border-opacity-60' : 'border-gray-700 text-gray-500 opacity-40 hover:opacity-70'}`}
-                              style={on ? { backgroundColor: chipColor + '30', borderColor: chipColor } : undefined}>
-                              {b.icon} {b.name} ({b.value}%)
-                            </button>
+                            <Tooltip key={b.id} label={zoneLabel}>
+                              <button onClick={() => toggleBuff(b.id)}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer border transition-all ${on ? 'text-white border-opacity-60' : 'border-gray-700 text-gray-500 opacity-40 hover:opacity-70'}`}
+                                style={on ? { backgroundColor: chipColor + '30', borderColor: chipColor } : undefined}>
+                                {b.icon} {b.name} ({b.value}%)
+                              </button>
+                            </Tooltip>
                           );
                         })}
                       </div>

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 import { useAppStore } from '../stores/appStore';
+import { Tooltip } from './ui';
 
 export default function CycleBuffBar() {
-  const { buffs, buffGroups, activeRotationId, rotationGroups, toggleCycleBuff } = useAppStore(useShallow(s => ({
+  const { buffs, buffGroups, zones, activeRotationId, rotationGroups, toggleCycleBuff } = useAppStore(useShallow(s => ({
     buffs: s.buffs,
     buffGroups: s.buffGroups,
+    zones: s.zones,
     activeRotationId: s.activeRotationId,
     rotationGroups: s.rotationGroups,
     toggleCycleBuff: s.toggleCycleBuff,
@@ -45,25 +47,28 @@ export default function CycleBuffBar() {
           const group = buffGroups.find(g => g.id === b.groupId);
           const isDisabled = disabledSet.has(b.id);
           const color = group?.color || '#64748b';
+          const zone = zones.find(z => z.id === b.zoneId);
+          const zoneLabel = zone ? `${zone.icon} ${zone.displayName}` : '未設定分區';
+          const tooltipLabel = `${zoneLabel}／${group?.name || '未分組'}`;
 
           return (
-            <button
-              key={b.id}
-              onClick={() => toggleCycleBuff(b.id)}
-              title={isDisabled ? '已停用，點擊啟用' : '已啟用，點擊停用'}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer border transition-all ${
-                isDisabled
-                  ? 'border-gray-700 text-gray-500 opacity-40 line-through'
-                  : 'text-white'
-              }`}
-              style={
-                isDisabled
-                  ? undefined
-                  : { backgroundColor: color + '25', borderColor: color + '80', color }
-              }
-            >
-              {b.icon} {b.name} {b.value}%
-            </button>
+            <Tooltip key={b.id} label={tooltipLabel}>
+              <button
+                onClick={() => toggleCycleBuff(b.id)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer border transition-all ${
+                  isDisabled
+                    ? 'border-gray-700 text-gray-500 opacity-40 line-through'
+                    : 'text-white'
+                }`}
+                style={
+                  isDisabled
+                    ? undefined
+                    : { backgroundColor: color + '25', borderColor: color + '80', color }
+                }
+              >
+                {b.icon} {b.name} {b.value}%
+              </button>
+            </Tooltip>
           );
         })}
         {sortedBuffs.length === 0 && (
