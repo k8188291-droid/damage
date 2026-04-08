@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 import { useAppStore } from '../stores/appStore';
 
@@ -12,8 +12,6 @@ export default function CycleBuffBar() {
   })));
 
   const [expanded, setExpanded] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [needsExpand, setNeedsExpand] = useState(false);
 
   const activeRotation = rotationGroups.find(g => g.id === activeRotationId);
   const cycleDisabledBuffIds = activeRotation?.disabledBuffIds || [];
@@ -33,51 +31,15 @@ export default function CycleBuffBar() {
     ? sortedBuffs
     : sortedBuffs.filter(b => !disabledSet.has(b.id));
 
-  // Two rows of chips: each chip ~36px height + 8px gap = ~44px per row, 2 rows ≈ 80px
-  const collapsedMaxHeight = 80;
-
-  // Check if content overflows 2 rows when collapsed
-  useEffect(() => {
-    if (contentRef.current && !expanded) {
-      setNeedsExpand(contentRef.current.scrollHeight > collapsedMaxHeight);
-    }
-  }, [visibleBuffs, expanded]);
-
-  // Also check on expand toggle to detect if expand button is needed
-  useEffect(() => {
-    if (contentRef.current && expanded) {
-      // Re-check with all buffs visible
-      const el = contentRef.current;
-      setNeedsExpand(el.scrollHeight > collapsedMaxHeight);
-    }
-  }, [expanded, sortedBuffs]);
-
-  const disabledCount = sortedBuffs.filter(b => disabledSet.has(b.id)).length;
-
   return (
-    <div className="px-5 py-3 border-b border-gray-800 shrink-0">
+    <div className="relative px-5 py-3 border-b border-gray-800 shrink-0">
       <div className="flex items-center gap-2 mb-2.5">
         <span className="text-gray-500 text-sm">⚙</span>
         <span className="text-xs font-semibold text-gray-400 tracking-wide">當前循環 BUFF 生效開關</span>
-        <button
-          onClick={() => setExpanded(e => !e)}
-          className="ml-auto flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 cursor-pointer transition-colors"
-        >
-          {!expanded && disabledCount > 0 && (
-            <span className="text-gray-600">{disabledCount} 個已停用</span>
-          )}
-          <span className={`inline-block transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
-            ▾
-          </span>
-          <span>{expanded ? '收合' : '展開'}</span>
-        </button>
       </div>
       <div
-        ref={contentRef}
-        className={`flex flex-wrap gap-2 transition-all duration-200 ${
-          !expanded ? 'overflow-y-auto' : ''
-        }`}
-        style={!expanded ? { maxHeight: collapsedMaxHeight } : undefined}
+        className={`flex flex-wrap gap-2 transition-all duration-200 overflow-y-auto`}
+        style={{ maxHeight: !expanded ? 70 : 'calc(100vh - 120px)' }}
       >
         {visibleBuffs.map(b => {
           const group = buffGroups.find(g => g.id === b.groupId);
@@ -108,6 +70,15 @@ export default function CycleBuffBar() {
           <span className="text-xs text-gray-600">尚未設定任何 Buff</span>
         )}
       </div>
+      <button
+        onClick={() => setExpanded(e => !e)}
+        className="z-10 absolute cursor-pointer bottom-[-20px] left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full bg-gray-800 border border-gray-700 text-gray-500 flex items-center justify-center hover:text-white transition-colors shadow-lg"
+        title={expanded ? '收合' : '展開'}
+      >
+        <span className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
+          ▾
+        </span>
+      </button>
     </div>
   );
 }
