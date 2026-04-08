@@ -1539,3 +1539,19 @@ export const exampleData = JSON.stringify({
   ],
   "notes": "狼之緋要疊層，多算一個8折的版本"
 })
+
+export interface SystemPreset {
+  id: string;
+  name: string;
+  description: string;
+  dataJson: string;
+}
+
+export const SYSTEM_PRESETS: SystemPreset[] = [
+  {
+    id: 'system-example',
+    name: '範例資料',
+    description: '內建範例：多角色技能與輪轉配置',
+    dataJson: exampleData,
+  },
+];

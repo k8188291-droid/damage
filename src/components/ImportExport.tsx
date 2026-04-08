@@ -5,7 +5,6 @@ import { useAppStore } from '../stores/appStore';
 import { migrateToLatest } from '../migrations';
 import Modal from './Modal';
 import ConfirmDialog from './ConfirmDialog';
-import { exampleData } from '../constants';
 
 export default function ImportExport() {
   const getData = useAppStore(s => s.getData);
@@ -102,17 +101,6 @@ export default function ImportExport() {
       {showModal && (
         <Modal open title="匯入設定" onClose={() => { setShowModal(false); setError(''); }}>
           <div className="space-y-4">
-            <button onClick={() => requestImport(exampleData)}
-              className="w-full py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg font-medium transition-colors cursor-pointer">
-              匯入範例資料
-            </button>
-
-            <div className="flex items-center gap-3">
-              <div className="flex-1 border-t border-gray-700" />
-              <span className="text-xs text-gray-500">或</span>
-              <div className="flex-1 border-t border-gray-700" />
-            </div>
-
             <div>
               <label className="block text-xs text-gray-400 mb-1">從檔案匯入</label>
               <input ref={fileRef} type="file" accept=".json" onChange={handleImportFromFile}
