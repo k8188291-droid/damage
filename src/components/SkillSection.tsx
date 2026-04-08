@@ -141,7 +141,7 @@ function SkillModal({ skill, buffs, buffGroups, characters, zones, skillGroups, 
                           const on = d.enabledBuffIds.includes(b.id);
                           const zone = zones.find(z => z.id === b.zoneId);
                           const chipColor = zone?.color || '#64748b';
-                          const zoneLabel = zone ? `分區：${zone.icon} ${zone.displayName}` : '分區：未設定';
+                          const zoneLabel = zone ? `${zone.icon} ${zone.displayName}` : '未設定分區';
                           return (
                             <Tooltip key={b.id} label={zoneLabel}>
                               <button onClick={() => toggleBuff(b.id)}

@@ -38,7 +38,7 @@ export default function CycleBuffBar() {
           const color = group?.color || '#64748b';
           const zone = zones.find(z => z.id === b.zoneId);
           const zoneLabel = zone ? `${zone.icon} ${zone.displayName}` : '未設定分區';
-          const tooltipLabel = `${zoneLabel}・${isDisabled ? '已停用，點擊啟用' : '已啟用，點擊停用'}`;
+          const tooltipLabel = `${zoneLabel}／${group?.name || '未分組'}`;
 
           return (
             <Tooltip key={b.id} label={tooltipLabel}>

@@ -179,9 +179,8 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
                   const bGroup = buffGroups.find(g => g.id === b.groupId);
                   const color = bGroup?.color || '#64748b';
                   const zone = zones.find(z => z.id === b.zoneId);
-                  const tooltipLabel = zone
-                    ? `分區：${zone.icon} ${zone.displayName}・${off ? '點擊啟用' : '點擊停用'}`
-                    : `分區：未設定・${off ? '點擊啟用' : '點擊停用'}`;
+                  const zoneLabel = zone ? `${zone.icon} ${zone.displayName}` : '未設定分區';
+                  const tooltipLabel = `${zoneLabel}／${bGroup?.name || '未分組'}`;
                   return (
                     <Tooltip key={b.id} label={tooltipLabel}>
                       <button onClick={() => toggleBuffForEntry(b.id)}
