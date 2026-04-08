@@ -13,7 +13,6 @@ import type { Preset } from '../types';
 import ConfirmDialog from './ConfirmDialog';
 import { SYSTEM_PRESETS } from '../constants';
 import type { SystemPreset } from '../constants';
-import { migrateToLatest } from '../migrations';
 
 function formatTime(ts: number) {
   const d = new Date(ts);
