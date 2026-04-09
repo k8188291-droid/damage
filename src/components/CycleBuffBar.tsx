@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 import { useAppStore } from '../stores/appStore';
 import { Tooltip } from './ui';
@@ -14,6 +14,21 @@ export default function CycleBuffBar() {
   })));
 
   const [expanded, setExpanded] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastKey, setToastKey] = useState(0);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
+
+  const handleCollapsedClick = () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setShowToast(false);
+    requestAnimationFrame(() => {
+      setToastKey(k => k + 1);
+      setShowToast(true);
+      toastTimer.current = setTimeout(() => setShowToast(false), 2000);
+    });
+  };
 
   const activeRotation = rotationGroups.find(g => g.id === activeRotationId);
   const cycleDisabledBuffIds = activeRotation?.disabledBuffIds || [];
@@ -52,10 +67,12 @@ export default function CycleBuffBar() {
           const tooltipLabel = `${zoneLabel}／${group?.name || '未分組'}`;
 
           return (
-            <Tooltip key={b.id} label={tooltipLabel}>
+            <Tooltip key={b.id} label={expanded ? tooltipLabel : '請先展開才能編輯'}>
               <button
-                onClick={() => toggleCycleBuff(b.id)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer border transition-all ${
+                onClick={expanded ? () => toggleCycleBuff(b.id) : handleCollapsedClick}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                  expanded ? 'cursor-pointer' : 'cursor-not-allowed'
+                } ${
                   isDisabled
                     ? 'border-gray-700 text-gray-500 opacity-40 line-through'
                     : 'text-white'
@@ -84,6 +101,16 @@ export default function CycleBuffBar() {
           ▾
         </span>
       </button>
+
+      {showToast && (
+        <div
+          key={toastKey}
+          className="animate-from-top fixed top-16 left-1/2 z-[100] flex items-center gap-2 px-4 py-2 rounded-full bg-gray-800 border border-gray-600 text-sm text-gray-300 shadow-xl pointer-events-none whitespace-nowrap"
+        >
+          <span className="text-gray-500">🔒</span>
+          請先展開才能編輯 BUFF
+        </div>
+      )}
     </div>
   );
 }
