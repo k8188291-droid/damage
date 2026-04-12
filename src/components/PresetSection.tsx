@@ -1,14 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useShallow } from 'zustand/shallow';
-import {
-  DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { DragDropProvider, type DragDropEvents } from '@dnd-kit/react';
+import { useSortable } from '@dnd-kit/react/sortable';
 import { useAppStore } from '../stores/appStore';
+import { arrayMove } from '../utils/arrayMove';
 import type { Preset } from '../types';
 import ConfirmDialog from './ConfirmDialog';
 import { SYSTEM_PRESETS } from '../constants';
@@ -19,8 +14,9 @@ function formatTime(ts: number) {
   return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-function SortablePresetCard({ preset, editingId, editValue, onEditChange, onStartRename, onCommitRename, onCancelRename, onLoad, onOpenInNewTab, onDuplicate, onOverwrite, onDelete }: {
+function SortablePresetCard({ preset, index, editingId, editValue, onEditChange, onStartRename, onCommitRename, onCancelRename, onLoad, onOpenInNewTab, onDuplicate, onOverwrite, onDelete }: {
   preset: Preset;
+  index: number;
   editingId: string | null;
   editValue: string;
   onEditChange: (v: string) => void;
@@ -33,8 +29,8 @@ function SortablePresetCard({ preset, editingId, editValue, onEditChange, onStar
   onOverwrite: () => void;
   onDelete: () => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: preset.id });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  const handleRef = useRef<HTMLSpanElement>(null);
+  const { ref, isDragging } = useSortable({ id: preset.id, index, handle: handleRef });
   const isEditing = editingId === preset.id;
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -46,11 +42,11 @@ function SortablePresetCard({ preset, editingId, editValue, onEditChange, onStar
   }, [isEditing]);
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={ref} style={{ opacity: isDragging ? 0.5 : 1 }}>
       <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-2.5 py-2 group">
         <div className="flex items-center gap-1.5 mb-0.5">
-          <span {...attributes} {...listeners}
-            className="text-gray-600 cursor-grab active:cursor-grabbing text-xs shrink-0"
+          <span ref={handleRef}
+            className="text-gray-600 cursor-grab active:cursor-grabbing text-xs shrink-0 touch-none"
             onClick={e => e.stopPropagation()}>⠿</span>
           {isEditing ? (
             <input
@@ -159,10 +155,6 @@ export default function PresetSection() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-  );
 
   const handleSave = () => {
     const name = newName.trim() || `檔案 ${presets.length + 1}`;
@@ -182,13 +174,14 @@ export default function PresetSection() {
     setEditingId(null);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIdx = presets.findIndex(p => p.id === active.id);
-      const newIdx = presets.findIndex(p => p.id === over.id);
-      reorderPresets(arrayMove(presets, oldIdx, newIdx));
-    }
+  const handleDragEnd: DragDropEvents['dragend'] = (event) => {
+    if (event.canceled) return;
+    const { source, target } = event.operation;
+    if (!source || !target || source.id === target.id) return;
+    const oldIdx = presets.findIndex(p => p.id === source.id);
+    const newIdx = presets.findIndex(p => p.id === target.id);
+    if (oldIdx < 0 || newIdx < 0) return;
+    reorderPresets(arrayMove(presets, oldIdx, newIdx));
   };
 
   const handleConfirm = () => {
@@ -286,29 +279,28 @@ export default function PresetSection() {
             </div>
           )}
 
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={presets.map(p => p.id)} strategy={verticalListSortingStrategy}>
-              <div className="space-y-1.5">
-                {presets.map(p => (
-                  <SortablePresetCard
-                    key={p.id}
-                    preset={p}
-                    editingId={editingId}
-                    editValue={editValue}
-                    onEditChange={setEditValue}
-                    onStartRename={startRename}
-                    onCommitRename={commitRename}
-                    onCancelRename={() => setEditingId(null)}
-                    onLoad={() => setConfirmAction({ type: 'load', preset: p })}
-                    onOpenInNewTab={() => openPresetInNewTab(p)}
-                    onDuplicate={() => duplicatePreset(p.id)}
-                    onOverwrite={() => setConfirmAction({ type: 'overwrite', id: p.id, name: p.name })}
-                    onDelete={() => setConfirmAction({ type: 'delete', id: p.id, name: p.name })}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
+          <DragDropProvider onDragEnd={handleDragEnd}>
+            <div className="space-y-1.5">
+              {presets.map((p, idx) => (
+                <SortablePresetCard
+                  key={p.id}
+                  preset={p}
+                  index={idx}
+                  editingId={editingId}
+                  editValue={editValue}
+                  onEditChange={setEditValue}
+                  onStartRename={startRename}
+                  onCommitRename={commitRename}
+                  onCancelRename={() => setEditingId(null)}
+                  onLoad={() => setConfirmAction({ type: 'load', preset: p })}
+                  onOpenInNewTab={() => openPresetInNewTab(p)}
+                  onDuplicate={() => duplicatePreset(p.id)}
+                  onOverwrite={() => setConfirmAction({ type: 'overwrite', id: p.id, name: p.name })}
+                  onDelete={() => setConfirmAction({ type: 'delete', id: p.id, name: p.name })}
+                />
+              ))}
+            </div>
+          </DragDropProvider>
         </>
       )}
 

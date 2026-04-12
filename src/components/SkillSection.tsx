@@ -1,15 +1,13 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useShallow } from 'zustand/shallow';
 import {
-  DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
-  type DragEndEvent, type DragStartEvent, DragOverlay, useDroppable,
-} from '@dnd-kit/core';
-import {
-  arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+  DragDropProvider, DragOverlay, useDroppable,
+  type DragDropEvents,
+} from '@dnd-kit/react';
+import { useSortable } from '@dnd-kit/react/sortable';
 import { useAppStore } from '../stores/appStore';
+import { arrayMove } from '../utils/arrayMove';
 import { useUndoStore } from '../stores/undoStore';
 import type { Skill, SkillGroup, Buff, BuffGroup, Character, DamageZone } from '../types';
 import Modal from './Modal';
@@ -168,19 +166,19 @@ function SkillModal({ skill, buffs, buffGroups, characters, zones, skillGroups, 
 }
 
 /* ── Sortable Skill Card ── */
-function SortableSkillCard({ skill, char, onClick, onCopy, onRemove }: {
-  skill: Skill; char: Character | undefined;
+function SortableSkillCard({ skill, index, groupId, char, onClick, onCopy, onRemove }: {
+  skill: Skill; index: number; groupId: string; char: Character | undefined;
   onClick: () => void; onCopy: () => void; onRemove: () => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: skill.id });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
+  const handleRef = useRef<HTMLSpanElement>(null);
+  const { ref, isDragging } = useSortable({ id: skill.id, index, group: groupId || 'ungrouped', handle: handleRef });
 
   return (
-    <div ref={setNodeRef} style={style}
+    <div ref={ref} style={{ opacity: isDragging ? 0.4 : 1 }}
       className="bg-gray-800/60 border border-gray-700 rounded-xl px-3 py-2 cursor-pointer hover:border-indigo-500/50 transition-colors group"
       onClick={onClick}>
       <div className="flex items-center gap-2">
-        <span {...attributes} {...listeners} className="text-gray-600 cursor-grab active:cursor-grabbing text-xs" onClick={e => e.stopPropagation()}>⠿</span>
+        <span ref={handleRef} className="text-gray-600 cursor-grab active:cursor-grabbing text-xs touch-none" onClick={e => e.stopPropagation()}>⠿</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-200 truncate">{skill.name}</span>
@@ -213,14 +211,14 @@ function SkillCardOverlay({ skill, char }: { skill: Skill; char: Character | und
 function DroppableSkillArea({ groupId, children, isEmpty }: {
   groupId: string; children: React.ReactNode; isEmpty: boolean;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: `skill-group-drop:${groupId}` });
+  const { ref, isDropTarget } = useDroppable({ id: `skill-group-drop:${groupId}` });
   return (
-    <div ref={setNodeRef}
-      className={`space-y-1.5 p-1.5 min-h-[40px] rounded-lg transition-colors ${isOver ? 'bg-indigo-500/10 ring-1 ring-inset ring-indigo-500/30' : ''}`}>
+    <div ref={ref}
+      className={`space-y-1.5 p-1.5 min-h-[40px] rounded-lg transition-colors ${isDropTarget ? 'bg-indigo-500/10 ring-1 ring-inset ring-indigo-500/30' : ''}`}>
       {children}
       {isEmpty && (
         <div className="w-full text-xs text-gray-600 text-center py-2">
-          {isOver ? '放開以移入此群組' : '拖曳技能到此群組'}
+          {isDropTarget ? '放開以移入此群組' : '拖曳技能到此群組'}
         </div>
       )}
     </div>
@@ -238,12 +236,6 @@ export default function SkillSection() {
   const pushUndo = useUndoStore(s => s.pushUndo);
 
   const [editing, setEditing] = useState<Skill | null>(null);
-  const [activeId, setActiveId] = useState<string | null>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-  );
 
   const save = (s: Skill) => {
     const exists = skills.find(x => x.id === s.id);
@@ -295,17 +287,13 @@ export default function SkillSection() {
     pushUndo(`已刪除技能群組: ${grp.name}`, () => { setSkillGroups(prevGroups); setSkills(prevSkills); });
   };
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-  };
+  const handleDragEnd: DragDropEvents['dragend'] = (event) => {
+    if (event.canceled) return;
+    const { source, target } = event.operation;
+    if (!source || !target) return;
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    setActiveId(null);
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeSkillId = active.id as string;
-    const overId = over.id as string;
+    const activeSkillId = source.id as string;
+    const overId = target.id as string;
 
     let targetGroupId: string;
     if (overId.startsWith('skill-group-drop:')) {
@@ -319,7 +307,7 @@ export default function SkillSection() {
 
     if (groupChanged) {
       setSkills(skills.map(s => s.id === activeSkillId ? { ...s, groupId: targetGroupId } : s));
-    } else if (!overId.startsWith('skill-group-drop:') && active.id !== over.id) {
+    } else if (!overId.startsWith('skill-group-drop:') && activeSkillId !== overId) {
       const oldIdx = skills.findIndex(s => s.id === activeSkillId);
       const newIdx = skills.findIndex(s => s.id === overId);
       if (oldIdx !== -1 && newIdx !== -1) {
@@ -337,8 +325,6 @@ export default function SkillSection() {
     }
   }
 
-  const activeSkill = activeId ? skills.find(s => s.id === activeId) : null;
-
   return (
     <section>
       <div className="flex gap-2 mb-3 flex-wrap">
@@ -355,24 +341,21 @@ export default function SkillSection() {
       {skills.length === 0 && skillGroups.length === 0 ? (
         <p className="text-gray-600 text-xs text-center py-3">尚未新增技能</p>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter}
-          onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <DragDropProvider onDragEnd={handleDragEnd}>
 
           {/* Ungrouped */}
           {(ungroupedSkills.length > 0 || skillGroups.length > 0) && (
             <div className="mb-2">
               {skillGroups.length > 0 && <div className="text-[10px] text-gray-600 mb-1">未分組</div>}
-              <SortableContext items={ungroupedSkills.map(s => s.id)} strategy={verticalListSortingStrategy}>
-                <DroppableSkillArea groupId="" isEmpty={ungroupedSkills.length === 0}>
-                  {ungroupedSkills.map(s => (
-                    <SortableSkillCard key={s.id} skill={s}
-                      char={characters.find(c => c.id === s.characterId)}
-                      onClick={() => setEditing({ ...s })}
-                      onCopy={() => copy(s)}
-                      onRemove={() => remove(s.id)} />
-                  ))}
-                </DroppableSkillArea>
-              </SortableContext>
+              <DroppableSkillArea groupId="" isEmpty={ungroupedSkills.length === 0}>
+                {ungroupedSkills.map((s, i) => (
+                  <SortableSkillCard key={s.id} skill={s} index={i} groupId=""
+                    char={characters.find(c => c.id === s.characterId)}
+                    onClick={() => setEditing({ ...s })}
+                    onCopy={() => copy(s)}
+                    onRemove={() => remove(s.id)} />
+                ))}
+              </DroppableSkillArea>
             </div>
           )}
 
@@ -394,27 +377,28 @@ export default function SkillSection() {
                   />
                   <button onClick={() => removeSkillGroup(g.id)} className="text-gray-500 hover:text-red-400 text-xs cursor-pointer shrink-0">✕</button>
                 </div>
-                <SortableContext items={groupSkills.map(s => s.id)} strategy={verticalListSortingStrategy}>
-                  <DroppableSkillArea groupId={g.id} isEmpty={groupSkills.length === 0}>
-                    {groupSkills.map(s => (
-                      <SortableSkillCard key={s.id} skill={s}
-                        char={characters.find(c => c.id === s.characterId)}
-                        onClick={() => setEditing({ ...s })}
-                        onCopy={() => copy(s)}
-                        onRemove={() => remove(s.id)} />
-                    ))}
-                  </DroppableSkillArea>
-                </SortableContext>
+                <DroppableSkillArea groupId={g.id} isEmpty={groupSkills.length === 0}>
+                  {groupSkills.map((s, i) => (
+                    <SortableSkillCard key={s.id} skill={s} index={i} groupId={g.id}
+                      char={characters.find(c => c.id === s.characterId)}
+                      onClick={() => setEditing({ ...s })}
+                      onCopy={() => copy(s)}
+                      onRemove={() => remove(s.id)} />
+                  ))}
+                </DroppableSkillArea>
               </div>
             );
           })}
 
           <DragOverlay>
-            {activeSkill ? (
-              <SkillCardOverlay skill={activeSkill} char={characters.find(c => c.id === activeSkill.characterId)} />
-            ) : null}
+            {(source) => {
+              const activeSkill = source ? skills.find(s => s.id === source.id) : null;
+              return activeSkill ? (
+                <SkillCardOverlay skill={activeSkill} char={characters.find(c => c.id === activeSkill.characterId)} />
+              ) : null;
+            }}
           </DragOverlay>
-        </DndContext>
+        </DragDropProvider>
       )}
 
       {editing && (

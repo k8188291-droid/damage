@@ -1,15 +1,13 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useShallow } from 'zustand/shallow';
 import {
-  DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
-  type DragEndEvent, type DragStartEvent, DragOverlay, useDroppable,
-} from '@dnd-kit/core';
-import {
-  arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+  DragDropProvider, DragOverlay, useDroppable,
+  type DragDropEvents,
+} from '@dnd-kit/react';
+import { useSortable } from '@dnd-kit/react/sortable';
 import { useAppStore } from '../stores/appStore';
+import { arrayMove } from '../utils/arrayMove';
 import { useUndoStore } from '../stores/undoStore';
 import type { Buff, BuffGroup, DamageZone, Skill, SkillGroup } from '../types';
 import Modal from './Modal';
@@ -209,18 +207,18 @@ function BuffModal({ buff, zones, buffGroups, skills, skillGroups, onSave, onClo
 }
 
 /* ── Sortable Buff Chip ── */
-function SortableBuffChip({ buff, zone, onClick, onToggle, onCopy, onRemove }: {
-  buff: Buff; zone: DamageZone | undefined;
+function SortableBuffChip({ buff, index, groupId, zone, onClick, onToggle, onCopy, onRemove }: {
+  buff: Buff; index: number; groupId: string; zone: DamageZone | undefined;
   onClick: () => void; onToggle: () => void; onCopy: () => void; onRemove: () => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: buff.id });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
+  const handleRef = useRef<HTMLSpanElement>(null);
+  const { ref, isDragging } = useSortable({ id: buff.id, index, group: groupId || 'ungrouped', handle: handleRef });
 
   return (
-    <div ref={setNodeRef} style={style}
+    <div ref={ref} style={{ opacity: isDragging ? 0.4 : 1 }}
       className={`bg-gray-800/60 border rounded-xl px-3 py-2 flex items-center gap-2 cursor-pointer hover:border-indigo-500/50 transition-colors group ${buff.enabled ? 'border-gray-700' : 'border-gray-800 opacity-50'}`}
       onClick={onClick}>
-      <span {...attributes} {...listeners} className="text-gray-600 cursor-grab active:cursor-grabbing text-xs" onClick={e => e.stopPropagation()}>⠿</span>
+      <span ref={handleRef} className="text-gray-600 cursor-grab active:cursor-grabbing text-xs touch-none" onClick={e => e.stopPropagation()}>⠿</span>
       <Tooltip label={buff.enabled ? '已啟用，點擊停用' : '已停用，點擊啟用'}>
         <button
           onClick={e => { e.stopPropagation(); onToggle(); }}
@@ -263,14 +261,14 @@ function BuffChipOverlay({ buff, zone }: { buff: Buff; zone: DamageZone | undefi
 function DroppableGroupArea({ groupId, children, isEmpty }: {
   groupId: string; children: React.ReactNode; isEmpty: boolean;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: `group-drop:${groupId}` });
+  const { ref, isDropTarget } = useDroppable({ id: `group-drop:${groupId}` });
   return (
-    <div ref={setNodeRef}
-      className={`space-y-1.5 p-1.5 min-h-[40px] rounded-lg transition-colors ${isOver ? 'bg-indigo-500/10 ring-1 ring-inset ring-indigo-500/30' : ''}`}>
+    <div ref={ref}
+      className={`space-y-1.5 p-1.5 min-h-[40px] rounded-lg transition-colors ${isDropTarget ? 'bg-indigo-500/10 ring-1 ring-inset ring-indigo-500/30' : ''}`}>
       {children}
       {isEmpty && (
         <div className="text-xs text-gray-600 text-center py-2">
-          {isOver ? '放開以移入此群組' : '拖曳 Buff 到此群組'}
+          {isDropTarget ? '放開以移入此群組' : '拖曳 Buff 到此群組'}
         </div>
       )}
     </div>
@@ -291,12 +289,6 @@ export default function BuffSection() {
 
   const [editingBuff, setEditingBuff] = useState<Buff | null>(null);
   const [editingZone, setEditingZone] = useState<DamageZone | null>(null);
-  const [activeId, setActiveId] = useState<string | null>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-  );
 
   const saveBuff = (b: Buff, enabledSkillIds?: string[]) => {
     const exists = buffs.find(x => x.id === b.id);
@@ -383,17 +375,13 @@ export default function BuffSection() {
     setEditingZone({ id: uuid(), name: '', displayName: '', icon: '⭐', color: COLORS[zones.length % COLORS.length], isDefault: false });
   };
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-  };
+  const handleDragEnd: DragDropEvents['dragend'] = (event) => {
+    if (event.canceled) return;
+    const { source, target } = event.operation;
+    if (!source || !target) return;
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    setActiveId(null);
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeBuffId = active.id as string;
-    const overId = over.id as string;
+    const activeBuffId = source.id as string;
+    const overId = target.id as string;
 
     let targetGroupId: string;
     if (overId.startsWith('group-drop:')) {
@@ -407,7 +395,7 @@ export default function BuffSection() {
 
     if (groupChanged) {
       setBuffs(buffs.map(b => b.id === activeBuffId ? { ...b, groupId: targetGroupId } : b));
-    } else if (!overId.startsWith('group-drop:') && active.id !== over.id) {
+    } else if (!overId.startsWith('group-drop:') && activeBuffId !== overId) {
       const oldIdx = buffs.findIndex(b => b.id === activeBuffId);
       const newIdx = buffs.findIndex(b => b.id === overId);
       if (oldIdx !== -1 && newIdx !== -1) {
@@ -424,8 +412,6 @@ export default function BuffSection() {
       groupedMap.get(b.groupId)!.push(b);
     }
   }
-
-  const activeBuff = activeId ? buffs.find(b => b.id === activeId) : null;
 
   return (
     <section>
@@ -464,25 +450,22 @@ export default function BuffSection() {
       {buffs.length === 0 && buffGroups.length === 0 ? (
         <p className="text-gray-600 text-xs text-center py-3">尚未新增 Buff</p>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter}
-          onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <DragDropProvider onDragEnd={handleDragEnd}>
 
           {/* Ungrouped */}
           {(ungroupedBuffs.length > 0 || buffGroups.length > 0) && (
             <div className="mb-2">
               {buffGroups.length > 0 && <div className="text-[10px] text-gray-600 mb-1">未分組</div>}
-              <SortableContext items={ungroupedBuffs.map(b => b.id)} strategy={verticalListSortingStrategy}>
-                <DroppableGroupArea groupId="" isEmpty={ungroupedBuffs.length === 0}>
-                  {ungroupedBuffs.map(b => (
-                    <SortableBuffChip key={b.id} buff={b}
-                      zone={zones.find(z => z.id === b.zoneId)}
-                      onClick={() => setEditingBuff({ ...b })}
-                      onToggle={() => toggleBuff(b.id)}
-                      onCopy={() => copyBuff(b)}
-                      onRemove={() => removeBuff(b.id)} />
-                  ))}
-                </DroppableGroupArea>
-              </SortableContext>
+              <DroppableGroupArea groupId="" isEmpty={ungroupedBuffs.length === 0}>
+                {ungroupedBuffs.map((b, i) => (
+                  <SortableBuffChip key={b.id} buff={b} index={i} groupId=""
+                    zone={zones.find(z => z.id === b.zoneId)}
+                    onClick={() => setEditingBuff({ ...b })}
+                    onToggle={() => toggleBuff(b.id)}
+                    onCopy={() => copyBuff(b)}
+                    onRemove={() => removeBuff(b.id)} />
+                ))}
+              </DroppableGroupArea>
             </div>
           )}
 
@@ -504,29 +487,30 @@ export default function BuffSection() {
                   />
                   <button onClick={() => removeGroup(g.id)} className="text-gray-500 hover:text-red-400 text-xs cursor-pointer shrink-0">✕</button>
                 </div>
-                <SortableContext items={groupBuffs.map(b => b.id)} strategy={verticalListSortingStrategy}>
-                  <DroppableGroupArea groupId={g.id} isEmpty={groupBuffs.length === 0}>
-                    {groupBuffs.map(b => (
-                      <SortableBuffChip key={b.id} buff={b}
-                        zone={zones.find(z => z.id === b.zoneId)}
-                        onClick={() => setEditingBuff({ ...b })}
-                        onToggle={() => toggleBuff(b.id)}
-                        onCopy={() => copyBuff(b)}
-                        onRemove={() => removeBuff(b.id)} />
-                    ))}
-                  </DroppableGroupArea>
-                </SortableContext>
+                <DroppableGroupArea groupId={g.id} isEmpty={groupBuffs.length === 0}>
+                  {groupBuffs.map((b, i) => (
+                    <SortableBuffChip key={b.id} buff={b} index={i} groupId={g.id}
+                      zone={zones.find(z => z.id === b.zoneId)}
+                      onClick={() => setEditingBuff({ ...b })}
+                      onToggle={() => toggleBuff(b.id)}
+                      onCopy={() => copyBuff(b)}
+                      onRemove={() => removeBuff(b.id)} />
+                  ))}
+                </DroppableGroupArea>
               </div>
             );
           })}
 
           <DragOverlay>
-            {activeBuff ? (
-              <BuffChipOverlay buff={activeBuff}
-                zone={zones.find(z => z.id === activeBuff.zoneId)} />
-            ) : null}
+            {(source) => {
+              const activeBuff = source ? buffs.find(b => b.id === source.id) : null;
+              return activeBuff ? (
+                <BuffChipOverlay buff={activeBuff}
+                  zone={zones.find(z => z.id === activeBuff.zoneId)} />
+              ) : null;
+            }}
           </DragOverlay>
-        </DndContext>
+        </DragDropProvider>
       )}
 
       {editingBuff && (

@@ -1,13 +1,9 @@
+import { useRef } from 'react';
 import { useShallow } from 'zustand/shallow';
-import {
-  DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { DragDropProvider, type DragDropEvents } from '@dnd-kit/react';
+import { useSortable } from '@dnd-kit/react/sortable';
 import { useAppStore } from '../stores/appStore';
+import { arrayMove } from '../utils/arrayMove';
 import type { RotationGroup } from '../types';
 import type { RotationGroupResult } from '../utils/damage';
 import { Tooltip } from './ui';
@@ -20,8 +16,9 @@ function fmt(n: number) { return Math.round(n).toLocaleString(); }
 
 const SKILL_COLORS = ['#3b82f6', '#f59e0b', '#ef4444', '#22c55e', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#14b8a6', '#a855f7'];
 
-function SortableCycleCard({ group, result, isActive, maxDamage, diff, excluded, onSelect, onCopy, onRemove, onToggleExclude }: {
+function SortableCycleCard({ group, index, result, isActive, maxDamage, diff, excluded, onSelect, onCopy, onRemove, onToggleExclude }: {
   group: RotationGroup;
+  index: number;
   result: RotationGroupResult;
   isActive: boolean;
   maxDamage: number;
@@ -32,12 +29,12 @@ function SortableCycleCard({ group, result, isActive, maxDamage, diff, excluded,
   onRemove: () => void;
   onToggleExclude: () => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: group.id });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  const handleRef = useRef<HTMLSpanElement>(null);
+  const { ref, isDragging } = useSortable({ id: group.id, index, handle: handleRef });
   const pct = (result.totalDamage / maxDamage) * 100;
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={ref} style={{ opacity: isDragging ? 0.5 : 1 }}>
       <div
         onClick={onSelect}
         className={`rounded-xl px-3 py-2.5 cursor-pointer transition-colors group ${
@@ -51,8 +48,8 @@ function SortableCycleCard({ group, result, isActive, maxDamage, diff, excluded,
         {/* Name + damage */}
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5 min-w-0">
-            <span {...attributes} {...listeners}
-              className="text-gray-600 cursor-grab active:cursor-grabbing text-xs shrink-0"
+            <span ref={handleRef}
+              className="text-gray-600 cursor-grab active:cursor-grabbing text-xs shrink-0 touch-none"
               onClick={e => e.stopPropagation()}>⠿</span>
             <span className={`text-sm truncate min-w-0 ${excluded ? 'text-gray-500 line-through' : 'text-gray-200'}`}>{group.name}</span>
           </div>
@@ -112,10 +109,6 @@ export default function AnalysisPanel({ groupResults }: Props) {
     setNotes: s.setNotes,
   })));
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-  );
   const excludedSet = new Set(excludedGroupIds);
 
   const activeIdx = rotationGroups.findIndex(g => g.id === activeRotationId);
@@ -124,13 +117,14 @@ export default function AnalysisPanel({ groupResults }: Props) {
   const includedResults = groupResults.filter((_, i) => !excludedSet.has(rotationGroups[i].id));
   const maxDamage = Math.max(...includedResults.map(r => r.totalDamage), 1);
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIdx = rotationGroups.findIndex(g => g.id === active.id);
-      const newIdx = rotationGroups.findIndex(g => g.id === over.id);
-      reorderRotationGroups(arrayMove(rotationGroups, oldIdx, newIdx));
-    }
+  const handleDragEnd: DragDropEvents['dragend'] = (event) => {
+    if (event.canceled) return;
+    const { source, target } = event.operation;
+    if (!source || !target || source.id === target.id) return;
+    const oldIdx = rotationGroups.findIndex(g => g.id === source.id);
+    const newIdx = rotationGroups.findIndex(g => g.id === target.id);
+    if (oldIdx < 0 || newIdx < 0) return;
+    reorderRotationGroups(arrayMove(rotationGroups, oldIdx, newIdx));
   };
 
   return (
@@ -162,36 +156,35 @@ export default function AnalysisPanel({ groupResults }: Props) {
           <button onClick={addRotationGroup}
             className="text-xs text-indigo-400 hover:text-indigo-300 cursor-pointer">+ 新增</button>
         </div>
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={rotationGroups.map(g => g.id)} strategy={verticalListSortingStrategy}>
-            <div className="space-y-2">
-              {rotationGroups.map((g, i) => {
-                const isActive = g.id === activeRotationId;
-                const result = groupResults[i];
-                const excluded = excludedSet.has(g.id);
-                const diff = activeResult && activeResult.totalDamage > 0 && !isActive && !excluded && !excludedSet.has(activeRotationId)
-                  ? ((result.totalDamage / activeResult.totalDamage - 1) * 100).toFixed(1)
-                  : null;
+        <DragDropProvider onDragEnd={handleDragEnd}>
+          <div className="space-y-2">
+            {rotationGroups.map((g, i) => {
+              const isActive = g.id === activeRotationId;
+              const result = groupResults[i];
+              const excluded = excludedSet.has(g.id);
+              const diff = activeResult && activeResult.totalDamage > 0 && !isActive && !excluded && !excludedSet.has(activeRotationId)
+                ? ((result.totalDamage / activeResult.totalDamage - 1) * 100).toFixed(1)
+                : null;
 
-                return (
-                  <SortableCycleCard
-                    key={g.id}
-                    group={g}
-                    result={result}
-                    isActive={isActive}
-                    maxDamage={maxDamage}
-                    diff={diff}
-                    excluded={excluded}
-                    onSelect={() => setActiveRotationId(g.id)}
-                    onCopy={() => copyRotationGroup(g)}
-                    onRemove={() => removeRotationGroup(g.id)}
-                    onToggleExclude={() => toggleExclude(g.id)}
-                  />
-                );
-              })}
-            </div>
-          </SortableContext>
-        </DndContext>
+              return (
+                <SortableCycleCard
+                  key={g.id}
+                  group={g}
+                  index={i}
+                  result={result}
+                  isActive={isActive}
+                  maxDamage={maxDamage}
+                  diff={diff}
+                  excluded={excluded}
+                  onSelect={() => setActiveRotationId(g.id)}
+                  onCopy={() => copyRotationGroup(g)}
+                  onRemove={() => removeRotationGroup(g.id)}
+                  onToggleExclude={() => toggleExclude(g.id)}
+                />
+              );
+            })}
+          </div>
+        </DragDropProvider>
       </div>
 
       {activeResult && activeResult.skillResults.length > 0 && (

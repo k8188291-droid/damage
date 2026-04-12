@@ -1,14 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useShallow } from 'zustand/shallow';
-import {
-  DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { DragDropProvider, type DragDropEvents } from '@dnd-kit/react';
+import { useSortable } from '@dnd-kit/react/sortable';
+import { arrayMove } from '../utils/arrayMove';
 import { useAppStore } from '../stores/appStore';
 import type { Skill, Buff, BuffGroup, Character, DamageZone, RotationGroup, RotationEntry } from '../types';
 import { calculateSkillDamage, type RotationGroupResult } from '../utils/damage';
@@ -93,8 +88,8 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
   onUpdate: (id: string, patch: Partial<RotationEntry>) => void;
   onRemove: (id: string) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: entry.id });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
+  const handleRef = useRef<HTMLSpanElement>(null);
+  const { ref, isDragging } = useSortable({ id: entry.id, index, handle: handleRef });
 
   const skill = skills.find(s => s.id === entry.skillId);
   const enabledBuffIds = skill?.enabledBuffIds || [];
@@ -146,12 +141,12 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={ref} style={{ opacity: isDragging ? 0.4 : 1 }}>
       <div className="bg-gray-900/80 border border-gray-700 rounded-xl p-4">
         <div className="flex items-start gap-3">
           {/* Drag handle + index */}
           <div className="flex items-center gap-2 shrink-0 pt-0.5">
-            <span {...attributes} {...listeners} className="text-gray-600 cursor-grab active:cursor-grabbing text-xs" onClick={e => e.stopPropagation()}>⠿</span>
+            <span ref={handleRef} className="text-gray-600 cursor-grab active:cursor-grabbing text-xs touch-none" onClick={e => e.stopPropagation()}>⠿</span>
             <span className="text-xs font-mono text-gray-500 bg-gray-800 px-1.5 py-0.5 rounded">{String(index + 1).padStart(2, '0')}</span>
           </div>
           {/* Main content */}
@@ -237,11 +232,6 @@ export default function CycleEditor({ groupResult }: Props) {
   const [detailResult, setDetailResult] = useState<RotationGroupResult | null>(null);
   const [showSkillPalette, setShowSkillPalette] = useState(false);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-  );
-
   const updateEntry = (id: string, patch: Partial<RotationEntry>) => {
     updateRotationGroup({ ...group, entries: group.entries.map(e => e.id === id ? { ...e, ...patch } : e) });
   };
@@ -253,13 +243,14 @@ export default function CycleEditor({ groupResult }: Props) {
     setShowSkillPalette(false);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIdx = group.entries.findIndex(e => e.id === active.id);
-      const newIdx = group.entries.findIndex(e => e.id === over.id);
-      updateRotationGroup({ ...group, entries: arrayMove(group.entries, oldIdx, newIdx) });
-    }
+  const handleDragEnd: DragDropEvents['dragend'] = (event) => {
+    if (event.canceled) return;
+    const { source, target } = event.operation;
+    if (!source || !target || source.id === target.id) return;
+    const oldIdx = group.entries.findIndex(e => e.id === source.id);
+    const newIdx = group.entries.findIndex(e => e.id === target.id);
+    if (oldIdx < 0 || newIdx < 0) return;
+    updateRotationGroup({ ...group, entries: arrayMove(group.entries, oldIdx, newIdx) });
   };
 
   return (
@@ -287,18 +278,16 @@ export default function CycleEditor({ groupResult }: Props) {
         </div>
 
         {/* Entries */}
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={group.entries.map(e => e.id)} strategy={verticalListSortingStrategy}>
-            <div className="space-y-3">
-              {group.entries.map((e, i) => (
-                <SortableEntry key={e.id} entry={e} index={i} group={group}
-                  skills={skills} buffs={buffs} buffGroups={buffGroups}
-                  characters={characters} zones={zones}
-                  onUpdate={updateEntry} onRemove={removeEntry} />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+        <DragDropProvider onDragEnd={handleDragEnd}>
+          <div className="space-y-3">
+            {group.entries.map((e, i) => (
+              <SortableEntry key={e.id} entry={e} index={i} group={group}
+                skills={skills} buffs={buffs} buffGroups={buffGroups}
+                characters={characters} zones={zones}
+                onUpdate={updateEntry} onRemove={removeEntry} />
+            ))}
+          </div>
+        </DragDropProvider>
 
         {/* Add Next Skill */}
         <div className="mt-4">
