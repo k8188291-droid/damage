@@ -154,23 +154,35 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
             <span {...attributes} {...listeners} className="text-gray-600 cursor-grab active:cursor-grabbing text-xs" onClick={e => e.stopPropagation()}>⠿</span>
             <span className="text-xs font-mono text-gray-500 bg-gray-800 px-1.5 py-0.5 rounded">{String(index + 1).padStart(2, '0')}</span>
           </div>
-
           {/* Main content */}
           <div className="flex-1 min-w-0">
-            {/* Skill name or selector */}
-            {skill ? (
-              <div className="text-sm font-semibold text-gray-100 mb-1">{skill.name}</div>
-            ) : (
-              <select value={entry.skillId} onChange={e => onUpdate(entry.id, { skillId: e.target.value })}
-                className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-sm text-gray-200 focus:outline-none focus:border-indigo-500 mb-1 w-full">
-                <option value="" className="bg-gray-900">選擇技能</option>
-                {skills.map(s => <option key={s.id} value={s.id} className="bg-gray-900">{s.name}</option>)}
-              </select>
-            )}
+            <div className='flex justify-between'>
+              <div>
+                {/* Skill name or selector */}
+                {skill ? (
+                  <div className="text-sm font-semibold text-gray-100 mb-1">{skill.name}</div>
+                ) : (
+                  <select value={entry.skillId} onChange={e => onUpdate(entry.id, { skillId: e.target.value })}
+                    className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-sm text-gray-200 focus:outline-none focus:border-indigo-500 mb-1 w-full">
+                    <option value="" className="bg-gray-900">選擇技能</option>
+                    {skills.map(s => <option key={s.id} value={s.id} className="bg-gray-900">{s.name}</option>)}
+                  </select>
+                )}
 
-            {sr && (
-              <div className="text-xs font-mono mb-2">{formulaParts}</div>
-            )}
+                {sr && (
+                  <div className="text-xs font-mono">{formulaParts}</div>
+                )}
+              </div>
+
+              {/* Quantity */}
+              <div className="shrink-0 text-right mb-2">
+                <div className="text-xs text-gray-500 mb-0.5 tracking-wider">施放次數</div>
+                <input type="number" min={1} value={entry.count}
+                  onChange={e => onUpdate(entry.id, { count: Math.max(1, Number(e.target.value) || 1) })}
+                  className="w-20 bg-gray-800 border border-gray-700 rounded-lg text-lg font-bold text-gray-100 text-center focus:outline-none focus:border-indigo-500 font-mono py-0.5 px-2" />
+              </div>
+
+            </div>
 
             {sortedRelevantBuffs.length > 0 && (
               <div className="flex flex-wrap gap-1">
@@ -197,13 +209,6 @@ function SortableEntry({ entry, index, group, skills, buffs, buffGroups, charact
             )}
           </div>
 
-          {/* Quantity */}
-          <div className="shrink-0 text-right">
-            <div className="text-xs text-gray-500 mb-0.5 tracking-wider">施放次數</div>
-            <input type="number" min={1} value={entry.count}
-              onChange={e => onUpdate(entry.id, { count: Math.max(1, Number(e.target.value) || 1) })}
-              className="w-20 bg-gray-800 border border-gray-700 rounded-lg text-lg font-bold text-gray-100 text-center focus:outline-none focus:border-indigo-500 font-mono py-0.5 px-2" />
-          </div>
 
           {/* Delete */}
           <button onClick={() => onRemove(entry.id)} className="text-gray-600 hover:text-red-400 cursor-pointer shrink-0 pt-0.5 text-sm" title="刪除">

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 import { useAppStore } from '../stores/appStore';
 import { Tooltip } from './ui';
@@ -14,6 +14,21 @@ export default function CycleBuffBar() {
   })));
 
   const [expanded, setExpanded] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastKey, setToastKey] = useState(0);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
+
+  const handleCollapsedClick = () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setShowToast(false);
+    requestAnimationFrame(() => {
+      setToastKey(k => k + 1);
+      setShowToast(true);
+      toastTimer.current = setTimeout(() => setShowToast(false), 2000);
+    });
+  };
 
   const activeRotation = rotationGroups.find(g => g.id === activeRotationId);
   const cycleDisabledBuffIds = activeRotation?.disabledBuffIds || [];
@@ -40,7 +55,7 @@ export default function CycleBuffBar() {
         <span className="text-xs font-semibold text-gray-400 tracking-wide">當前循環 BUFF 生效開關</span>
       </div>
       <div
-        className={`flex flex-wrap gap-2 transition-all duration-200 overflow-y-auto`}
+        className={`flex flex-wrap gap-2 overflow-y-auto`}
         style={{ maxHeight: !expanded ? 70 : 'calc(100vh - 120px)' }}
       >
         {visibleBuffs.map(b => {
@@ -54,8 +69,10 @@ export default function CycleBuffBar() {
           return (
             <Tooltip key={b.id} label={tooltipLabel}>
               <button
-                onClick={() => toggleCycleBuff(b.id)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer border transition-all ${
+                onClick={expanded ? () => toggleCycleBuff(b.id) : handleCollapsedClick}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                  expanded ? 'cursor-pointer' : 'cursor-not-allowed'
+                } ${
                   isDisabled
                     ? 'border-gray-700 text-gray-500 opacity-40 line-through'
                     : 'text-white'
@@ -75,15 +92,24 @@ export default function CycleBuffBar() {
           <span className="text-xs text-gray-600">尚未設定任何 Buff</span>
         )}
       </div>
-      <button
+      <button 
         onClick={() => setExpanded(e => !e)}
-        className="z-10 absolute cursor-pointer bottom-[-20px] left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full bg-gray-800 border border-gray-700 text-gray-500 flex items-center justify-center hover:text-white transition-colors shadow-lg"
-        title={expanded ? '收合' : '展開'}
+        className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-12 h-6 bg-gray-800 border border-gray-700 border-t-0 rounded-b-lg flex items-center justify-center text-gray-500 hover:text-gray-300 cursor-pointer transition-colors text-xs z-10"
       >
         <span className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
           ▾
         </span>
       </button>
+
+      {showToast && (
+        <div
+          key={toastKey}
+          className="animate-from-top fixed top-16 left-1/2 z-[100] flex items-center gap-2 px-4 py-2 rounded-full bg-gray-800 border border-gray-600 text-sm text-gray-300 shadow-xl pointer-events-none whitespace-nowrap"
+        >
+          <span className="text-gray-500">🔒</span>
+          請先展開才能編輯 BUFF
+        </div>
+      )}
     </div>
   );
 }
