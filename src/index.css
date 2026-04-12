@@ -1,7 +1,78 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────────────────
+   Redesign (v=new) tokens — Tailwind v4 @theme
+   Usage: bg-rd-panel, text-rd-accent, border-rd-line …
+   ───────────────────────────────────────────────────────── */
+@theme {
+  /* Surfaces */
+  --color-rd-bg-a:       #1e2329;   /* gradient center (brighter) */
+  --color-rd-bg-b:       #0b0e13;   /* gradient edge (darker) */
+  --color-rd-panel:      #161a21;   /* primary panel block */
+  --color-rd-panel-hi:   #1f242c;   /* hover / selected panel */
+  --color-rd-panel-mute: #12151b;   /* deepest inset (slot bg) */
+
+  /* Lines */
+  --color-rd-line:       #2a2f38;
+  --color-rd-line-soft:  #20242b;
+  --color-rd-line-hi:    #3a414d;
+
+  /* Text */
+  --color-rd-text:       #e4e7eb;
+  --color-rd-text-dim:   #8a9096;
+  --color-rd-text-mute:  #5a6069;
+
+  /* Accent (industrial yellow – selected / key CTA) */
+  --color-rd-accent:     #f5d524;
+  --color-rd-accent-dim: #c9ad1e;
+
+  /* Data (blue/cyan – plus values, info) */
+  --color-rd-data:       #4fc3e8;
+  --color-rd-data-dim:   #2ea6d6;
+
+  /* Semantic */
+  --color-rd-pos:        #5bd2a0;   /* positive delta */
+  --color-rd-neg:        #e06060;   /* negative delta */
+}
+
 :root {
   color-scheme: dark;
+}
+
+/* Chamfered corner utility for redesign cards */
+.rd-chamfer {
+  clip-path: polygon(
+    0 0,
+    calc(100% - 10px) 0,
+    100% 10px,
+    100% 100%,
+    10px 100%,
+    0 calc(100% - 10px)
+  );
+}
+.rd-chamfer-sm {
+  clip-path: polygon(
+    0 0,
+    calc(100% - 6px) 0,
+    100% 6px,
+    100% 100%,
+    6px 100%,
+    0 calc(100% - 6px)
+  );
+}
+.rd-chamfer-tag {
+  clip-path: polygon(
+    8px 0,
+    100% 0,
+    calc(100% - 8px) 100%,
+    0 100%
+  );
+}
+
+/* Redesign background: dark radial gradient */
+.rd-canvas {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 35%, var(--color-rd-bg-a) 0%, var(--color-rd-bg-b) 75%);
 }
 
 body {
