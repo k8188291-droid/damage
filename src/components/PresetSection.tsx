@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useShallow } from 'zustand/shallow';
-import { DragDropProvider, type DragDropEvents } from '@dnd-kit/react';
+import { DragDropProvider, type DragEndEvent } from '@dnd-kit/react';
 import { useSortable } from '@dnd-kit/react/sortable';
 import { useAppStore } from '../stores/appStore';
 import { arrayMove } from '../utils/arrayMove';
@@ -174,7 +174,7 @@ export default function PresetSection() {
     setEditingId(null);
   };
 
-  const handleDragEnd: DragDropEvents['dragend'] = (event) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     if (event.canceled) return;
     const { source, target } = event.operation;
     if (!source || !target || source.id === target.id) return;

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useShallow } from 'zustand/shallow';
-import { DragDropProvider, type DragDropEvents } from '@dnd-kit/react';
+import { DragDropProvider, type DragEndEvent } from '@dnd-kit/react';
 import { useSortable } from '@dnd-kit/react/sortable';
 import { arrayMove } from '../utils/arrayMove';
 import { useAppStore } from '../stores/appStore';
@@ -243,7 +243,7 @@ export default function CycleEditor({ groupResult }: Props) {
     setShowSkillPalette(false);
   };
 
-  const handleDragEnd: DragDropEvents['dragend'] = (event) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     if (event.canceled) return;
     const { source, target } = event.operation;
     if (!source || !target || source.id === target.id) return;

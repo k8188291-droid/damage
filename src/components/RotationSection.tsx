@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
-import { DragDropProvider, type DragDropEvents } from '@dnd-kit/react';
+import { DragDropProvider, type DragEndEvent } from '@dnd-kit/react';
 import { useSortable } from '@dnd-kit/react/sortable';
 import { arrayMove } from '../utils/arrayMove';
 import type { Skill, Buff, BuffGroup, Character, DamageZone, RotationGroup, RotationEntry } from '../types';
@@ -187,7 +187,7 @@ function GroupCard({ group, groupResult, skills, buffs, buffGroups, onUpdate, on
     onUpdate({ ...group, entries: [...group.entries, { id: uuid(), skillId, count: 1, disabledBuffIds: [] }] });
   };
 
-  const handleDragEnd: DragDropEvents['dragend'] = (event) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     if (event.canceled) return;
     const { source, target } = event.operation;
     if (!source || !target || source.id === target.id) return;

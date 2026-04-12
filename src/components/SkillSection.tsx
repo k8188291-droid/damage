@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid';
 import { useShallow } from 'zustand/shallow';
 import {
   DragDropProvider, DragOverlay, useDroppable,
-  type DragDropEvents,
+  type DragEndEvent,
 } from '@dnd-kit/react';
 import { useSortable } from '@dnd-kit/react/sortable';
 import { useAppStore } from '../stores/appStore';
@@ -287,7 +287,7 @@ export default function SkillSection() {
     pushUndo(`已刪除技能群組: ${grp.name}`, () => { setSkillGroups(prevGroups); setSkills(prevSkills); });
   };
 
-  const handleDragEnd: DragDropEvents['dragend'] = (event) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     if (event.canceled) return;
     const { source, target } = event.operation;
     if (!source || !target) return;
