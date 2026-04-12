@@ -55,7 +55,7 @@ export default function CycleBuffBar() {
         <span className="text-xs font-semibold text-gray-400 tracking-wide">當前循環 BUFF 生效開關</span>
       </div>
       <div
-        className={`flex flex-wrap gap-2 transition-all duration-200 overflow-y-auto`}
+        className={`flex flex-wrap gap-2 overflow-y-auto`}
         style={{ maxHeight: !expanded ? 70 : 'calc(100vh - 120px)' }}
       >
         {visibleBuffs.map(b => {
@@ -67,7 +67,7 @@ export default function CycleBuffBar() {
           const tooltipLabel = `${zoneLabel}／${group?.name || '未分組'}`;
 
           return (
-            <Tooltip key={b.id} label={expanded ? tooltipLabel : '請先展開才能編輯'}>
+            <Tooltip key={b.id} label={tooltipLabel}>
               <button
                 onClick={expanded ? () => toggleCycleBuff(b.id) : handleCollapsedClick}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
@@ -92,10 +92,9 @@ export default function CycleBuffBar() {
           <span className="text-xs text-gray-600">尚未設定任何 Buff</span>
         )}
       </div>
-      <button
+      <button 
         onClick={() => setExpanded(e => !e)}
-        className="z-10 absolute cursor-pointer bottom-[-20px] left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full bg-gray-800 border border-gray-700 text-gray-500 flex items-center justify-center hover:text-white transition-colors shadow-lg"
-        title={expanded ? '收合' : '展開'}
+        className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-12 h-6 bg-gray-800 border border-gray-700 border-t-0 rounded-b-lg flex items-center justify-center text-gray-500 hover:text-gray-300 cursor-pointer transition-colors text-xs z-10"
       >
         <span className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
           ▾

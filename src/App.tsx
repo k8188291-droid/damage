@@ -108,7 +108,7 @@ function App() {
                 ? 'absolute top-0 bottom-0 left-12 z-30 shadow-2xl'
                 : 'relative shrink-0'
             }`}
-            style={{ width: leftPanelWidth }}
+            style={{ width: `min(${leftPanelWidth}px, calc(100vw - 48px))` }}
           >
             {/* Header area with import/export */}
             <div className="px-4 py-2.5 border-b border-gray-800 flex items-center justify-between shrink-0 overflow-auto whitespace-nowrap">
@@ -225,7 +225,7 @@ function App() {
           <button
             onClick={() => setRightPanelOpen(v => !v)}
             className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-12 bg-gray-800 border border-gray-700 border-r-0 rounded-l-lg flex items-center justify-center text-gray-500 hover:text-gray-300 cursor-pointer transition-colors text-xs z-10"
-            style={{ right: rightPanelOpen ? rightPanelWidth : 0 }}
+            style={{ right: `min(${rightPanelOpen ? rightPanelWidth : 0}px, calc(100vw - 24px))` }}
           >
             {rightPanelOpen ? '›' : '‹'}
           </button>
@@ -239,7 +239,7 @@ function App() {
                 ? 'absolute top-0 bottom-0 right-0 z-30 shadow-2xl'
                 : 'relative shrink-0'
             }`}
-            style={{ width: rightPanelWidth }}
+            style={{ width: rightPanelWidth, maxWidth: 'calc(100vw - 24px)' }}
           >
             <div
               className="absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-indigo-500/40 transition-colors z-10"
