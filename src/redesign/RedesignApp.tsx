@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState, useRef, useCallback, type ReactNode } from 'react';
 import {
   IconFolder, IconUser, IconSword, IconSpark, IconGear,
   IconSearch,
@@ -10,10 +10,10 @@ import {
    Demo data
    ────────────────────────────────────────────────────────── */
 const ROTATIONS = [
-  { id: 'r1', name: '主循環',        dmg: 1958482, excluded: false },
-  { id: 'r2', name: '副循環',        dmg: 1102003, excluded: false },
-  { id: 'r3', name: '爆發循環',      dmg: 2450100, excluded: false },
-  { id: 'r4', name: '低練度測試',    dmg:  742300, excluded: true  },
+  { id: 'r1', name: '主循環',     dmg: 1958482, excluded: false },
+  { id: 'r2', name: '副循環',     dmg: 1102003, excluded: false },
+  { id: 'r3', name: '爆發循環',   dmg: 2450100, excluded: false },
+  { id: 'r4', name: '低練度測試', dmg:  742300, excluded: true  },
 ];
 
 const PRESETS = [
@@ -23,33 +23,67 @@ const PRESETS = [
 ];
 
 const CHARACTERS = [
-  { id: 'c1', name: '主C',   atk: 2480, crit: 82.5, cd: 220 },
-  { id: 'c2', name: '副C',   atk: 1940, crit: 65.0, cd: 180 },
-  { id: 'c3', name: '輔助',  atk:  900, crit: 10.0, cd:  50 },
+  { id: 'c1', name: '主C',  atk: 2480, crit: 82.5, cd: 220 },
+  { id: 'c2', name: '副C',  atk: 1940, crit: 65.0, cd: 180 },
+  { id: 'c3', name: '輔助', atk:  900, crit: 10.0, cd:  50 },
 ];
 
-const BUFFS = [
-  { id: 'b1', name: '攻擊力 BUFF',     value: '+36%',  zone: '全域' },
-  { id: 'b2', name: '暴擊傷害 BUFF',   value: '+80%',  zone: '暴擊' },
-  { id: 'b3', name: '易傷',            value: '+25%',  zone: '易傷' },
-  { id: 'b4', name: '元素增幅',        value: '+40%',  zone: '增幅' },
+const LIB_BUFFS = [
+  { id: 'b1', name: '攻擊力 BUFF',   value: '+36%', zone: '全域' },
+  { id: 'b2', name: '暴擊傷害 BUFF', value: '+80%', zone: '暴擊' },
+  { id: 'b3', name: '易傷',          value: '+25%', zone: '易傷' },
+  { id: 'b4', name: '元素增幅',      value: '+40%', zone: '增幅' },
 ];
 
-const SKILLS = [
-  { id: 's1', name: '普通攻擊',   mult:  120, char: '主C' },
-  { id: 's2', name: '戰技',       mult:  380, char: '主C' },
-  { id: 's3', name: '終結技',     mult: 1200, char: '主C' },
-  { id: 's4', name: '副C 戰技',   mult:  340, char: '副C' },
+const LIB_SKILLS = [
+  { id: 's1', name: '普通攻擊', mult:  120, char: '主C' },
+  { id: 's2', name: '戰技',     mult:  380, char: '主C' },
+  { id: 's3', name: '終結技',   mult: 1200, char: '主C' },
+  { id: 's4', name: '副C 戰技', mult:  340, char: '副C' },
 ];
 
-const CYCLE_ENTRIES = [
-  { id: 'e1', skill: '戰技',       char: '主C', dmg:  482100, count: 1 },
-  { id: 'e2', skill: '普通攻擊',   char: '主C', dmg:  112400, count: 3 },
-  { id: 'e3', skill: '副C 戰技',   char: '副C', dmg:  264800, count: 1 },
-  { id: 'e4', skill: '終結技',     char: '主C', dmg: 1099182, count: 1 },
+/* ── Timeline demo data ── */
+interface TLBuff {
+  id: string;
+  name: string;
+  value: string;
+  color: string;
+  start: number;
+  end: number;
+}
+
+interface TLSkill {
+  id: string;
+  name: string;
+  char: string;
+  dmg: number;
+  time: number;
+  duration: number;
+}
+
+const TIMELINE_BUFFS: TLBuff[] = [
+  { id: 'tb1', name: '攻擊力 +36%',   value: '+36%', color: '#3b82f6', start: 0,  end: 20 },
+  { id: 'tb2', name: '暴傷 +80%',     value: '+80%', color: '#f59e0b', start: 2,  end: 14 },
+  { id: 'tb3', name: '易傷 +25%',     value: '+25%', color: '#ef4444', start: 6,  end: 16 },
+  { id: 'tb4', name: '元素增幅 +40%', value: '+40%', color: '#22c55e', start: 8,  end: 13 },
 ];
+
+const TIMELINE_SKILLS: TLSkill[] = [
+  { id: 'ts1', name: '戰技',     char: '主C', dmg: 482100,  time: 1,    duration: 1.2 },
+  { id: 'ts2', name: '普攻',     char: '主C', dmg:  37467,  time: 3,    duration: 0.6 },
+  { id: 'ts3', name: '普攻',     char: '主C', dmg:  37467,  time: 4,    duration: 0.6 },
+  { id: 'ts4', name: '普攻',     char: '主C', dmg:  37467,  time: 5,    duration: 0.6 },
+  { id: 'ts5', name: '副C戰技',  char: '副C', dmg: 264800,  time: 7,    duration: 1.5 },
+  { id: 'ts6', name: '終結技',   char: '主C', dmg: 1099182, time: 10,   duration: 2.5 },
+];
+
+const TOTAL_DURATION = 20;
 
 const fmt = (n: number) => n.toLocaleString();
+
+function buffCoversSkill(b: TLBuff, s: TLSkill): boolean {
+  return s.time >= b.start && s.time < b.end;
+}
 
 /* ──────────────────────────────────────────────────────────
    Shared primitives
@@ -87,7 +121,7 @@ function RailButton({
 }
 
 /* ──────────────────────────────────────────────────────────
-   Top: VS-Code style Tab Bar (original IA)
+   Top: VS-Code style Tab Bar
    ────────────────────────────────────────────────────────── */
 function TabBar({
   tabs, activeTabId, onSwitchTab, onAddTab,
@@ -114,13 +148,9 @@ function TabBar({
             >
               <span className="truncate">{tab.name}</span>
               <div className="flex gap-1 shrink-0">
-                <span className="text-rd-text-ghost hover:text-rd-text-dim text-[10px] cursor-pointer">
-                  ⧉
-                </span>
+                <span className="text-rd-text-ghost hover:text-rd-text-dim text-[10px] cursor-pointer">⧉</span>
                 {tabs.length > 1 && (
-                  <span className="text-rd-text-ghost hover:text-rd-neg text-[10px] cursor-pointer">
-                    ✕
-                  </span>
+                  <span className="text-rd-text-ghost hover:text-rd-neg text-[10px] cursor-pointer">✕</span>
                 )}
               </div>
               {isActive && <span className="absolute bottom-0 left-0 right-0 h-[1px] bg-rd-panel" />}
@@ -136,7 +166,6 @@ function TabBar({
         </button>
       </div>
 
-      {/* search */}
       <div className="flex items-center gap-1.5 pb-1 pr-1">
         <div className="h-6 flex items-center gap-1.5 px-2 bg-rd-panel-deep border border-rd-line rounded-[2px]">
           <IconSearch className="text-rd-text-ghost" size={11} />
@@ -172,31 +201,19 @@ function LeftRail({ active, onToggle }: { active: LibKey | null; onToggle: (k: L
 
 function LibraryPanel({ active }: { active: LibKey }) {
   const titleMap: Record<LibKey, string> = {
-    presets: '檔案庫',
-    characters: '角色',
-    buffs: 'BUFF / 分區',
-    skills: '技能庫',
+    presets: '檔案庫', characters: '角色', buffs: 'BUFF / 分區', skills: '技能庫',
   };
-
   return (
     <aside className="w-64 bg-rd-panel border-r border-rd-line flex flex-col shrink-0 rd-sheen">
       <SectionTitle
-        right={
-          <button className="w-5 h-5 flex items-center justify-center text-rd-text-mute hover:text-rd-accent cursor-pointer">
-            <IconPlus size={13} />
-          </button>
-        }
+        right={<button className="w-5 h-5 flex items-center justify-center text-rd-text-mute hover:text-rd-accent cursor-pointer"><IconPlus size={13} /></button>}
       >
         {titleMap[active]}
       </SectionTitle>
-
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
         {active === 'presets' && PRESETS.map(p => (
-          <LibCard key={p.id} title={p.name}>
-            <div className="text-[10px] text-rd-text-ghost mt-0.5">{p.time}</div>
-          </LibCard>
+          <LibCard key={p.id} title={p.name}><div className="text-[10px] text-rd-text-ghost mt-0.5">{p.time}</div></LibCard>
         ))}
-
         {active === 'characters' && CHARACTERS.map(c => (
           <LibCard key={c.id} title={c.name} hasUpdate>
             <div className="grid grid-cols-3 gap-x-2 text-[10px] text-rd-text-mute mt-1">
@@ -206,8 +223,7 @@ function LibraryPanel({ active }: { active: LibKey }) {
             </div>
           </LibCard>
         ))}
-
-        {active === 'buffs' && BUFFS.map(b => (
+        {active === 'buffs' && LIB_BUFFS.map(b => (
           <LibCard key={b.id} title={b.name}>
             <div className="flex items-center justify-between text-[10px] mt-1">
               <span className="text-rd-text-mute">{b.zone}</span>
@@ -215,8 +231,7 @@ function LibraryPanel({ active }: { active: LibKey }) {
             </div>
           </LibCard>
         ))}
-
-        {active === 'skills' && SKILLS.map(s => (
+        {active === 'skills' && LIB_SKILLS.map(s => (
           <LibCard key={s.id} title={s.name}>
             <div className="flex items-center justify-between text-[10px] mt-1">
               <span className="text-rd-text-mute">{s.char}</span>
@@ -243,17 +258,209 @@ function LibCard({ title, children, hasUpdate }: { title: string; children?: Rea
 }
 
 /* ──────────────────────────────────────────────────────────
-   Center: cycle tabs + rotation editor
+   Timeline
+   ────────────────────────────────────────────────────────── */
+const LABEL_W = 130;
+const MIN_PPS = 30;
+const MAX_PPS = 150;
+const TRACK_H = 28;
+const SKILL_TRACK_H = 44;
+const RULER_H = 24;
+
+function Timeline({ hoveredSkill, onHoverSkill }: {
+  hoveredSkill: string | null;
+  onHoverSkill: (id: string | null) => void;
+}) {
+  const [pps, setPps] = useState(60);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const trackW = TOTAL_DURATION * pps;
+
+  const onWheel = useCallback((e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      setPps(prev => Math.min(MAX_PPS, Math.max(MIN_PPS, prev - e.deltaY * 0.3)));
+    }
+  }, []);
+
+  const hovSkill = hoveredSkill ? TIMELINE_SKILLS.find(s => s.id === hoveredSkill) : null;
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden border-t border-rd-line">
+      {/* toolbar */}
+      <div className="h-8 flex items-center justify-between px-3 border-b border-rd-line-soft bg-rd-panel-deep/30 shrink-0">
+        <div className="flex items-center gap-1.5">
+          <IconSectionMark className="text-rd-accent" />
+          <span className="text-[11px] tracking-[0.12em] text-rd-text-dim uppercase">時間軸</span>
+        </div>
+        <div className="flex items-center gap-3 text-[10px] text-rd-text-ghost">
+          <span>Ctrl+滾輪 縮放</span>
+          <span>{pps.toFixed(0)} px/s</span>
+          <span>{TOTAL_DURATION}s</span>
+        </div>
+      </div>
+
+      {/* timeline body */}
+      <div className="flex-1 flex overflow-hidden" onWheel={onWheel}>
+        {/* sticky labels */}
+        <div className="shrink-0 flex flex-col bg-rd-panel border-r border-rd-line z-10" style={{ width: LABEL_W }}>
+          {/* ruler spacer */}
+          <div className="border-b border-rd-line-soft flex items-center px-3" style={{ height: RULER_H }}>
+            <span className="text-[9px] text-rd-text-ghost tracking-widest">TIME</span>
+          </div>
+          {/* buff labels */}
+          {TIMELINE_BUFFS.map(b => {
+            const dimmed = hovSkill ? !buffCoversSkill(b, hovSkill) : false;
+            return (
+              <div
+                key={b.id}
+                className={`flex items-center gap-1.5 px-3 border-b border-rd-line-soft transition-opacity ${dimmed ? 'opacity-30' : ''}`}
+                style={{ height: TRACK_H }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: b.color }} />
+                <span className="text-[11px] text-rd-text-dim truncate">{b.name}</span>
+              </div>
+            );
+          })}
+          {/* divider */}
+          <div className="h-px bg-rd-line" />
+          {/* skill label */}
+          <div className="flex items-center px-3 border-b border-rd-line-soft" style={{ height: SKILL_TRACK_H }}>
+            <span className="text-[11px] text-rd-text-dim">技能</span>
+          </div>
+        </div>
+
+        {/* scrollable tracks */}
+        <div ref={scrollRef} className="flex-1 overflow-x-auto overflow-y-hidden">
+          <div style={{ width: trackW, minHeight: '100%' }} className="relative">
+            {/* ── ruler ── */}
+            <div className="sticky top-0 border-b border-rd-line-soft bg-rd-panel-deep/70" style={{ height: RULER_H }}>
+              {Array.from({ length: TOTAL_DURATION + 1 }).map((_, s) => {
+                const isMajor = s % 2 === 0;
+                return (
+                  <div
+                    key={s}
+                    className="absolute top-0 flex flex-col items-center"
+                    style={{ left: s * pps }}
+                  >
+                    <div className={`${isMajor ? 'h-full w-px bg-rd-line' : 'h-2/3 w-px bg-rd-line-soft'}`} />
+                    {isMajor && (
+                      <span className="absolute bottom-0.5 text-[9px] text-rd-text-ghost tabular-nums translate-x-1">
+                        {s}s
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* ── buff tracks ── */}
+            {TIMELINE_BUFFS.map(b => {
+              const dimmed = hovSkill ? !buffCoversSkill(b, hovSkill) : false;
+              const covers = hovSkill ? buffCoversSkill(b, hovSkill) : false;
+              return (
+                <div key={b.id} className="relative border-b border-rd-line-soft" style={{ height: TRACK_H }}>
+                  {/* grid lines (every 2s) */}
+                  {Array.from({ length: Math.floor(TOTAL_DURATION / 2) + 1 }).map((_, i) => (
+                    <div key={i} className="absolute top-0 bottom-0 w-px bg-rd-line-soft/50" style={{ left: i * 2 * pps }} />
+                  ))}
+                  {/* buff bar */}
+                  <div
+                    className={`absolute top-1 bottom-1 rounded-[2px] flex items-center px-2 overflow-hidden transition-opacity ${
+                      dimmed ? 'opacity-20' : covers ? 'opacity-100' : 'opacity-70'
+                    }`}
+                    style={{
+                      left: b.start * pps,
+                      width: (b.end - b.start) * pps,
+                      background: `${b.color}18`,
+                      borderLeft: `2px solid ${b.color}90`,
+                      boxShadow: covers ? `inset 0 0 12px ${b.color}25` : undefined,
+                    }}
+                  >
+                    <span className="text-[10px] truncate" style={{ color: `${b.color}cc` }}>
+                      {b.name}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* ── divider ── */}
+            <div className="h-px bg-rd-line" />
+
+            {/* ── skill track ── */}
+            <div className="relative" style={{ height: SKILL_TRACK_H }}>
+              {/* grid lines */}
+              {Array.from({ length: Math.floor(TOTAL_DURATION / 2) + 1 }).map((_, i) => (
+                <div key={i} className="absolute top-0 bottom-0 w-px bg-rd-line-soft/50" style={{ left: i * 2 * pps }} />
+              ))}
+
+              {TIMELINE_SKILLS.map(sk => {
+                const isHov = hoveredSkill === sk.id;
+                const w = Math.max(sk.duration * pps, 48);
+                const coveringBuffs = TIMELINE_BUFFS.filter(b => buffCoversSkill(b, sk));
+                return (
+                  <div
+                    key={sk.id}
+                    className={`absolute top-1 cursor-pointer transition-all ${isHov ? 'z-10' : 'z-0'}`}
+                    style={{ left: sk.time * pps, width: w, bottom: 4 }}
+                    onMouseEnter={() => onHoverSkill(sk.id)}
+                    onMouseLeave={() => onHoverSkill(null)}
+                  >
+                    <div
+                      className={`h-full rd-chamfer-sm flex flex-col justify-center px-2 border transition-colors ${
+                        isHov
+                          ? 'bg-rd-panel-lift border-rd-line-top'
+                          : 'bg-rd-panel-hi border-rd-line'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1 min-w-0">
+                        <span className="text-[11px] text-rd-text truncate">{sk.name}</span>
+                        <span className="text-[9px] text-rd-text-ghost shrink-0">{sk.char}</span>
+                      </div>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <span className="text-[10px] text-rd-text-hi tabular-nums">{fmt(sk.dmg)}</span>
+                        {/* buff coverage dots */}
+                        <div className="flex gap-0.5 ml-auto">
+                          {coveringBuffs.map(cb => (
+                            <span
+                              key={cb.id}
+                              className="w-1.5 h-1.5 rounded-full shrink-0"
+                              style={{ background: cb.color }}
+                              title={cb.name}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    {/* yellow bottom accent when hovered */}
+                    {isHov && <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-rd-accent" />}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────
+   Center Pane (rotation header + timeline)
    ────────────────────────────────────────────────────────── */
 function CenterPane({
   activeRotationId, onSelect,
 }: { activeRotationId: string; onSelect: (id: string) => void }) {
   const active = ROTATIONS.find(r => r.id === activeRotationId)!;
+  const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
+
+  const hovSkill = hoveredSkill ? TIMELINE_SKILLS.find(s => s.id === hoveredSkill) : null;
+  const coveringBuffs = hovSkill ? TIMELINE_BUFFS.filter(b => buffCoversSkill(b, hovSkill)) : [];
 
   return (
     <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
       {/* rotation sub-tabs */}
-      <div className="h-10 flex items-end gap-px px-2 border-b border-rd-line bg-rd-panel-deep/50">
+      <div className="h-10 flex items-end gap-px px-2 border-b border-rd-line bg-rd-panel-deep/50 shrink-0">
         {ROTATIONS.map(r => {
           const isActive = r.id === activeRotationId;
           return (
@@ -278,103 +485,41 @@ function CenterPane({
       </div>
 
       {/* rotation header */}
-      <div className="px-6 pt-5 pb-4 border-b border-rd-line">
+      <div className="px-6 pt-4 pb-3 border-b border-rd-line shrink-0">
         <div className="flex items-start justify-between">
           <div>
-            <div className="text-[10px] tracking-[0.2em] text-rd-text-ghost uppercase mb-1">ACTIVE ROTATION</div>
+            <div className="text-[10px] tracking-[0.2em] text-rd-text-ghost uppercase mb-0.5">ACTIVE ROTATION</div>
             <h1 className="text-lg text-rd-text">{active.name}</h1>
           </div>
           <div className="text-right">
-            <div className="text-[10px] tracking-[0.2em] text-rd-text-ghost uppercase mb-1">TOTAL DAMAGE</div>
+            <div className="text-[10px] tracking-[0.2em] text-rd-text-ghost uppercase mb-0.5">TOTAL DAMAGE</div>
             <div className="text-3xl text-rd-text-hi tabular-nums font-semibold">{fmt(active.dmg)}</div>
           </div>
         </div>
 
-        {/* buff chips */}
-        <div className="mt-3.5 flex flex-wrap gap-1.5">
-          {BUFFS.map(b => (
-            <span
-              key={b.id}
-              className="rd-chamfer-sm bg-rd-panel-deep border border-rd-line px-2.5 py-1 text-[11px] text-rd-data"
-            >
-              {b.name} {b.value}
-            </span>
-          ))}
-          <button className="rd-chamfer-sm border border-dashed border-rd-line-hi text-rd-text-ghost hover:text-rd-accent hover:border-rd-accent px-2.5 py-1 text-[11px] cursor-pointer flex items-center gap-1 transition-colors">
-            <IconPlus size={10} /> BUFF
-          </button>
-        </div>
-      </div>
-
-      {/* skill entry list */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-1.5">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-1.5">
-            <IconSectionMark className="text-rd-accent" />
-            <span className="text-[11px] tracking-[0.12em] text-rd-text-dim uppercase">技能序列</span>
-          </div>
-          <button className="h-6 px-3 text-[11px] text-rd-text-mute hover:text-rd-accent cursor-pointer flex items-center gap-1">
-            <IconPlus size={11} /> 加入技能
-          </button>
-        </div>
-
-        {CYCLE_ENTRIES.map((e, i) => (
-          <SkillEntryCard key={e.id} entry={e} index={i} />
-        ))}
-      </div>
-    </main>
-  );
-}
-
-function SkillEntryCard({ entry: e, index: i }: { entry: typeof CYCLE_ENTRIES[number]; index: number }) {
-  return (
-    <div
-      className="relative bg-rd-panel border border-rd-line hover:border-rd-line-hi transition-colors group rd-chamfer"
-    >
-      <div className="flex items-stretch">
-        {/* index column */}
-        <div className="w-10 flex flex-col items-center justify-center border-r border-rd-line-soft text-rd-text-ghost">
-          <span className="text-[10px] tracking-wider tabular-nums">#{String(i + 1).padStart(2, '0')}</span>
-          <IconGrip className="mt-0.5 text-rd-text-ghost cursor-grab" size={12} />
-        </div>
-
-        {/* content */}
-        <div className="flex-1 px-4 py-2.5 flex items-center justify-between min-w-0">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-rd-text">{e.skill}</span>
-              {e.count > 1 && (
-                <span className="text-[10px] text-rd-text-mute border border-rd-line-soft px-1.5 py-0.5 tabular-nums rounded-[2px]">
-                  ×{e.count}
-                </span>
-              )}
-            </div>
-            <div className="text-[11px] text-rd-text-mute mt-0.5">{e.char}</div>
-          </div>
-          <div className="text-right shrink-0 ml-4">
-            <div className="text-sm text-rd-text-hi tabular-nums font-medium">{fmt(e.dmg)}</div>
-            {e.count > 1 && (
-              <div className="text-[10px] text-rd-text-ghost tabular-nums">
-                單次 {fmt(Math.round(e.dmg / e.count))}
-              </div>
+        {/* hovered skill buff detail */}
+        {hovSkill && (
+          <div className="mt-3 flex items-center gap-2 text-[11px]">
+            <span className="text-rd-text-dim">{hovSkill.name} ({hovSkill.char}) @ {hovSkill.time}s</span>
+            <span className="text-rd-text-ghost">—</span>
+            {coveringBuffs.length > 0 ? coveringBuffs.map(cb => (
+              <span key={cb.id} className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: cb.color }} />
+                <span style={{ color: `${cb.color}cc` }}>{cb.name}</span>
+              </span>
+            )) : (
+              <span className="text-rd-text-ghost">無生效 BUFF</span>
             )}
           </div>
-        </div>
-
-        {/* hover actions */}
-        <div className="flex items-center gap-0.5 pr-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button className="w-6 h-6 flex items-center justify-center text-rd-text-ghost hover:text-rd-data cursor-pointer">
-            <IconCopy size={12} />
-          </button>
-          <button className="w-6 h-6 flex items-center justify-center text-rd-text-ghost hover:text-rd-neg cursor-pointer">
-            <IconTrash size={12} />
-          </button>
-        </div>
+        )}
+        {!hovSkill && (
+          <div className="mt-3 text-[11px] text-rd-text-ghost">滑鼠移到技能方塊查看 BUFF 覆蓋</div>
+        )}
       </div>
 
-      {/* left accent bar */}
-      <span className="absolute left-0 top-2 bottom-2 w-[2px] bg-rd-line group-hover:bg-rd-accent transition-colors" />
-    </div>
+      {/* timeline */}
+      <Timeline hoveredSkill={hoveredSkill} onHoverSkill={setHoveredSkill} />
+    </main>
   );
 }
 
@@ -395,7 +540,6 @@ function RightAnalysis({ activeRotationId, onSelect }: { activeRotationId: strin
           const pct = (r.dmg / maxDmg) * 100;
           const diff = r.id === activeRotationId ? null
             : (((r.dmg - activeDmg) / activeDmg) * 100).toFixed(1);
-
           return (
             <div
               key={r.id}
@@ -408,43 +552,31 @@ function RightAnalysis({ activeRotationId, onSelect }: { activeRotationId: strin
                   : 'bg-rd-panel-hi border border-rd-line-soft hover:border-rd-line'
               }`}
             >
-              {/* selected accent */}
               {isActive && <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-rd-accent" />}
-
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5 min-w-0">
                   <IconGrip className="text-rd-text-ghost shrink-0" size={11} />
-                  <span className={`text-[13px] truncate ${isActive ? 'text-rd-text' : 'text-rd-text-dim'}`}>
-                    {r.name}
-                  </span>
+                  <span className={`text-[13px] truncate ${isActive ? 'text-rd-text' : 'text-rd-text-dim'}`}>{r.name}</span>
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button className="text-rd-text-ghost hover:text-rd-data cursor-pointer"><IconCopy size={11} /></button>
                   <button className="text-rd-text-ghost hover:text-rd-neg cursor-pointer"><IconTrash size={11} /></button>
                 </div>
               </div>
-
-              {/* segmented progress bar */}
               <div className="flex gap-[2px] h-[5px] mb-2">
-                {Array.from({ length: 20 }).map((_, idx) => {
-                  const filled = (idx / 20) * 100 < pct;
-                  return (
-                    <div
-                      key={idx}
-                      className={`flex-1 transition-colors ${
-                        filled
-                          ? isActive ? 'bg-rd-accent' : 'bg-rd-line-hi'
-                          : 'bg-rd-panel-deep'
-                      }`}
-                    />
-                  );
-                })}
+                {Array.from({ length: 20 }).map((_, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex-1 transition-colors ${
+                      (idx / 20) * 100 < pct
+                        ? isActive ? 'bg-rd-accent' : 'bg-rd-line-hi'
+                        : 'bg-rd-panel-deep'
+                    }`}
+                  />
+                ))}
               </div>
-
               <div className="flex items-baseline justify-between">
-                <span className={`text-[15px] tabular-nums font-medium ${isActive ? 'text-rd-text-hi' : 'text-rd-text'}`}>
-                  {fmt(r.dmg)}
-                </span>
+                <span className={`text-[15px] tabular-nums font-medium ${isActive ? 'text-rd-text-hi' : 'text-rd-text'}`}>{fmt(r.dmg)}</span>
                 {diff !== null && !r.excluded && (
                   <span className={`text-[11px] tabular-nums ${Number(diff) >= 0 ? 'text-rd-pos' : 'text-rd-neg'}`}>
                     {Number(diff) >= 0 ? '+' : ''}{diff}%
@@ -456,12 +588,9 @@ function RightAnalysis({ activeRotationId, onSelect }: { activeRotationId: strin
         })}
       </div>
 
-      {/* summary */}
       <div className="border-t border-rd-line p-4 bg-rd-panel-deep/40">
         <div className="text-[10px] tracking-[0.2em] text-rd-text-ghost uppercase">PEAK</div>
-        <div className="text-2xl text-rd-text-hi tabular-nums font-semibold mt-1">
-          {fmt(maxDmg)}
-        </div>
+        <div className="text-2xl text-rd-text-hi tabular-nums font-semibold mt-1">{fmt(maxDmg)}</div>
         <div className="text-[11px] text-rd-text-mute mt-0.5">
           {ROTATIONS.length} 個循環 · {ROTATIONS.filter(r => r.excluded).length} 個排除
         </div>
@@ -512,20 +641,13 @@ export default function RedesignApp() {
 
   return (
     <div className="h-screen flex flex-col rd-canvas text-rd-text overflow-hidden">
-      <TabBar
-        tabs={tabs}
-        activeTabId={activeTabId}
-        onSwitchTab={setActiveTabId}
-        onAddTab={addTab}
-      />
-
+      <TabBar tabs={tabs} activeTabId={activeTabId} onSwitchTab={setActiveTabId} onAddTab={addTab} />
       <div className="flex-1 flex overflow-hidden">
         <LeftRail active={libOpen} onToggle={toggleLib} />
         {libOpen && <LibraryPanel active={libOpen} />}
         <CenterPane activeRotationId={activeRotationId} onSelect={setActiveRotationId} />
         <RightAnalysis activeRotationId={activeRotationId} onSelect={setActiveRotationId} />
       </div>
-
       <StatusBar />
     </div>
   );
